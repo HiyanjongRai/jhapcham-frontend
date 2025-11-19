@@ -1,0 +1,186 @@
+.footer {
+  background: #050816;
+  color: #f5f5f5;
+  padding: 28px 16px 18px;
+  margin-top: 40px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.footer a {
+  color: #d1d5db;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: #ffffff;
+}
+
+/* ========== TOP SECTION ========== */
+/* Mobile first: stacked columns */
+.footer-top {
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.footer-col {
+  font-size: 14px;
+}
+
+.footer-logo {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.footer-about {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #d1d5db;
+  margin-bottom: 10px;
+}
+
+.footer-contact span {
+  font-size: 13px;
+  color: #e5e7eb;
+}
+
+/* Headings and list */
+.footer-heading {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #f9fafb;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 6px;
+}
+
+.footer-links a {
+  font-size: 13px;
+}
+
+/* Newsletter */
+.footer-news-text {
+  font-size: 13px;
+  color: #d1d5db;
+  margin-bottom: 8px;
+}
+
+.footer-news-form {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.footer-input {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  background: #0b1120;
+  color: #f9fafb;
+  font-size: 13px;
+}
+
+.footer-input::placeholder {
+  color: #6b7280;
+}
+
+.footer-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.footer-btn:hover {
+  background: #1d4ed8;
+}
+
+/* Social icons */
+.footer-social-title {
+  margin-top: 6px;
+}
+
+.footer-social {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.footer-social a {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+/* ========== BOTTOM SECTION ========== */
+.footer-bottom {
+  border-top: 1px solid #1f2933;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.footer-made {
+  text-align: left;
+}
+
+/* ========== TABLET ========== */
+@media (min-width: 640px) {
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 2fr;
+    gap: 24px;
+  }
+
+  .footer-brand {
+    grid-column: 1 / span 2;
+  }
+
+  .footer-bottom {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-made {
+    text-align: right;
+  }
+}
+
+/* ========== DESKTOP ========== */
+@media (min-width: 1024px) {
+  .footer-top {
+    grid-template-columns: 2fr 1fr 1fr 2fr;
+    gap: 28px;
+  }
+
+  .footer-brand {
+    grid-column: auto;
+  }
+}

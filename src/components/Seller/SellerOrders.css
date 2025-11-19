@@ -1,0 +1,126 @@
+.seller-orders-container {
+  padding: 20px 30px;
+  font-family: Arial, sans-serif;
+}
+
+.seller-orders-title {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.order-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  border-left: 6px solid #007bff;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.order-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.order-meta {
+  font-size: 14px;
+  color: #555;
+}
+
+.order-items {
+  background: #f8f9fc;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.order-items ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.order-items li {
+  padding: 4px 0;
+  font-size: 15px;
+}
+
+.status-label {
+  font-size: 14px;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #664d03;
+}
+
+.status-processing {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.status-shipped {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.status-delivered {
+  background: #e2f0d9;
+  color: #1f6f1f;
+}
+
+.status-cancelled {
+  background: #f8d7da;
+  color: #842029;
+}
+
+.order-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.order-btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.order-btn:hover {
+  opacity: 0.8;
+}
+
+.btn-process {
+  background: #0d6efd;
+  color: white;
+}
+
+.btn-ship {
+  background: #198754;
+  color: white;
+}
+
+.btn-deliver {
+  background: #20c997;
+  color: white;
+}
+
+.btn-cancel {
+  background: #dc3545;
+  color: white;
+}

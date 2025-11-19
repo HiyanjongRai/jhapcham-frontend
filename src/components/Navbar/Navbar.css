@@ -216,6 +216,8 @@ input {
   flex-direction: column;
   gap: 6px;
   margin-bottom: 12px;
+  align-items: center;   /* CENTER ITEMS */
+  text-align: center;    /* CENTER TEXT */
 }
 
 .mobile-link {
@@ -224,10 +226,12 @@ input {
   padding: 8px 0;
   font-size: 15px;
   color: var(--gray-dark);
-  text-align: left;
   cursor: pointer;
   transition: 0.15s;
+  width: 100%;
+  text-align: center;    /* CENTER TEXT */
 }
+
 
 .mobile-link:hover {
   color: var(--black);
@@ -236,20 +240,40 @@ input {
 /* ========== SMALL COMPACT SELLER BUTTON FOR MOBILE ========== */
 .mobile-seller-btn {
   padding: 8px 16px;
-  width: auto;
-  display: inline-block;
   border-radius: 999px;
   border: 1px solid var(--black);
   background: var(--black);
   color: var(--white);
   font-size: 14px;
   cursor: pointer;
+  display: flex;             /* Center content */
+  justify-content: center;
+  align-items: center;
+  margin: 10px auto;         /* <-- THIS CENTERS IT */
+  width: fit-content;        /* Avoid stretching */
 }
+
 
 .mobile-seller-btn:hover {
   background: var(--white);
   color: var(--black);
 }
+
+.cart-btn {
+  position: relative;
+}
+
+.cart-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: red;
+  color: white;
+  font-size: 12px;
+  padding: 2px 5px;
+  border-radius: 50%;
+}
+
 
 /* Extra small screens */
 @media (max-width: 460px) {
@@ -287,3 +311,8 @@ input {
   }
 }
 
+@media (max-width: 640px) {
+    .nav {
+    padding: 0 12px;
+    }
+}

@@ -1,7 +1,14 @@
 // src/components/productGrid/ProductGrid.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ProductCard from "../productCard/ProductCard";
 import "./ProjectGrind.css";
+
+import {
+  getCurrentUserId,
+  addToGuestCart,
+  apiAddToCart,
+} from "../AddCart/cartUtils";
 
 const API_BASE = "http://localhost:8080";
 
@@ -13,6 +20,10 @@ function ProductGrid() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("newest");
+
+  const navigate = useNavigate();
+  const userId = getCurrentUserId();
+  const isLoggedIn = !!userId;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -80,6 +91,24 @@ function ProductGrid() {
     return list;
   }, [products, search, categoryFilter, sortBy]);
 
+  const handleAddToCart = async (product, quantity = 1) => {
+    try {
+      if (!isLoggedIn) {
+        // Guest user -> localStorage
+        addToGuestCart(product, quantity);
+      } else {
+        // Logged in -> Spring Boot API
+        await apiAddToCart(userId, product.id, quantity);
+      }
+
+      // After adding, go to cart page
+      navigate("/cart");
+    } catch (err) {
+      console.error("Error adding to cart", err);
+      alert(err.message || "Unable to add to cart");
+    }
+  };
+
   if (loading) return <div className="products-loading">Loading...</div>;
   if (error) return <div className="products-error">Error: {error}</div>;
 
@@ -130,7 +159,11 @@ function ProductGrid() {
 
       <div className="products-grid">
         {filteredProducts.map((p) => (
-          <ProductCard key={p.id} product={p} />
+          <ProductCard
+            key={p.id}
+            product={p}
+            onAddToCart={() => handleAddToCart(p, 1)}
+          />
         ))}
       </div>
     </div>

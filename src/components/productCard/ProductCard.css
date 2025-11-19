@@ -1,13 +1,9 @@
-/* src/components/productCard/ProductCard.css */
 
-/* Card container */
 .pc-card {
-  /* width removed so parent (grid) controls size */
-  /* max-width removed so flex/grid can size cards */
-  background: #ffffff;
   border-radius: 16px;
   padding: 14px;
   display: flex;
+  background-color: rgb(208, 208, 208);
   flex-direction: column;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -90,7 +86,12 @@
   color: #555;
   line-height: 1.4;
   margin: 0;
+  height: 60px; 
+  overflow: hidden;
+  display: block;
 }
+
+
 
 /* Rating */
 .pc-rating-row {
@@ -187,4 +188,33 @@
   .pc-image-shell {
     height: 180px;
   }
+}
+
+.pc-chip-sale {
+  background: #e53935;
+  color: #fff;
+  font-weight: 600;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.pc-price-sale {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-right: 6px;
+}
+
+.pc-price-original {
+  font-size: 0.9rem;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+
+.pc-card {
+  cursor: pointer;
+}
+.pc-card .pc-btn {
+  cursor: pointer;
 }
