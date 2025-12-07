@@ -7,6 +7,8 @@ import {
   faCartArrowDown,
   faList,
 } from "@fortawesome/free-solid-svg-icons";
+import { MessageCircle } from "lucide-react";
+import { API_BASE } from "../config/config";
 
 const navLinks = [
   { label: "Shop", labelKey: "Shop", path: "/" },
@@ -19,6 +21,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [underlineStyle, setUnderlineStyle] = useState({});
   const [cartCount, setCartCount] = useState(0);
+  const [messageCount, setMessageCount] = useState(0);
   const linksRef = useRef([]);
   const navigate = useNavigate();
 
@@ -42,6 +45,39 @@ const Navbar = () => {
     window.addEventListener("cart-updated", handleUpdate);
     return () => window.removeEventListener("cart-updated", handleUpdate);
   }, []);
+
+  // Load message count (unread only)
+  useEffect(() => {
+    const loadMessageCount = async () => {
+      if (!encodedId) return;
+
+      try {
+        const userId = atob(encodedId);
+        const response = await fetch(`${API_BASE}/api/messages/receiver/${userId}`);
+        if (response.ok) {
+          const messages = await response.json();
+          // Count only UNREAD messages (where isRead is false or undefined)
+          const unreadCount = messages.filter(msg => !msg.isRead).length;
+          setMessageCount(unreadCount);
+        }
+      } catch (error) {
+        console.error("Failed to load message count:", error);
+      }
+    };
+
+    loadMessageCount();
+    
+    // Refresh message count every 30 seconds
+    const interval = setInterval(loadMessageCount, 30000);
+    
+    // Listen for manual refresh events (when user reads messages)
+    window.addEventListener('messages-updated', loadMessageCount);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('messages-updated', loadMessageCount);
+    };
+  }, [encodedId]);
 
   const toggleMobileMenu = () => setMobileOpen(!mobileOpen);
 
@@ -93,24 +129,17 @@ const Navbar = () => {
           {/* NOT LOGGED IN */}
           {!isLoggedIn && (
             <>
-              <button
-                className="seller-btn"
-                onClick={() => navigate("/seller/register")}
-              >
-                Become Seller
-              </button>
-
               <button className="icon-btn cart-btn" onClick={() => navigate("/cart")}>
                 <FontAwesomeIcon icon={faCartArrowDown} />
                 {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
               </button>
 
-              <button className="icon-btn" onClick={() => navigate("/signup")}>
-                <FontAwesomeIcon icon={faUser} />
+              <button className="seller-btn" onClick={() => navigate("/seller/register")}>
+                Become Seller
               </button>
 
-              <button className="nav-mobile-toggle" onClick={toggleMobileMenu}>
-                <FontAwesomeIcon icon={faList} />
+              <button className="logout-btn" onClick={() => navigate("/signup")}>
+                Sign Up
               </button>
             </>
           )}
@@ -123,10 +152,19 @@ const Navbar = () => {
                 {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
               </button>
 
-              <button className="icon-btn" onClick={() => navigate("/customer/dashboard")}>
-                <FontAwesomeIcon icon={faUser} />
+              <button 
+                className="icon-btn cart-btn" 
+                onClick={() => navigate("/messages")}
+                title="Messages"
+              >
+                <MessageCircle size={20} />
+                {messageCount > 0 && <span className="cart-count">{messageCount}</span>}
               </button>
 
+              <button className="nav-link" onClick={() => navigate("/customer/dashboard")}>
+                Dashboard
+              </button>
+              
               <button className="logout-btn" onClick={handleLogout}>
                 Logout
               </button>
@@ -136,9 +174,19 @@ const Navbar = () => {
           {/* SELLER */}
           {isLoggedIn && role === "SELLER" && (
             <>
-              <button className="nav-link" onClick={() => navigate("/seller/dashboard")}>
-                Seller Dashboard
+              <button 
+                className="icon-btn cart-btn" 
+                onClick={() => navigate("/messages")}
+                title="Messages"
+              >
+                <MessageCircle size={20} />
+                {messageCount > 0 && <span className="cart-count">{messageCount}</span>}
               </button>
+
+              <button className="nav-link" onClick={() => navigate("/seller/dashboard")}>
+                Dashboard
+              </button>
+              
               <button className="logout-btn" onClick={handleLogout}>
                 Logout
               </button>
@@ -149,8 +197,9 @@ const Navbar = () => {
           {isLoggedIn && role === "ADMIN" && (
             <>
               <button className="nav-link" onClick={() => navigate("/admin/dashboard")}>
-                Admin Panel
+                Dashboard
               </button>
+              
               <button className="logout-btn" onClick={handleLogout}>
                 Logout
               </button>

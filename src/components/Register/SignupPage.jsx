@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import "./SignupPage.css";
+import { Link } from "react-router-dom";
 import { API_BASE } from "../config/config";
-import { Link } from "react-router-dom"
+import "../Login/Auth.css"; // Reuse Auth CSS
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -37,7 +37,6 @@ const SignupPage = () => {
       if (response.ok) {
         setMessage("Account created successfully!");
         setMessageType("success");
-        // Optional: redirect after 2 seconds
         setTimeout(() => window.location.href = "/login", 2000);
       } else {
         setMessage(data.message || "Registration failed. Try again.");
@@ -46,92 +45,86 @@ const SignupPage = () => {
     } catch (error) {
       setMessage("Server error. Try again later.");
       setMessageType("error");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="signup-page">
-      <main className="main">
-        <div className="main-inner">
+    <div className="auth-container">
+      <div className="auth-card">
+        <h1 className="auth-title">Create Account</h1>
+        <p className="auth-subtitle">Join us to start shopping</p>
 
-          {/* Left illustration */}
-          <section className="hero-card">
-            <div className="hero-art">
-              <div className="phone"></div>
-              <div className="cart"></div>
-              <div className="shopping-bags">
-                <div className="bag bag-small" />
-                <div className="bag bag-medium" />
-              </div>
-            </div>
-          </section>
+        {message && (
+          <div className={`auth-message ${messageType === "error" ? "auth-error" : "auth-success"}`}>
+            {message}
+          </div>
+        )}
 
-          {/* Signup form */}
-          <section className="form-card">
-            <h1>Create an account</h1>
-            <p className="form-subtitle">Enter your details below</p>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="auth-input-group">
+            <label className="auth-label">Full Name</label>
+            <input
+              className="auth-input"
+              type="text"
+              name="fullName"
+              placeholder="Enter your full name"
+              value={formData.fullName}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-            {message && (
-              <p className={`signup-message ${messageType}`}>
-                {message}
-              </p>
-            )}
+          <div className="auth-input-group">
+            <label className="auth-label">Username</label>
+            <input
+              className="auth-input"
+              type="text"
+              name="username"
+              placeholder="Choose a username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-            <form className="signup-form" onSubmit={handleSubmit}>
-              <input
-                type="text"
-                name="username"
-                placeholder="Username"
-                value={formData.username}
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Full Name"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
+          <div className="auth-input-group">
+            <label className="auth-label">Email Address</label>
+            <input
+              className="auth-input"
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-              <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? "Creating..." : "Create Account"}
-              </button>
+          <div className="auth-input-group">
+            <label className="auth-label">Password</label>
+            <input
+              className="auth-input"
+              type="password"
+              name="password"
+              placeholder="Create a password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-              <button type="button" className="btn-google">
-                <span className="google-icon">G</span>
-                <span>Sign up with Google</span>
-              </button>
-            </form>
+          <button type="submit" className="auth-btn" disabled={loading}>
+            {loading ? "Creating Account..." : "Sign Up"}
+          </button>
+        </form>
 
-            <p className="login-text">
-  Already have an account?{" "}
-  <Link to="/login" className="login-link">
-    Log in
-  </Link>
-</p>
-          </section>
+        <div className="auth-footer">
+          Already have an account?
+          <Link to="/login" className="auth-link">Log in</Link>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

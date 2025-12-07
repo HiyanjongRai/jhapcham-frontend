@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { API_BASE } from "../config/config";
 import { mergeGuestCartIntoUser } from "../AddCart/cartUtils";
-
-import "./SignupPage.css";
+import "./Auth.css";
 
 function encodeUserId(userId) {
   return window.btoa(String(userId));
@@ -58,10 +57,7 @@ const LoginPage = () => {
         return;
       }
 
-      console.log("Logged in userId =", userId);
-
       const roleForRouting = role.toUpperCase().replace(/^ROLE_/, "");
-
       const encodedId = encodeUserId(userId);
       localStorage.setItem("userId", encodedId);
       localStorage.setItem("userRole", roleForRouting);
@@ -73,9 +69,6 @@ const LoginPage = () => {
         try {
           const statusRes = await fetch(`${API_BASE}/api/seller/application/${userId}`);
           const statusData = await statusRes.json();
-
-          console.log("Seller status API =", statusData);
-
           const status = statusData.status?.toUpperCase();
           const note = statusData.note || "No note";
 
@@ -85,7 +78,6 @@ const LoginPage = () => {
             return;
           }
 
-          
           if (status === "APPROVED") {
             navigate("/seller/dashboard", { replace: true });
             return;
@@ -108,52 +100,56 @@ const LoginPage = () => {
     } catch (err) {
       console.error("Login error:", err);
       setMessage("Server error. Try again later.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="signup-page">
-      <main className="main">
-        <div className="main-inner">
-          <section className="form-card">
-            <h1>Login</h1>
-            <p className="form-subtitle">Enter your login credentials</p>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h1 className="auth-title">Welcome Back</h1>
+        <p className="auth-subtitle">Please sign in to your account</p>
 
-            {message && <p className="signup-message">{message}</p>}
+        {message && <div className="auth-message auth-error">{message}</div>}
 
-            <form className="signup-form" onSubmit={handleSubmit}>
-              <input
-                type="text"
-                name="usernameOrEmail"
-                placeholder="Username or Email"
-                value={formData.usernameOrEmail}
-                onChange={handleChange}
-                required
-              />
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="auth-input-group">
+            <label className="auth-label">Username or Email</label>
+            <input
+              className="auth-input"
+              type="text"
+              name="usernameOrEmail"
+              placeholder="Enter your username or email"
+              value={formData.usernameOrEmail}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
+          <div className="auth-input-group">
+            <label className="auth-label">Password</label>
+            <input
+              className="auth-input"
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-              <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
-              </button>
-            </form>
+          <button type="submit" className="auth-btn" disabled={loading}>
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
 
-            <p className="login-text">
-              Don’t have an account?
-              <Link to="/signup" className="login-link">Sign up</Link>
-            </p>
-          </section>
+        <div className="auth-footer">
+          Don't have an account?
+          <Link to="/signup" className="auth-link">Sign up</Link>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

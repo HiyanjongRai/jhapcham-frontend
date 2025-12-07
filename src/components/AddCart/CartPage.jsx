@@ -1,4 +1,3 @@
-// src/cart/CartPage.jsx
 import React, { useEffect, useState } from "react";
 import {
   getCurrentUserId,
@@ -6,7 +5,7 @@ import {
   saveGuestCart,
   apiGetCart,
   apiUpdateQuantity,
-  apiRemoveItem,
+  apiRemoveItem
 } from "./cartUtils";
 import "./CartPage.css";
 
@@ -20,7 +19,7 @@ function CartPage() {
   const isLoggedIn = !!userId;
 
   const recalcTotal = (list) =>
-    list.reduce((sum, i) => sum + (i.lineTotal || 0), 0);
+    list.reduce((sum, i) => sum + i.lineTotal, 0);
 
   const loadCart = async () => {
     try {
@@ -47,45 +46,99 @@ function CartPage() {
     loadCart();
   }, [isLoggedIn, userId]);
 
-  const handleQtyChange = async (productId, newQty) => {
+  /* INSTANT QTY UPDATE (NO FULL RELOAD) */
+
+  const handleQtyChange = async (item, newQty) => {
     if (newQty <= 0) return;
 
-    try {
-      if (isLoggedIn) {
-        await apiUpdateQuantity(userId, productId, newQty);
-        await loadCart();
-      } else {
-        const updated = items.map((i) =>
-          i.productId === productId
-            ? {
-                ...i,
-                quantity: newQty,
-                lineTotal: (i.unitPrice || 0) * newQty,
-              }
-            : i
+    if (isLoggedIn) {
+      try {
+        await apiUpdateQuantity(
+          userId,
+          item.productId,
+          newQty,
+          item.color || null,
+          item.storage || null
         );
-        setItems(updated);
-        setTotal(recalcTotal(updated));
-        saveGuestCart(updated);
+
+        /* Update instantly without reload */
+        setItems((prev) =>
+          prev.map((i) =>
+            i.productId === item.productId &&
+            i.color === item.color &&
+            i.storage === item.storage
+              ? {
+                  ...i,
+                  quantity: newQty,
+                  lineTotal: i.unitPrice * newQty
+                }
+              : i
+          )
+        );
+
+        setTotal((prev) => {
+          const oldLine = item.lineTotal;
+          const newLine = item.unitPrice * newQty;
+          return prev - oldLine + newLine;
+        });
+      } catch (e) {
+        alert(e.message || "Unable to update quantity");
       }
-    } catch (e) {
-      alert(e.message || "Unable to update quantity");
+    } else {
+      /* Guest user */
+      const updated = items.map((i) =>
+        i.productId === item.productId &&
+        i.color === item.color &&
+        i.storage === item.storage
+          ? { ...i, quantity: newQty, lineTotal: i.unitPrice * newQty }
+          : i
+      );
+      setItems(updated);
+      setTotal(recalcTotal(updated));
+      saveGuestCart(updated);
     }
   };
 
-  const handleRemove = async (productId) => {
-    try {
-      if (isLoggedIn) {
-        await apiRemoveItem(userId, productId);
-        await loadCart();
-      } else {
-        const updated = items.filter((i) => i.productId !== productId);
-        setItems(updated);
-        setTotal(recalcTotal(updated));
-        saveGuestCart(updated);
+  /* INSTANT REMOVE (NO RELOAD) */
+
+  const handleRemove = async (item) => {
+    if (isLoggedIn) {
+      try {
+        await apiRemoveItem(
+          userId,
+          item.productId,
+          item.color || null,
+          item.storage || null
+        );
+
+        /* Update instantly */
+        setItems((prev) =>
+          prev.filter(
+            (i) =>
+              !(
+                i.productId === item.productId &&
+                i.color === item.color &&
+                i.storage === item.storage
+              )
+          )
+        );
+
+        setTotal((prev) => prev - item.lineTotal);
+      } catch (e) {
+        alert(e.message || "Unable to remove item");
       }
-    } catch (e) {
-      alert(e.message || "Unable to remove item");
+    } else {
+      const updated = items.filter(
+        (i) =>
+          !(
+            i.productId === item.productId &&
+            i.color === item.color &&
+            i.storage === item.storage
+          )
+      );
+      setItems(updated);
+      setTotal(recalcTotal(updated));
+      saveGuestCart(updated);
     }
   };
 
@@ -93,86 +146,100 @@ function CartPage() {
   if (error) return <div className="cart-error">{error}</div>;
 
   return (
-    <div className="cart-page">
-      <h1 className="cart-header">CART</h1>
+    <div className="cart-wrapper">
+      <div className="cart-left">
+        {items.map((item) => (
+          <div
+            key={`${item.productId}-${item.color}-${item.storage}`}
+            className="cart-box"
+          >
+            <div className="item-info">
+              <img
+                src={
+                  item.imagePath
+                    ? `http://localhost:8080${item.imagePath}`
+                    : "https://via.placeholder.com/130x130?text=Product"
+                }
+                alt={item.name}
+                className="item-img"
+              />
 
-      {items.length === 0 ? (
-        <p>Your cart is empty.</p>
-      ) : (
-        <>
-          <div className="cart-list">
-            {items.map((item) => (
-              <div key={item.productId} className="cart-row">
-                <div className="cart-item-main">
+              <div className="item-text">
+                <div className="item-title">{item.name}</div>
 
-                  {/* FIXED IMAGE PATH */}
-                  <img
-                    src={
-                      item.imagePath
-                        ? `http://localhost:8080${item.imagePath}`
-                        : "https://via.placeholder.com/140x100?text=Product"
-                    }
-                    alt={item.name}
-                    className="cart-item-image"
-                  />
-
-                  <div className="cart-item-info">
-                    <div className="cart-item-name">{item.name}</div>
-                    <button
-                      className="cart-remove-link"
-                      onClick={() => handleRemove(item.productId)}
-                    >
-                      Remove
-                    </button>
-                  </div>
+                <div className="item-tags">
+                  {item.brand && <span>{item.brand}</span>}
+                  {item.category && <span>{item.category}</span>}
                 </div>
 
-                <div className="cart-cell cart-price">
-                  ${item.unitPrice?.toFixed(2)}
-                </div>
+                {item.color && (
+                  <div className="item-attr">Color: {item.color}</div>
+                )}
+                {item.storage && (
+                  <div className="item-attr">Storage: {item.storage}</div>
+                )}
 
-                <div className="cart-cell cart-qty">
-                  <button
-                    className="qty-btn"
-                    onClick={() =>
-                      handleQtyChange(item.productId, item.quantity - 1)
-                    }
-                  >
-                    –
-                  </button>
-                  <span className="qty-value">{item.quantity}</span>
-                  <button
-                    className="qty-btn"
-                    onClick={() =>
-                      handleQtyChange(item.productId, item.quantity + 1)
-                    }
-                  >
-                    +
-                  </button>
-                </div>
-
-                <div className="cart-cell cart-line-total">
-                  ${item.lineTotal?.toFixed(2)}
-                </div>
+                <button className="remove-btn" onClick={() => handleRemove(item)}>
+                  Remove
+                </button>
               </div>
-            ))}
-          </div>
-
-          <div className="cart-summary">
-            <div className="summary-row">
-              <span>Grand total:</span>
-              <span>${total.toFixed(2)}</span>
             </div>
 
-            <button
-              className="checkout-btn"
-              onClick={() => (window.location.href = "/checkout")}
-            >
-              PROCEED TO CHECKOUT
-            </button>
+            <div className="item-price">${item.unitPrice.toFixed(2)}</div>
+
+            <div className="item-qty">
+              <button
+                onClick={() => handleQtyChange(item, item.quantity - 1)}
+                className="qty-button"
+              >
+                -
+              </button>
+              <span>{item.quantity}</span>
+              <button
+                onClick={() => handleQtyChange(item, item.quantity + 1)}
+                className="qty-button"
+              >
+                +
+              </button>
+            </div>
+
+            <div className="item-total">${item.lineTotal.toFixed(2)}</div>
           </div>
-        </>
-      )}
+        ))}
+      </div>
+
+      <div className="cart-right">
+        <div className="summary-box">
+          <div className="summary-row">
+            <span>Total Items</span>
+            <span>{items.length}</span>
+          </div>
+
+          <div className="summary-row">
+            <span>Subtotal</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+
+          <div className="summary-row grand">
+            <span>Grand Total</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+
+          <button
+            className="checkout-button"
+            onClick={() => (window.location.href = "/checkout")}
+          >
+            Proceed to Checkout
+          </button>
+
+          <button
+            className="continue-button"
+            onClick={() => (window.location.href = "/index")}
+          >
+            Continue Shopping
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -72,6 +72,28 @@ export default function NotificationList() {
               <strong>{n.stage}</strong>
               <p>{customMessage}</p>
               <small>{new Date(n.updateTime).toLocaleString()}</small>
+
+              {n.stage === "DELIVERED" && (
+                <button
+                  style={{
+                    marginTop: "10px",
+                    padding: "8px 16px",
+                    backgroundColor: "#000",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    display: "block"
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    localStorage.setItem("reviewOrderId", n.orderId);
+                    navigate("/review");
+                  }}
+                >
+                  Write a Review
+                </button>
+              )}
             </div>
           );
         })

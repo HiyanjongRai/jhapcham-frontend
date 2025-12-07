@@ -15,15 +15,41 @@ import CheckoutPage from "./components/Checkout/CheckoutPage";
 import OrderSuccess from "./components/Oder/OrderSuccess.jsx";
 import SellerOrders from "./components/Seller/SellerOrders";
 import NotificationList from "./components/NotificationPage/NotificationList";
-import ReviewForm from "./components/Review/ReviewForm.jsx";  
+import ReviewForm from "./components/Review/ReviewForm.jsx";
+import WishlistPage from "./components/WishlistPage/WishlistPage.jsx";
+import AddProduct from "./components/Seller/AddProductPage.jsx";
+import UpdateAccount from "./components/Customer/UpdateAccount.jsx";
+import ProductManagement from "./components/Seller/ProductManagement.jsx";
+import MessagesPage from "./components/Message/MessagesPage.jsx";
+import OnSalePage from "./components/Collections/OnSalePage.jsx";
+import NewArrivalsPage from "./components/Collections/NewArrivalsPage.jsx";
+import BrandsPage from "./components/Collections/BrandsPage.jsx";
 
+import SellerProfilePage from "./components/Seller/SellerProfilePage.jsx";
+import SellerSettings from "./components/Seller/SellerSettings.jsx";
+
+// Error Pages
+import { 
+  NotFoundPage, 
+  ForbiddenPage, 
+  ServerErrorPage, 
+  NetworkErrorPage,
+  BackendDownPage,
+  AllErrorsPage
+} from "./components/ErrorPage/ErrorPage.jsx";
+
+// Error Boundary
+import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary.jsx";
 
 function App() {
+
   return (
-    <>
+    <ErrorBoundary>
       <Navbar />
 
       <Routes>
+
+        {/* Home */}
         <Route path="/" element={<ProductGrid />} />
 
         {/* Auth */}
@@ -36,28 +62,60 @@ function App() {
         {/* Customer */}
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
 
-        {/* Seller */}
+        {/* Seller Dashboard Routes */}
         <Route path="/seller/orders" element={<SellerOrders />} />
-
         <Route path="/seller/dashboard" element={<SellerDashboard />} />
         <Route path="/seller/register" element={<SellerRegister />} />
         <Route path="/seller-application" element={<SellerApplication />} />
 
-        {/* Products */}
+        {/* Product Details */}
         <Route path="/products/:id" element={<ProductDetailPage />} />
 
-<Route path="/checkout" element={<CheckoutPage />} />
-<Route path="/order-success" element={<OrderSuccess />} />
+        {/* Checkout */}
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
 
-        {/* Admin  */}
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        {/* Admin */}
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
+        {/* Account */}
+        <Route path="/update-account" element={<UpdateAccount />} />
 
-<Route path="/notification-list" element={<NotificationList />} />
-<Route path="/review" element={<ReviewForm />} />
+        {/* Notifications */}
+        <Route path="/notification-list" element={<NotificationList />} />
+        <Route path="/review" element={<ReviewForm />} />
+
+        {/* Wishlist */}
+        <Route path="/wishlist" element={<WishlistPage />} />
+
+        {/* Seller Product Management */}
+        <Route path="/seller/add-product" element={<AddProduct />} />
+        <Route path="/seller/products" element={<ProductManagement />} />
+        <Route path="/seller/settings" element={<SellerSettings />} />
+
+        {/* Messages */}
+        <Route path="/messages" element={<MessagesPage />} />
+
+        {/* Collections */}
+        <Route path="/on-sale" element={<OnSalePage />} />
+        <Route path="/new-arrivals" element={<NewArrivalsPage />} />
+        <Route path="/brands" element={<BrandsPage />} />
+
+        {/* NEW STATIC SELLER PROFILE PAGE */}
+        <Route path="/seller/:id" element={<SellerProfilePage />} />
+
+        {/* Error Pages */}
+        <Route path="/403" element={<ForbiddenPage />} />
+        <Route path="/500" element={<ServerErrorPage />} />
+        <Route path="/network-error" element={<NetworkErrorPage />} />
+        <Route path="/backend-down" element={<BackendDownPage />} />
+        <Route path="/error" element={<AllErrorsPage />} />
+        
+        {/* 404 - Must be last to catch all undefined routes */}
+        <Route path="*" element={<NotFoundPage />} />
 
       </Routes>
-    </>
+    </ErrorBoundary>
   );
 }
 

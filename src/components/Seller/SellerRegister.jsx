@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import "./SellerAuth.css";
+import { API_BASE } from "../config/config";
 
 export default function SellerRegister() {
   const navigate = useNavigate();
@@ -11,6 +13,7 @@ export default function SellerRegister() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,59 +22,95 @@ export default function SellerRegister() {
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
+    setMessage(null);
 
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/register/seller", form);
+      const res = await axios.post(`${API_BASE}/api/auth/register/seller`, form);
 
-      // Save encoded userId and role in localStorage
       const userId = res.data.userId;
       const role = res.data.role;
 
       localStorage.setItem("userId", btoa(String(userId)));
       localStorage.setItem("userRole", role);
 
-      alert(res.data.message || "Seller registered successfully!");
+      setMessage({ type: "success", text: "Registration successful! Redirecting..." });
 
-      // Redirect to seller application
-      navigate("/seller-application");
+      setTimeout(() => {
+        navigate("/seller-application");
+      }, 1500);
+
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Registration failed");
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Registration failed. Please try again."
+      });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="seller-register-container">
-      <h1>Seller Registration</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={form.username}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">{loading ? "Registering..." : "Register as Seller"}</button>
-      </form>
+    <div className="sa-container">
+      <div className="sa-card">
+        <h1 className="sa-title">Become a Seller</h1>
+        <p className="sa-subtitle">Create your seller account to start selling</p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="sa-form-group">
+            <label className="sa-label">Username</label>
+            <input
+              className="sa-input"
+              type="text"
+              name="username"
+              placeholder="Choose a username"
+              value={form.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="sa-form-group">
+            <label className="sa-label">Email Address</label>
+            <input
+              className="sa-input"
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="sa-form-group">
+            <label className="sa-label">Password</label>
+            <input
+              className="sa-input"
+              type="password"
+              name="password"
+              placeholder="Create a password"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {message && (
+            <div className={`sa-message ${message.type === "error" ? "sa-error" : "sa-success"}`}>
+              {message.text}
+            </div>
+          )}
+
+          <button type="submit" className="sa-btn" disabled={loading}>
+            {loading ? "Creating Account..." : "Register & Continue"}
+          </button>
+        </form>
+
+        <div style={{ textAlign: "center", marginTop: "1.5rem", fontSize: "0.9rem", color: "#666" }}>
+          Already have an account? <Link to="/login" style={{ color: "#000", fontWeight: "600" }}>Login here</Link>
+        </div>
+      </div>
     </div>
   );
 }

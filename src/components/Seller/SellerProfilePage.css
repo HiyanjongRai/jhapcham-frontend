@@ -1,0 +1,458 @@
+/* Wrapper */
+.spp-wrapper {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  font-family: Inter, sans-serif;
+  padding-bottom: 50px;
+}
+
+/* Loading */
+.spp-loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+/* Header */
+.spp-header {
+  background: #000;
+  color: #fff;
+  padding: 30px 0;
+  margin-bottom: 30px;
+}
+
+.spp-header-content {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.spp-logo-box {
+  width: 80px;
+  height: 80px;
+  background: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.spp-store-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spp-store-icon {
+  font-size: 32px;
+  color: #000;
+}
+
+.spp-header-info {
+  flex: 1;
+}
+
+.spp-title {
+  font-size: 28px;
+  margin: 0 0 6px 0;
+  font-weight: 700;
+}
+
+.spp-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.spp-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.star-full {
+  color: #f8d000;
+}
+
+.star-empty {
+  color: #555;
+}
+
+.spp-rating-text {
+  color: #ccc;
+}
+
+.spp-verified-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #4ade80;
+}
+
+.spp-follow-btn {
+  background: #fff;
+  border: none;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spp-follow-btn:hover {
+  background: #eee;
+}
+
+/* Layout */
+.spp-main-layout {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 20px;
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.spp-left-col {
+  flex: 2;
+  min-width: 300px;
+}
+
+.spp-right-col {
+  flex: 1;
+  min-width: 260px;
+}
+
+/* Card */
+.spp-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.spp-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+  margin-bottom: 15px;
+}
+
+.spp-card-header h3 {
+  font-size: 18px;
+  margin: 0;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spp-badge-black {
+  background: #000;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.spp-subtitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.spp-text {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+}
+
+.spp-info-row {
+  display: flex;
+  gap: 40px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.spp-info-col label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+}
+
+.spp-val {
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Stats */
+.spp-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.spp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 15px;
+}
+
+.spp-stat-box {
+  background: #f2f2f2;
+  text-align: center;
+  padding: 18px 10px;
+  border-radius: 4px;
+}
+
+.spp-stat-icon {
+  font-size: 20px;
+  color: #000;
+  margin-bottom: 8px;
+}
+
+.spp-stat-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000;
+}
+
+.spp-stat-label {
+  font-size: 12px;
+  color: #777;
+}
+
+/* Right Column Widgets */
+.spp-quick-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.spp-quick-stat-row.no-border {
+  border-bottom: none;
+}
+
+.spp-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spp-badge-dark {
+  background: #000;
+  color: #fff;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+/* Products */
+.spp-section-title {
+  max-width: 1200px;
+  margin: 40px auto 20px;
+  padding: 0 20px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.spp-products-grid {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.spp-prod-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.spp-prod-card:hover {
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
+}
+
+.spp-prod-img-wrap {
+  height: 220px;
+  background: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spp-prod-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spp-prod-details {
+  padding: 12px 14px;
+}
+
+.spp-prod-name {
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 0 6px 0;
+}
+
+.spp-prod-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: #000;
+  margin-bottom: 6px;
+}
+
+.ml-1 {
+  margin-left: 4px;
+}
+
+.spp-prod-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+}
+
+.spp-no-products {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 30px;
+  color: #777;
+}
+
+/* Reviews */
+.spp-reviews-list {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 20px;
+}
+
+.spp-write-review-btn-row {
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.spp-black-btn {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spp-review-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+.spp-review-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.spp-reviewer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spp-avatar-small {
+  width: 40px;
+  height: 40px;
+  background: #ddd;
+  border-radius: 50%;
+}
+
+.spp-reviewer-name {
+  font-weight: 700;
+}
+
+.spp-review-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.spp-review-text {
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}
+
+.spp-load-more {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.spp-outline-btn {
+  background: transparent;
+  border: 1px solid #000;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.spp-outline-btn:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .spp-header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .spp-main-layout {
+    flex-direction: column;
+  }
+
+  .spp-info-row {
+    flex-direction: column;
+    gap: 20px;
+  }
+}

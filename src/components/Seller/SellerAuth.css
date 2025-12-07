@@ -1,0 +1,134 @@
+/* SellerAuth.css */
+.sa-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f4f6;
+    padding: 2rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.sa-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px;
+}
+
+.sa-title {
+    font-size: 1.875rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.sa-subtitle {
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+}
+
+.sa-form-group {
+    margin-bottom: 1.25rem;
+}
+
+.sa-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.sa-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.sa-input:focus {
+    border-color: #000;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.sa-file-input-wrapper {
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f9fafb;
+}
+
+.sa-file-input-wrapper:hover {
+    border-color: #9ca3af;
+    background: #f3f4f6;
+}
+
+.sa-btn {
+    width: 100%;
+    padding: 0.875rem;
+    background-color: #000;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 1rem;
+}
+
+.sa-btn:hover {
+    background-color: #1f2937;
+    transform: translateY(-1px);
+}
+
+.sa-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.sa-message {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.sa-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.sa-success {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.sa-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 2rem 0;
+}
+
+.sa-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f3f4f6;
+}

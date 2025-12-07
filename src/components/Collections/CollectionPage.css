@@ -1,0 +1,203 @@
+/* CollectionPage.css - Shared styles for On Sale, New Arrivals, Brands pages */
+
+.collection-page {
+  min-height: 100vh;
+  background: #ffffff;
+  padding: 2rem 1rem;
+}
+
+.collection-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.collection-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.collection-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.collection-header p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.collection-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.collection-count {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.collection-count strong {
+  color: #000;
+  font-weight: 600;
+}
+
+.collection-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.collection-sort label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.collection-sort select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.collection-sort select:hover {
+  border-color: #000;
+}
+
+.collection-sort select:focus {
+  outline: none;
+  border-color: #000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.collection-loading {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.collection-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.collection-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.collection-empty h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000;
+  margin: 0 0 0.5rem;
+}
+
+.collection-empty p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 1.5rem;
+}
+
+.collection-empty-btn {
+  display: inline-block;
+  padding: 0.875rem 2rem;
+  background: #000;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.collection-empty-btn:hover {
+  background: #222;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Brand Grid Specific */
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.brand-card {
+  background: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.brand-card:hover {
+  border-color: #000;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.brand-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #000;
+  margin: 0 0 0.5rem;
+}
+
+.brand-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .collection-page {
+    padding: 1rem;
+  }
+
+  .collection-header h1 {
+    font-size: 2rem;
+  }
+
+  .collection-filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .collection-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+
+  .brand-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+}
