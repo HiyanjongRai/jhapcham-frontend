@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { API_BASE } from "../config/config";
 import ProductCard from "../productCard/ProductCard";
 import ErrorToast from "../ErrorToast/ErrorToast";
+import { apiAddToCart, getCurrentUserId } from "../AddCart/cartUtils";
 import "./CollectionPage.css";
 
 export default function NewArrivalsPage() {
@@ -22,10 +23,18 @@ export default function NewArrivalsPage() {
       const response = await fetch(`${API_BASE}/api/products`);
       const data = await response.json();
       
+      // Map to frontend format
+      const mapped = data.map(dto => ({
+        ...dto,
+        imagePath: dto.imagePaths && dto.imagePaths.length > 0 ? dto.imagePaths[0] : (dto.imagePath || ""),
+        rating: dto.averageRating || 0,
+        stock: dto.stockQuantity || 0,
+      }));
+
       // Filter for newest products (e.g., last 30 days or top 20 newest)
-      const activeProducts = data.filter(product => 
-        product.status === "ACTIVE" && 
-        product.visible === true
+      const activeProducts = mapped.filter(product => 
+        product.status === "ACTIVE" 
+        // && product.visible === true
       );
       
       // Sort by ID (newest first) and take top 20
@@ -54,65 +63,6 @@ export default function NewArrivalsPage() {
       case "newest":
       default:
         return sorted.sort((a, b) => b.id - a.id);
-    }
-  };
-
-  const addToCart = async (product) => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      setError(null);
-      const decodedId = atob(userId);
-      const url = `${API_BASE}/api/cart/add`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: parseInt(decodedId),
-          productId: product.id,
-          quantity: 1,
-        }),
-      });
-
-      if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          setError({
-            status: response.status,
-            message: errorData.message || 'Failed to add to cart',
-            details: errorData.details || errorData.error || response.statusText,
-            errors: errorData.errors || {},
-            timestamp: errorData.timestamp || new Date().toISOString(),
-            path: errorData.path || url,
-            trace: errorData.trace
-          });
-        } catch (e) {
-          setError({
-            status: response.status,
-            message: 'Failed to add to cart',
-            details: await response.text().catch(() => 'Unknown error'),
-            timestamp: new Date().toISOString(),
-            path: url
-          });
-        }
-        return;
-      }
-
-      const currentCount = Number(localStorage.getItem("cartCount")) || 0;
-      localStorage.setItem("cartCount", currentCount + 1);
-      window.dispatchEvent(new Event("cart-updated"));
-    } catch (err) {
-      console.error("Failed to add to cart:", err);
-      setError({
-        status: 500,
-        message: "Failed to Add Item",
-        details: err.message || "An unexpected error occurred",
-        timestamp: new Date().toISOString()
-      });
     }
   };
 
@@ -163,7 +113,6 @@ export default function NewArrivalsPage() {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  onAddToCart={() => addToCart(product)}
                 />
               ))}
             </div>

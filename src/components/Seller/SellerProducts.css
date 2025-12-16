@@ -1,83 +1,97 @@
-/* SellerProducts.css */
+/* SellerProducts.css - Black & White Edition */
 .sp-container {
-  padding: 2rem;
+  padding: 40px;
   max-width: 1400px;
   margin: 0 auto;
-  font-family: 'Inter', sans-serif;
-  color: #1f2937;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #111;
+  background-color: #fff;
+  min-height: 100vh;
 }
 
 .sp-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #000;
 }
 
 .sp-title {
-  font-size: 1.875rem;
+  font-size: 2rem;
   font-weight: 800;
-  color: #111827;
+  color: #000;
   margin: 0;
+  letter-spacing: -1px;
 }
 
 .sp-subtitle {
-  color: #6b7280;
-  margin-top: 0.5rem;
+  color: #666;
+  margin-top: 8px;
+  font-size: 0.95rem;
 }
 
 .sp-add-btn {
   background: #000;
   color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-weight: 700;
+  border: 2px solid #000;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   transition: all 0.2s;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
 }
 
 .sp-add-btn:hover {
-  background: #1f2937;
-  transform: translateY(-1px);
+  background: #fff;
+  color: #000;
 }
 
 .sp-controls {
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
   display: flex;
-  gap: 1rem;
+  gap: 16px;
 }
 
 .sp-filter-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
+  padding: 8px 16px;
+  border: 1px solid #000;
   background: white;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
-  color: #374151;
+  font-size: 0.85rem;
+  color: #000;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  font-weight: 600;
+  gap: 8px;
+  text-transform: uppercase;
+}
+
+.sp-filter-btn:hover {
+  background: #f5f5f5;
 }
 
 .sp-filter-btn.active {
-  background: #fee2e2;
-  border-color: #fecaca;
-  color: #991b1b;
+  background: #000;
+  color: #fff;
 }
 
-/* Table Styles */
+/* Table Styles - Minimalist Black & White */
 .sp-table-wrapper {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  /* box-shadow removed for flat monochrome look, added border */
+  border: 1px solid #000;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
 }
 
 .sp-table {
@@ -87,19 +101,22 @@
 }
 
 .sp-table th {
-  background: #f9fafb;
-  padding: 1rem;
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.875rem;
-  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 16px;
+  font-weight: 800;
+  color: #000;
+  font-size: 0.8rem;
+  border-bottom: 2px solid #000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .sp-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 16px;
+  border-bottom: 1px solid #ededed;
   vertical-align: middle;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  color: #333;
 }
 
 .sp-table tr:last-child td {
@@ -107,82 +124,113 @@
 }
 
 .sp-table tr:hover {
-  background: #f9fafb;
+  background: #fafafa;
 }
 
-/* Product Info in Table */
+/* Product Info */
 .sp-product-cell {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 16px;
 }
 
 .sp-product-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
   object-fit: cover;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  background: #f0f0f0;
+  border: 1px solid #e0e0e0;
 }
 
 .sp-product-name {
-  font-weight: 600;
-  color: #111827;
+  font-weight: 700;
+  color: #000;
+  font-size: 0.95rem;
 }
 
 .sp-product-brand {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #666;
+  text-transform: uppercase;
+  margin-top: 2px;
+  font-weight: 500;
 }
 
-/* Badges */
+/* Badges - Monochrome */
 .sp-badge {
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 4px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   display: inline-block;
+  text-transform: uppercase;
+  border: 1px solid transparent;
 }
 
-.sp-badge-success { background: #dcfce7; color: #166534; }
-.sp-badge-warning { background: #fef3c7; color: #92400e; }
-.sp-badge-danger { background: #fee2e2; color: #991b1b; }
-.sp-badge-gray { background: #f3f4f6; color: #374151; }
+.sp-badge-success { 
+  background: #000; 
+  color: #fff; 
+}
+
+.sp-badge-warning { 
+  background: #fff; 
+  color: #000; 
+  border-color: #000; 
+}
+
+.sp-badge-danger { 
+  background: #fff; 
+  color: #000; 
+  border-color: #000;
+  text-decoration: line-through; 
+}
+
+.sp-badge-gray { 
+  background: #f5f5f5; 
+  color: #666; 
+  border-color: #ddd;
+}
 
 /* Actions */
 .sp-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .sp-action-btn {
-  padding: 0.4rem;
-  border: 1px solid #e5e7eb;
+  padding: 8px;
+  border: 1px solid #ccc;
   background: white;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  color: #4b5563;
+  color: #000;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sp-action-btn:hover {
-  background: #f3f4f6;
-  color: #111827;
-  border-color: #d1d5db;
+  background: #000;
+  color: #fff;
+  border-color: #000;
 }
 
 .sp-action-btn.delete:hover {
-  background: #fee2e2;
-  color: #991b1b;
-  border-color: #fecaca;
+  background: #000;
+  color: #fff;
+  border-color: #000;
 }
 
 /* Empty State */
 .sp-empty {
-  padding: 4rem;
+  padding: 80px 0;
   text-align: center;
-  color: #6b7280;
+  color: #000;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* Modal Overlay */
@@ -192,42 +240,71 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.9); /* White overlay instead of black */
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 2000;
 }
 
 .sp-modal {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  max-width: 400px;
+  background: #000; /* Black modal */
+  color: #fff;
+  padding: 32px;
+  border-radius: 8px;
+  max-width: 440px;
   width: 100%;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+.sp-modal h3 {
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.sp-modal p {
+  color: #ccc;
+  margin-bottom: 24px;
 }
 
 .sp-modal-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  justify-content: flex-end;
+  gap: 16px;
+  justify-content: center;
 }
 
 .sp-btn-secondary {
-  padding: 0.5rem 1rem;
-  background: white;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid #fff;
+  color: #fff;
+  border-radius: 4px;
   cursor: pointer;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  font-size: 0.8rem;
+}
+
+.sp-btn-secondary:hover {
+  background: rgba(255,255,255,0.1);
 }
 
 .sp-btn-danger {
-  padding: 0.5rem 1rem;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 10px 24px;
+  background: #fff;
+  color: #000;
+  border: none; /* No border for primary action in modal */
+  border-radius: 4px;
   cursor: pointer;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  font-size: 0.8rem;
+}
+
+.sp-btn-danger:hover {
+  background: #e0e0e0;
 }

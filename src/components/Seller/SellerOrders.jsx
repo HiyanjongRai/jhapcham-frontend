@@ -1,7 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
 import { getCurrentUserId } from "../config/authUtils";
 import { API_BASE } from "../config/config";
+import { useNavigate } from "react-router-dom";
 import "./SellerOrders.css";
 import { 
   Package, 
@@ -10,16 +12,21 @@ import {
   XCircle, 
   MapPin,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Edit2
 } from "lucide-react";
+import { apiGetSellerOrders, apiGetOrder } from "../AddCart/cartUtils";
 
 export default function SellerOrders() {
   const sellerId = getCurrentUserId();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [orderBranches, setOrderBranches] = useState({});
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [expandedOrders, setExpandedOrders] = useState({});
+  const [orderDetails, setOrderDetails] = useState({}); // Cache for detailed order info
+  const [selectedStages, setSelectedStages] = useState({});
   
   const branches = ["KATHMANDU", "POKHARA", "UDAYAPUR"];
 
@@ -27,112 +34,108 @@ export default function SellerOrders() {
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/orders/seller/${sellerId}`);
-      let ordersData = res.data;
-
-      // Extract unique customer IDs to fetch their profiles for images
-      const customerIds = [...new Set(ordersData.map(o => o.customerId).filter(id => id))];
-
-      if (customerIds.length > 0) {
-        try {
-          // Fetch profiles in parallel
-          const profileResponses = await Promise.allSettled(
-            customerIds.map(id => axios.get(`${API_BASE}/users/profile/${id}`))
-          );
-
-          // Create a map of customerId -> profileImagePath
-          const imageMap = {};
-          profileResponses.forEach((result, index) => {
-            if (result.status === 'fulfilled' && result.value.data) {
-              const cid = customerIds[index];
-              imageMap[cid] = result.value.data.profileImagePath;
-            }
-          });
-
-          // Attach image path to orders
-          ordersData = ordersData.map(order => ({
-            ...order,
-            customerImagePath: imageMap[order.customerId] || null
-          }));
-        } catch (profileErr) {
-          console.error("Error fetching customer profiles", profileErr);
-        }
-      }
-
-      setOrders(ordersData);
+      console.log("Fetching orders for seller:", sellerId);
+      const data = await apiGetSellerOrders(sellerId);
+      console.log("Seller orders fetched:", data);
+      
+      // The backend now returns OrderListItemDTO which is a summary
+      setOrders(data || []);
     } catch (err) {
-      console.error(err.response || err);
-      // alert("Error loading orders");
+      console.error("Error loading orders:", err);
     } finally {
       setLoading(false);
     }
   }, [sellerId]);
 
-  // Map order status to tracking stage
-  const mapStatusToStage = (status) => {
-    switch (status) {
-      case "PROCESSING": return "PROCESSING";
-      case "SHIPPED": return "OUT_FOR_DELIVERY";
-      case "DELIVERED": return "DELIVERED";
-      case "CANCELLED": return "CANCELLED";
-      default: return "PROCESSING";
-    }
-  };
-
-  // Update order status and send tracking info
-  const updateStatus = async (orderId, status) => {
+  const updateStatus = async (orderId, nextStatus) => {
     try {
-      await axios.patch(
-        `${API_BASE}/orders/${orderId}/status`,
-        null,
-        { params: { status } }
-      );
-
       const branch = orderBranches[orderId];
-      const trackingParams = { stage: mapStatusToStage(status) };
-      if (branch) trackingParams.branch = branch;
+      // Normalize status
+      const statusUpper = nextStatus.toUpperCase();
 
-      await axios.post(
-        `${API_BASE}/orders/${orderId}/tracking`,
-        null,
-        { params: trackingParams }
-      );
+      if (statusUpper === 'CANCELED') {
+        const url = `${API_BASE}/api/orders/seller/${sellerId}/cancel/${orderId}`;
+        await axios.put(url);
+        alert("Order canceled successfully");
+      } 
+      else if (statusUpper === 'SHIPPED' || statusUpper === 'SHIPPED_TO_BRANCH') {
+         // Map SHIPPED to seller assigning branch
+         if (!branch) {
+             alert("Please select a branch to ship to.");
+             return;
+         }
+         const url = `${API_BASE}/api/orders/seller/${sellerId}/assign/${orderId}`;
+         await axios.put(url, { branch: branch }); 
+         alert("Order shipped to branch");
+      }
+      else if (statusUpper === 'OUT_FOR_DELIVERY' || statusUpper === 'DELIVERED') {
+          // Verify branch logic - usually branch staff does this, but for dev we allow seller/admin to toggle
+          if (!branch) {
+             // Try to find existing assigned branch from order details if possible, or force select
+             alert("Please confirm the branch (select from dropdown) for this update.");
+             return;
+          }
+          // Construct URL with query parameters
+          const params = new URLSearchParams({ branch: branch, nextStatus: statusUpper });
+          const url = `${API_BASE}/api/orders/branch/${orderId}/status?${params.toString()}`;
+          await axios.put(url);
+          alert("Order status updated");
+      } 
+      else {
+          alert(`Unsupported status transition to ${statusUpper}. Backend only supports: Cancel, Ship to Branch, and Branch updates.`);
+          return;
+      }
 
       loadOrders();
     } catch (err) {
       console.error(err.response || err);
-      alert("Failed to update order");
+      const msg = err.response?.data?.message || "Failed to update order";
+      alert(msg);
     }
   };
 
-  // Build product image URL
   const buildImageUrl = (imagePath) => {
     if (!imagePath) return "https://via.placeholder.com/48";
-    // Check if imagePath is already a full URL (though unlikely based on backend)
     if (imagePath.startsWith("http")) return imagePath;
-    return `${API_BASE}/product-images/${imagePath}`;
+    return `${API_BASE}/uploads/${imagePath}`;
   };
 
-  // Calculate stats
   const stats = useMemo(() => {
     const total = orders.length;
+    // Map NEW to Pending stats
+    const pending = orders.filter(o => o.status === "NEW" || o.status === "PENDING").length; 
     const processing = orders.filter(o => o.status === "PROCESSING").length;
-    const shipped = orders.filter(o => o.status === "SHIPPED").length;
+    const shipped = orders.filter(o => o.status === "SHIPPED" || o.status === "SHIPPED_TO_BRANCH").length;
     const delivered = orders.filter(o => o.status === "DELIVERED").length;
-    return { total, processing, shipped, delivered };
+    return { total, pending, processing, shipped, delivered };
   }, [orders]);
 
-  // Filter orders
   const filteredOrders = useMemo(() => {
-    if (statusFilter === "ALL") return orders;
-    return orders.filter(o => o.status === statusFilter);
+    if (statusFilter === "ALL") return orders.filter(o => o.status !== "DELIVERED");
+    return orders.filter(o => {
+        if (statusFilter === "PENDING") return o.status === "NEW" || o.status === "PENDING";
+        if (statusFilter === "SHIPPED") return o.status === "SHIPPED" || o.status === "SHIPPED_TO_BRANCH";
+        return o.status === statusFilter;
+    });
   }, [orders, statusFilter]);
 
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
 
-  const toggleOrderItems = (orderId) => {
+  const toggleOrderItems = async (orderId) => {
+    // If expanding and we don't have details, fetch them
+    if (!expandedOrders[orderId] && !orderDetails[orderId]) {
+      try {
+        const detail = await apiGetOrder(orderId);
+        setOrderDetails(prev => ({ ...prev, [orderId]: detail }));
+      } catch (e) {
+        console.error("Failed to fetch order details", e);
+        alert("Could not load order details");
+        return; 
+      }
+    }
+
     setExpandedOrders(prev => ({
       ...prev,
       [orderId]: !prev[orderId]
@@ -151,14 +154,20 @@ export default function SellerOrders() {
     <div className="so-container">
       <div className="so-header">
         <h1 className="so-title">Order Management</h1>
+        <button onClick={loadOrders} style={{ padding: '0.4rem 0.8rem', marginLeft: 'auto', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', background: '#fff' }}>
+          Refresh List
+        </button>
         <p className="so-subtitle">Manage and track all your customer orders</p>
       </div>
 
-      {/* Stats */}
       <div className="so-stats">
         <div className="so-stat-card">
           <div className="so-stat-label">Total Orders</div>
           <div className="so-stat-value">{stats.total}</div>
+        </div>
+        <div className="so-stat-card">
+          <div className="so-stat-label">Pending</div>
+          <div className="so-stat-value">{stats.pending}</div>
         </div>
         <div className="so-stat-card">
           <div className="so-stat-label">Processing</div>
@@ -174,9 +183,8 @@ export default function SellerOrders() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="so-filters">
-        {["ALL", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"].map(status => (
+        {["ALL", "PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELED"].map(status => (
           <button
             key={status}
             className={`so-filter-btn ${statusFilter === status ? "active" : ""}`}
@@ -187,76 +195,89 @@ export default function SellerOrders() {
         ))}
       </div>
 
-      {/* Orders List */}
       {filteredOrders.length === 0 ? (
         <div className="so-empty">No orders found.</div>
       ) : (
         <div className="so-orders-list">
           {filteredOrders.map((order) => {
-            const customerImgUrl = order.customerImagePath
-              ? `${API_BASE}/uploads/customer-profile/${order.customerImagePath}`
-              : "https://via.placeholder.com/64";
-
+            const currentId = order.id || order.orderId; // Fallback
             return (
-              <div key={order.orderId} className="so-order-card">
-                {/* Header */}
+              <div key={currentId} className="so-order-card">
                 <div className="so-order-header">
                   <div>
-                    <h3 className="so-order-id">Order #{String(order.orderId).padStart(4, "0")}</h3>
+                    <h3 className="so-order-id">Order #{String(currentId).padStart(4, "0")}</h3>
+                    <div style={{fontSize: '0.8rem', color: '#666'}}>Customer: {order.customerName || "Guest"}</div>
                   </div>
                   <div className="so-order-meta">
-                    <span className={`so-badge so-badge-${order.status?.toLowerCase()}`}>
+                    <span className={`so-badge so-badge-${(order.status || 'PENDING').toLowerCase()}`}>
                       {order.status}
                     </span>
                     <span style={{fontSize: '0.875rem', color: '#6b7280'}}>
                       {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ""}
                     </span>
                     <span style={{fontSize: '0.875rem', fontWeight: '600', color: '#111827'}}>
-                      ${(order.totalPrice || 0).toFixed(2)}
+                      ${(order.grandTotal || 0).toFixed(2)}
                     </span>
+                     {order.paymentMethod && (
+                         <span className="so-badge" style={{background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db'}}>
+                          {order.paymentMethod}
+                        </span>
+                     )}
                   </div>
                 </div>
 
-                {/* Body */}
                 <div className="so-order-body">
-                  {/* Customer Info */}
-                  <div className="so-customer-section">
-                    <img 
-                      src={customerImgUrl} 
-                      alt={order.customerName || "Customer"} 
-                      className="so-customer-avatar"
-                      onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/64"; }}
-                    />
-                    <div className="so-customer-info">
-                      <h4>{order.customerName || "No name"}</h4>
-                      <p>📧 {order.customerEmail || "Not provided"}</p>
-                      <p>📞 {order.customerContact || "Not provided"}</p>
-                      <p>📍 {order.fullAddress || "No address provided"}</p>
-                      {order.latitude != null && order.longitude != null && (
-                        <p>
-                          <a
-                            href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <MapPin size={14} style={{display: 'inline', verticalAlign: 'middle'}} /> View on Map
-                          </a>
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  {/* Customer Info Section - Only visible if expanded or if we have detail */}
+                  {expandedOrders[currentId] && orderDetails[currentId] ? (
+                     <div className="so-customer-section">
+                        {/* Customer Image */}
+                        <img 
+                           src={
+                             orderDetails[currentId].customerProfileImagePath
+                               ? (orderDetails[currentId].customerProfileImagePath.startsWith('http') 
+                                   ? orderDetails[currentId].customerProfileImagePath 
+                                   : `${API_BASE}/uploads/${orderDetails[currentId].customerProfileImagePath}`)
+                               : "https://via.placeholder.com/60"
+                           }
+                           alt="Customer"
+                           style={{
+                             width: '60px', height: '60px', 
+                             borderRadius: '50%', objectFit: 'cover', 
+                             border: '2px solid #eee', marginRight: '1rem'
+                           }}
+                        />
+                        <div className="so-customer-info">
+                          <h4>
+                            {orderDetails[currentId].customerName || "No name"}
+                            <span style={{fontSize:'0.8em', fontWeight:'normal', marginLeft:'10px'}}>
+                                ({orderDetails[currentId].customerPhone})
+                            </span>
+                          </h4>
+                          <p>📧 {orderDetails[currentId].customerEmail || "Not provided"}</p>
+                          <p>📍 {orderDetails[currentId].shippingAddress || "No address provided"}</p>
+                          {orderDetails[currentId].shippingLocation && (
+                              <p>Zone: {orderDetails[currentId].shippingLocation}</p>
+                          )}
+                        </div>
+                     </div>
+                  ) : (
+                     /* collapsed view, minimal info */
+                     <div style={{padding: '0 1rem', color: '#888', fontStyle: 'italic', fontSize: '0.9rem'}}>
+                        {order.totalItems} items • Click to view details
+                     </div>
+                  )}
 
-                  {/* Actions */}
                   <div className="so-actions">
                     <select
                       className="so-branch-select"
-                      value={orderBranches[order.orderId] || ""}
+                      value={orderBranches[currentId] || ""}
                       onChange={(e) =>
                         setOrderBranches((prev) => ({
                           ...prev,
-                          [order.orderId]: e.target.value,
+                          [currentId]: e.target.value,
                         }))
                       }
+                      style={{ marginRight: '0.5rem' }}
                     >
                       <option value="">Select Branch</option>
                       {branches.map((b) => (
@@ -264,97 +285,136 @@ export default function SellerOrders() {
                       ))}
                     </select>
 
-                    <button 
-                      onClick={() => updateStatus(order.orderId, "PROCESSING")} 
-                      className="so-action-btn"
-                      disabled={order.status === "PROCESSING"}
+                    <select
+                      className="so-branch-select"
+                      value={selectedStages[currentId] || ""}
+                      onChange={(e) =>
+                        setSelectedStages((prev) => ({
+                          ...prev,
+                          [currentId]: e.target.value,
+                        }))
+                      }
+                      style={{ marginRight: '0.5rem', minWidth: '160px' }}
                     >
-                      <Package size={16} /> Process
-                    </button>
-                    
+                      <option value="">Select Action</option>
+                      <option value="SHIPPED">Ship Order (To Branch)</option>
+                      <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                      <option value="DELIVERED">Mark Delivered</option>
+                      <option value="CANCELED">Cancel Order</option>
+                    </select>
+
                     <button 
-                      onClick={() => updateStatus(order.orderId, "SHIPPED")} 
+                      onClick={() => {
+                        const stage = selectedStages[currentId];
+                        if (!stage) {
+                          alert("Please select an action/stage first");
+                          return;
+                        }
+                        updateStatus(currentId, stage);
+                      }} 
                       className="so-action-btn primary"
-                      disabled={order.status === "SHIPPED" || order.status === "DELIVERED"}
+                      disabled={!selectedStages[currentId]}
                     >
-                      <Truck size={16} /> Ship
-                    </button>
-                    
-                    <button 
-                      onClick={() => updateStatus(order.orderId, "DELIVERED")} 
-                      className="so-action-btn"
-                      disabled={order.status === "DELIVERED"}
-                    >
-                      <CheckCircle size={16} /> Deliver
-                    </button>
-                    
-                    <button 
-                      onClick={() => updateStatus(order.orderId, "CANCELLED")} 
-                      className="so-action-btn danger"
-                      disabled={order.status === "CANCELLED" || order.status === "DELIVERED"}
-                    >
-                      <XCircle size={16} /> Cancel
+                      <CheckCircle size={16} /> Update Status
                     </button>
                   </div>
 
-                  {/* Order Items */}
                   <div>
                     <div 
                       className="so-items-toggle"
-                      onClick={() => toggleOrderItems(order.orderId)}
+                      onClick={() => toggleOrderItems(currentId)}
                     >
-                      Order Items ({order.items?.length || 0})
-                      {expandedOrders[order.orderId] ? <ChevronUp size={16} style={{display: 'inline', marginLeft: '0.5rem'}} /> : <ChevronDown size={16} style={{display: 'inline', marginLeft: '0.5rem'}} />}
+                      {expandedOrders[currentId] ? 'Hide' : 'Show'} Order Details
+                      {expandedOrders[currentId] ? <ChevronUp size={16} style={{display: 'inline', marginLeft: '0.5rem'}} /> : <ChevronDown size={16} style={{display: 'inline', marginLeft: '0.5rem'}} />}
                     </div>
 
-                    {expandedOrders[order.orderId] && (
+                    {expandedOrders[currentId] && orderDetails[currentId] && (
                       <table className="so-items-table">
                         <thead>
                           <tr>
                             <th>Image</th>
                             <th>Product</th>
-                            <th>Details</th>
                             <th>Qty</th>
                             <th>Total</th>
+                            <th>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {order.items.map((item) => (
-                            <tr key={item.productId}>
-                              <td>
-                                <img
-                                  src={buildImageUrl(item.imagePath)}
-                                  alt={item.productName}
-                                  className="so-item-img"
-                                />
-                              </td>
-                              <td>{item.productName}</td>
-                              <td>
-                                <div style={{fontSize: '0.85rem', color: '#4b5563'}}>
-                                  {item.selectedColor && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
-                                      <span style={{ fontWeight: '500' }}>Color:</span>
-                                      <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: item.selectedColor, border: '1px solid #ddd', display: 'inline-block' }}></span>
-                                      {item.selectedColor}
-                                    </div>
+                          {orderDetails[currentId].items.map((item) => {
+                             const productName = item.name || item.productName || item.productNameSnapshot || "Unknown";
+                             const productImage = item.imagePath || item.imagePathSnapshot;
+                             const itemTotal = item.lineTotal;
+                             const productId = item.productId || item.productIdSnapshot;
+
+                            return (
+                              <tr key={productId || Math.random()}>
+                                <td>
+                                  <img
+                                    src={buildImageUrl(productImage)}
+                                    alt={productName}
+                                    className="so-item-img"
+                                  />
+                                </td>
+                                <td>
+                                  <div style={{ fontWeight: '500' }}>{productName}</div>
+                                  <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '2px' }}>
+                                    {item.selectedColor && (
+                                      <span style={{ marginRight: '8px' }}>
+                                        Running Color: {item.selectedColor}
+                                      </span>
+                                    )}
+                                    {item.selectedStorage && (
+                                      <span>
+                                        Storage: {item.selectedStorage}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td>{item.quantity}</td>
+                                <td>${(itemTotal || 0).toFixed(2)}</td>
+                                <td>
+                                  {productId && (
+                                    <button
+                                      className="so-action-btn"
+                                      onClick={() => navigate('/seller/products', { state: { editProductId: productId } })}
+                                      title="Edit this product"
+                                      style={{
+                                        padding: '0.5rem 0.75rem',
+                                        fontSize: '0.8rem',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.375rem',
+                                        background: '#000',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                      }}
+                                    >
+                                      <Edit2 size={14} />
+                                    </button>
                                   )}
-                                  {item.selectedStorage && (
-                                    <div style={{ marginBottom: '0.25rem' }}>
-                                      <span style={{ fontWeight: '500' }}>Storage:</span> {item.selectedStorage}
-                                    </div>
-                                  )}
-                                  {item.categoryName && <div><span style={{ fontWeight: '500' }}>Category:</span> {item.categoryName}</div>}
-                                </div>
-                              </td>
-                              <td>{item.quantity}</td>
-                              <td>${item.lineTotal?.toFixed(2)}</td>
-                            </tr>
-                          ))}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                         <tfoot>
                           <tr>
-                            <td colSpan="4" style={{textAlign: 'right'}}>Total</td>
-                            <td>${(order.totalPrice || 0).toFixed(2)}</td>
+                            <td colSpan="3" style={{textAlign: 'right'}}>Subtotal</td>
+                            <td>${(orderDetails[currentId].itemsTotal || 0).toFixed(2)}</td>
+                            <td></td>
+                          </tr>
+                          <tr>
+                            <td colSpan="3" style={{textAlign: 'right'}}>Shipping</td>
+                            <td>${(orderDetails[currentId].shippingFee || 0).toFixed(2)}</td>
+                            <td></td>
+                          </tr>
+                          <tr>
+                            <td colSpan="3" style={{textAlign: 'right'}}><strong>Grand Total</strong></td>
+                            <td><strong>${(orderDetails[currentId].grandTotal || 0).toFixed(2)}</strong></td>
+                            <td></td>
                           </tr>
                         </tfoot>
                       </table>

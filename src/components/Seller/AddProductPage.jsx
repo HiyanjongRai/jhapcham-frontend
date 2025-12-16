@@ -12,16 +12,15 @@ export default function AddProductPage() {
     shortDescription: "",
     brand: "",
     stock: "",
-    others: "",
     colors: [],
-    storage: [],        // 🔥 Storage options
+    storage: [],
     image: null,
     additionalImages: [],
     manufactureDate: "",
     expiryDate: "",
     warranty: "",
-    features: "",       // 🔥 Features
-    specifications: ""  // 🔥 Specifications
+    features: "",
+    specification: ""
   });
 
   const [message, setMessage] = useState("");
@@ -31,7 +30,7 @@ export default function AddProductPage() {
     "Yellow","Pink","Purple","Orange","Brown"
   ];
 
-  const storageOptions = ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"]; // 🔥 Storage options
+  const storageOptions = ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"];
 
   const handleInput = (e) => {
     const { name, value, files } = e.target;
@@ -70,42 +69,65 @@ export default function AddProductPage() {
 
     try {
       const data = new FormData();
+      
+      // Match ProductCreateRequestDTO fields
       data.append("name", formData.name);
       data.append("price", formData.price);
       data.append("category", formData.category);
       data.append("description", formData.description);
       data.append("shortDescription", formData.shortDescription);
       data.append("brand", formData.brand);
-      data.append("stock", formData.stock);
-      data.append("others", formData.others);
-      data.append("sellerId", sellerId);
-      data.append("colors", JSON.stringify(formData.colors));
-      data.append("storage", JSON.stringify(formData.storage)); // 🔥 Storage
+      data.append("stockQuantity", formData.stock || "0");
+      
+      // Color options as JSON string
+      if (formData.colors.length > 0) {
+        data.append("colorOptions", JSON.stringify(formData.colors));
+      }
+      
+      // Storage spec as JSON string
+      if (formData.storage.length > 0) {
+        data.append("storageSpec", JSON.stringify(formData.storage));
+      }
+      
+      // Optional fields
       if (formData.manufactureDate) data.append("manufactureDate", formData.manufactureDate);
       if (formData.expiryDate) data.append("expiryDate", formData.expiryDate);
-      if (formData.warranty) data.append("warranty", formData.warranty);
+      if (formData.warranty) {
+        const warrantyMonths = parseInt(formData.warranty) || 0;
+        data.append("warrantyMonths", warrantyMonths.toString());
+      }
       if (formData.features) data.append("features", formData.features.trim());
-      if (formData.specifications) data.append("specifications", formData.specifications.trim());
+      if (formData.specification) data.append("specification", formData.specification.trim());
+      
+      // Images - backend expects 'images' array
+      if (formData.image) {
+        data.append("images", formData.image);
+      }
+      formData.additionalImages.forEach((img) => {
+        data.append("images", img);
+      });
 
-      if (formData.image) data.append("image", formData.image);
-      formData.additionalImages.forEach((img) => data.append("additionalImages", img));
-
-      await axios.post(
-        "http://localhost:8080/api/products/add",
+      // Use new endpoint with seller ID in path
+      const response = await axios.post(
+        `http://localhost:8080/api/products/seller/${sellerId}`,
         data,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
+      console.log("Product created:", response.data);
       setMessage("Product added successfully!");
+      
+      // Reset form
       setFormData({
         name: "", price: "", category: "", description: "", shortDescription: "",
-        brand: "", stock: "", others: "", colors: [], storage: [],
+        brand: "", stock: "", colors: [], storage: [],
         image: null, additionalImages: [], manufactureDate: "",
-        expiryDate: "", warranty: "", features: "", specifications: ""
+        expiryDate: "", warranty: "", features: ""
       });
     } catch (error) {
-      console.error(error);
-      setMessage("Error saving product");
+      console.error("Add Product Error:", error);
+      const serverMsg = error.response?.data?.message || error.response?.data?.error || "Error saving product";
+      setMessage(serverMsg);
     }
   };
 
@@ -136,7 +158,7 @@ export default function AddProductPage() {
 
         <div className="field">
           <label>Short Description</label>
-          <input name="shortDescription" value={formData.shortDescription} onChange={handleInput} />
+          <textarea name="shortDescription" value={formData.shortDescription} onChange={handleInput} />
         </div>
 
         {/* Category and Stock */}
@@ -145,11 +167,20 @@ export default function AddProductPage() {
             <label>Category *</label>
             <select name="category" value={formData.category} onChange={handleInput} required>
               <option value="">Select a category</option>
-              <option value="electronics">Electronics</option>
-              <option value="clothing">Clothing</option>
-              <option value="food">Food</option>
-              <option value="toys">Toys</option>
-              <option value="vehicles">Vehicles</option>
+              <option value="Fashion & Apparel">Fashion & Apparel</option>
+              <option value="Electronics & Gadgets">Electronics & Gadgets</option>
+              <option value="Home & Living">Home & Living</option>
+              <option value="Beauty & Personal Care">Beauty & Personal Care</option>
+              <option value="Health & Wellness">Health & Wellness</option>
+              <option value="Books & Education">Books & Education</option>
+              <option value="Furniture">Furniture</option>
+              <option value="Mobile Accessories">Mobile Accessories</option>
+              <option value="Jewelry & Watches">Jewelry & Watches</option>
+              <option value="Pet Supplies">Pet Supplies</option>
+              <option value="Industrial & Construction Supplies">Industrial & Construction Supplies</option>
+              <option value="Software & Digital Products">Software & Digital Products</option>
+              <option value="Vehicles (Cars, Bikes, Scooters)">Vehicles (Cars, Bikes, Scooters)</option>
+              <option value="Others / Miscellaneous">Others / Miscellaneous</option>
             </select>
           </div>
           <div className="field">
@@ -158,20 +189,27 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        {/* Brand, Others, Warranty */}
+        {/* Brand and Warranty */}
         <div className="row">
           <div className="field">
             <label>Brand</label>
             <input name="brand" value={formData.brand} onChange={handleInput} />
           </div>
           <div className="field">
-            <label>Other Details</label>
-            <textarea name="others" value={formData.others} onChange={handleInput} />
+            <label>Warranty (months)</label>
+            <input type="number" name="warranty" value={formData.warranty} onChange={handleInput} placeholder="e.g., 12" />
           </div>
-          <div className="field">
-            <label>Warranty</label>
-            <input name="warranty" value={formData.warranty} onChange={handleInput} placeholder="e.g., 1 year" />
-          </div>
+        </div>
+
+        {/* Specification */}
+        <div className="field">
+          <label>Specification</label>
+          <textarea
+             name="specification"
+             value={formData.specification}
+             onChange={handleInput}
+             placeholder="Technical specifications..."
+          />
         </div>
 
         {/* Features */}
@@ -182,17 +220,6 @@ export default function AddProductPage() {
             value={formData.features}
             onChange={handleInput}
             placeholder="• Feature 1&#10;• Feature 2&#10;• Feature 3"
-          />
-        </div>
-
-        {/* Specifications */}
-        <div className="field">
-          <label>Specifications (one per line)</label>
-          <textarea
-            name="specifications"
-            value={formData.specifications}
-            onChange={handleInput}
-            placeholder="• Spec 1&#10;• Spec 2&#10;• Spec 3"
           />
         </div>
 

@@ -1,41 +1,40 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getCurrentUserId,
   apiGetCart,
+  apiPlaceOrder,
   apiPlaceOrderFromCart,
+  apiPreviewOrder, // Add this
 } from "../AddCart/cartUtils";
+import axios from "axios";
+import { API_BASE } from "../config/config";
 import ErrorToast from "../ErrorToast/ErrorToast";
 import "./CheckoutPage.css";
 
 
 function CheckoutPage() {
+  const navigate = useNavigate();
   const userId = getCurrentUserId();
 
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [previewData, setPreviewData] = useState(null); // Calculated totals from backend
 
-  // Contact Info
-  const [user, setUser] = useState({
+  // Form State
+  const [formData, setFormData] = useState({
+    fullName: "",
     email: "",
-    contactNumber: "",
+    phone: "",
+    address: "",
+    orderNote: ""
   });
 
-  // Shipping Address
-  const [shipping, setShipping] = useState({
-    firstName: "",
-    lastName: "",
-    street: "",
-    city: "",
-    state: "",
-    zip: "",
-    country: "",
-  });
+  // Inside Valley State
+  const [insideValley, setInsideValley] = useState(true);
 
-  // Shipping Method
-  const [shippingMethod, setShippingMethod] = useState({
-    name: "Standard Shipping",
-    price: 10,
-  });
+  // Payment Method
+  const [paymentMethod, setPaymentMethod] = useState("COD");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -48,11 +47,52 @@ function CheckoutPage() {
     loadUser();
   }, [userId]);
 
+  // Trigger preview when dependencies change
+  useEffect(() => {
+    if (items.length > 0) {
+      fetchPreview();
+    }
+  }, [items, insideValley, formData.address]); // Recalculate on items or location/address change
+
+  const fetchPreview = async () => {
+    try {
+      const payload = {
+        userId,
+        fullName: formData.fullName || "Guest",
+        phone: formData.phone || "9999999999",
+        email: formData.email || "guest@example.com",
+        address: formData.address || "Kathmandu",
+        shippingLocation: insideValley ? "INSIDE" : "OUTSIDE",
+        paymentMethod: paymentMethod === "WALLET" ? "ONLINE" : "COD",
+        items: items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            selectedColor: item.selectedColor,
+            selectedStorage: item.selectedStorage
+        }))
+      };
+
+      const data = await apiPreviewOrder(payload);
+      setPreviewData(data);
+    } catch (e) {
+      console.warn("Preview calculation failed", e);
+    }
+  };
+
   const loadCart = async () => {
     try {
       const data = await apiGetCart(userId);
-      setItems(data.items || []);
-      setTotal(data.total || 0);
+      const mappedItems = (data.items || []).map(i => ({
+        ...i,
+        unitPrice: i.price,
+        lineTotal: i.price * i.quantity,
+        imagePath: i.image,
+        productName: i.name,
+        selectedColor: i.selectedColor,
+        selectedStorage: i.selectedStorage
+      }));
+      setItems(mappedItems);
+      setTotal(data.subtotal || data.total || 0);
     } catch (e) {
       console.error("Cart load error:", e);
     }
@@ -60,61 +100,99 @@ function CheckoutPage() {
 
   const loadUser = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/users/profile/${userId}`);
+      const res = await fetch(`${API_BASE}/users/profile/${userId}`);
       if (!res.ok) return;
 
       const u = await res.json();
 
-      setUser({
+      setFormData(prev => ({
+        ...prev,
+        fullName: u.fullName || "",
         email: u.email || "",
-        contactNumber: u.contactNumber || "",
-      });
+        phone: u.contactNumber || u.phone || "",
+        address: u.address || ""
+      }));
     } catch (e) {
       console.error("User load error:", e);
     }
   };
 
+  // ...
+  const [success, setSuccess] = useState(false);
+
+  // ...
+
   const placeOrder = async () => {
-    if (!userId) {
-      setError({
-        status: 401,
-        message: "Authentication Required",
-        details: "You must be logged in to place an order",
-        timestamp: new Date().toISOString()
-      });
-      return;
+    // Basic validation
+    if (!formData.fullName || !formData.phone || !formData.address) {
+        setError({
+          status: 400,
+          message: "Missing Information",
+          details: "Please fill in all required fields (Name, Phone, Address)",
+          timestamp: new Date().toISOString()
+        });
+        return;
     }
 
-    // Combine shipping address into a single string
-    const fullAddress = `
-      ${shipping.firstName} ${shipping.lastName},
-      ${shipping.street},
-      ${shipping.city}, ${shipping.state} ${shipping.zip},
-      ${shipping.country}
-    `;
+    // Prepare Base Request Data
+    const requestData = {
+        userId: userId || null,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.address,
+        shippingLocation: insideValley ? "INSIDE" : "OUTSIDE",
+        paymentMethod: paymentMethod === "WALLET" ? "ONLINE" : "COD",
+    };
 
     try {
       setLoading(true);
-      setError(null); // Clear any previous errors
-      await apiPlaceOrderFromCart(userId, fullAddress, null, null);
-      window.location.href = "/order-success";
+      setError(null);
+
+      let orderSummary;
+
+      if (userId) {
+          // WAY 2: Cart Checkout (Authenticated)
+          // Backend fetches items from DB Cart
+          orderSummary = await apiPlaceOrderFromCart(requestData);
+      } else {
+          // WAY 3: Guest Checkout (Direct)
+          // Frontend sends items
+          const guestRequest = {
+            ...requestData,
+            items: items.map(item => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                selectedColor: item.selectedColor,
+                selectedStorage: item.selectedStorage
+            }))
+          };
+          orderSummary = await apiPlaceOrder(guestRequest);
+      }
+
+      setLoading(false);
+      setSuccess(true);
+      
+      // Delay navigation
+      setTimeout(() => {
+        // Pass the full order summary to success page
+        navigate("/order-success", { state: { session: orderSummary, order: orderSummary } });
+      }, 2000);
+
     } catch (e) {
       console.error("Order placement error:", e);
+      setLoading(false);
       
-      // Check if it's a structured error from our API
       if (e.status) {
         setError(e);
       } else {
-        // Generic error
         setError({
           status: 500,
           message: "Order Failed",
-          details: e.message || "An unexpected error occurred while placing your order",
+          details: e.message || "An unexpected error occurred",
           timestamp: new Date().toISOString()
         });
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -124,168 +202,139 @@ function CheckoutPage() {
       {/* Error Toast Notification */}
       <ErrorToast error={error} onClose={() => setError(null)} />
 
+      {success && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999,
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          flexDirection: 'column', color: 'white'
+        }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>✅</div>
+          <h2 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Order Successfully Created!</h2>
+          <p>Redirecting you to summary...</p>
+        </div>
+      )}
+
       <div className="checkout-container">
 
 
       {/* LEFT SIDE */}
       <div className="checkout-left">
 
-        {/* Contact Information */}
+        {/* Customer Information */}
         <div className="checkout-section">
           <h3 className="section-title">
-            <i className="icon">📧</i> Contact Information
+            <i className="icon">👤</i> Customer Details
           </h3>
+
+          <div className="form-field">
+            <label>Full Name</label>
+            <input 
+              type="text" 
+              value={formData.fullName} 
+              onChange={e => setFormData({...formData, fullName: e.target.value})}
+              placeholder="Enter your full name"
+            />
+          </div>
 
           <div className="form-row">
             <div className="form-field">
               <label>Email Address</label>
-              <input type="email" value={user.email} readOnly />
+              <input 
+                type="email" 
+                value={formData.email} 
+                onChange={e => setFormData({...formData, email: e.target.value})}
+                placeholder="name@example.com"
+              />
             </div>
 
             <div className="form-field">
               <label>Phone Number</label>
-              <input type="text" value={user.contactNumber} readOnly />
+              <input 
+                type="text" 
+                value={formData.phone} 
+                onChange={e => setFormData({...formData, phone: e.target.value})}
+                placeholder="98XXXXXXXX"
+              />
             </div>
           </div>
         </div>
 
-        {/* Shipping Address */}
+        {/* Delivery Address */}
         <div className="checkout-section">
           <h3 className="section-title">
-            <i className="icon">📦</i> Shipping Address
+            <i className="icon">📍</i> Delivery Address
           </h3>
 
-          <div className="form-row">
-            <div className="form-field">
-              <label>First Name</label>
-              <input
-                type="text"
-                value={shipping.firstName}
-                onChange={(e) =>
-                  setShipping({ ...shipping, firstName: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="form-field">
-              <label>Last Name</label>
-              <input
-                type="text"
-                value={shipping.lastName}
-                onChange={(e) =>
-                  setShipping({ ...shipping, lastName: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
           <div className="form-field">
-            <label>Street Address</label>
-            <input
-              type="text"
-              value={shipping.street}
-              onChange={(e) =>
-                setShipping({ ...shipping, street: e.target.value })
-              }
+            <textarea
+              style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #bbb", minHeight: "60px", fontFamily: 'inherit' }}
+              placeholder="e.g. House No. 123, Street Name, City"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-field">
-              <label>City</label>
-              <input
-                type="text"
-                value={shipping.city}
-                onChange={(e) =>
-                  setShipping({ ...shipping, city: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="form-field">
-              <label>State</label>
-              <input
-                type="text"
-                value={shipping.state}
-                onChange={(e) =>
-                  setShipping({ ...shipping, state: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="form-field">
-              <label>ZIP Code</label>
-              <input
-                type="text"
-                value={shipping.zip}
-                onChange={(e) =>
-                  setShipping({ ...shipping, zip: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <div className="form-field">
-            <label>Country</label>
+          <div className="shipping-option" style={{ marginTop: '1rem' }}>
             <input
-              type="text"
-              value={shipping.country}
-              onChange={(e) =>
-                setShipping({ ...shipping, country: e.target.value })
-              }
+              type="checkbox"
+              id="insideValley"
+              checked={insideValley}
+              onChange={(e) => setInsideValley(e.target.checked)}
+              style={{ width: "auto", marginRight: "10px" }}
             />
+            <label htmlFor="insideValley">
+              <strong>Inside Kathmandu Valley?</strong> <br />
+              <span style={{ fontSize: '0.9em', color: '#666' }}>Uncheck this if delivery is outside the valley.</span>
+            </label>
           </div>
         </div>
 
-        {/* Shipping Method */}
+        {/* Payment Method */}
         <div className="checkout-section">
           <h3 className="section-title">
-            <i className="icon">🚚</i> Shipping Method
+            <i className="icon">💳</i> Payment Method
           </h3>
 
           <div className="shipping-option">
             <input
               type="radio"
-              checked={shippingMethod.name === "Standard Shipping"}
-              onChange={() =>
-                setShippingMethod({ name: "Standard Shipping", price: 10 })
-              }
+              name="paymentMethod"
+              checked={paymentMethod === "COD"}
+              onChange={() => setPaymentMethod("COD")}
             />
             <label>
-              <strong>Standard Shipping</strong> <br />
-              5–7 business days
+              <strong>Cash on Delivery (COD)</strong> <br />
+              Pay when you receive your order
             </label>
-            <span className="price">$10.00</span>
           </div>
 
           <div className="shipping-option">
             <input
               type="radio"
-              checked={shippingMethod.name === "Express Shipping"}
-              onChange={() =>
-                setShippingMethod({ name: "Express Shipping", price: 25 })
-              }
+              name="paymentMethod"
+              checked={paymentMethod === "WALLET"}
+              onChange={() => setPaymentMethod("WALLET")}
             />
             <label>
-              <strong>Express Shipping</strong> <br />
-              2–3 business days
+              <strong>Digital Wallet</strong> <br />
+              Pay with Khalti / Esewa (Coming Soon)
             </label>
-            <span className="price">$25.00</span>
           </div>
+        </div>
 
-          <div className="shipping-option">
-            <input
-              type="radio"
-              checked={shippingMethod.name === "Overnight Shipping"}
-              onChange={() =>
-                setShippingMethod({ name: "Overnight Shipping", price: 50 })
-              }
+        {/* Order Note */}
+        <div className="checkout-section">
+          <h3 className="section-title">
+            <i className="icon">📝</i> Order Note (Optional)
+          </h3>
+          <div className="form-field">
+            <textarea
+              style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #bbb", minHeight: "60px", fontFamily: 'inherit' }}
+              placeholder="Any special instructions for delivery..."
+              value={formData.orderNote}
+              onChange={(e) => setFormData({...formData, orderNote: e.target.value})}
             />
-            <label>
-              <strong>Overnight Shipping</strong> <br />
-              Next business day
-            </label>
-            <span className="price">$50.00</span>
           </div>
         </div>
 
@@ -295,7 +344,7 @@ function CheckoutPage() {
           className="continue-btn"
           disabled={loading}
         >
-          {loading ? "Processing..." : "Continue to Payment →"}
+          {loading ? "Processing..." : "Place Order"}
         </button>
       </div>
 
@@ -309,7 +358,7 @@ function CheckoutPage() {
               <img
                 src={
                   item.imagePath
-                    ? `http://localhost:8080${item.imagePath}`
+                    ? `${API_BASE}/uploads/${item.imagePath}`
                     : "https://via.placeholder.com/70"
                 }
                 alt=""
@@ -317,7 +366,7 @@ function CheckoutPage() {
               />
 
               <div className="summary-info">
-  <div className="summary-item-name">{item.name}</div>
+  <div className="summary-item-name">{item.productName || item.name}</div>
 
   <div className="summary-item-details">
     <span>Qty: {item.quantity}</span>
@@ -353,19 +402,36 @@ function CheckoutPage() {
 
           <div className="summary-row">
             <span>Subtotal</span>
-            <span>${total.toFixed(2)}</span>
+            <span>$ {(previewData ? previewData.itemsTotal : total).toFixed(2)}</span>
           </div>
 
           <div className="summary-row">
             <span>Shipping</span>
-            <span>${shippingMethod.price.toFixed(2)}</span>
+            <span>
+                {previewData 
+                  ? (previewData.shippingFee === 0 ? "Free Shipping" : `$ ${previewData.shippingFee.toFixed(2)}`)
+                  : "Calculating..."}
+            </span>
           </div>
 
+          {previewData && previewData.discountTotal > 0 && (
+             <div className="summary-row" style={{ color: 'green' }}>
+                <span>Discount</span>
+                <span>- $ {previewData.discountTotal.toFixed(2)}</span>
+             </div>
+          )}
+
           <div className="summary-row total">
-            <strong>Total</strong>
+            <strong>Grand Total</strong>
             <strong>
-              ${(total + shippingMethod.price).toFixed(2)}
+              $ {(previewData ? previewData.grandTotal : total).toFixed(2)}
             </strong>
+          </div>
+          
+          <div style={{ fontSize: '0.85em', color: '#666', marginTop: '1rem', textAlign: 'center' }}>
+            {previewData && previewData.estimatedDelivery && (
+                <p>Estimated Delivery: <strong>{previewData.estimatedDelivery}</strong></p>
+            )}
           </div>
         </div>
       </div>

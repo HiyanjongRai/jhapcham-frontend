@@ -37,7 +37,12 @@ export default function SellerApplication() {
     setLoading(true);
     setMessage(null);
 
-    if (!userId) {
+    // Use robust utility
+    const effectiveUserId = getCurrentUserId();
+    console.log("SellerApplication Submitting with UserId:", effectiveUserId);
+
+    if (!effectiveUserId) {
+      console.error("User ID is missing or invalid.");
       setMessage({ type: "error", text: "User ID missing. Please login again." });
       setTimeout(() => navigate("/login"), 2000);
       setLoading(false);
@@ -45,7 +50,7 @@ export default function SellerApplication() {
     }
 
     const data = new FormData();
-    data.append("userId", userId);
+    data.append("userId", effectiveUserId);
     data.append("storeName", form.storeName);
     data.append("address", form.address);
 

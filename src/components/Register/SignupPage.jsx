@@ -9,6 +9,7 @@ const SignupPage = () => {
     email: "",
     fullName: "",
     password: "",
+    contactNumber: "",
   });
 
   const [message, setMessage] = useState("");
@@ -112,6 +113,18 @@ const SignupPage = () => {
               value={formData.password}
               onChange={handleChange}
               required
+            />
+          </div>
+
+          <div className="auth-input-group">
+            <label className="auth-label">Contact Number (Optional)</label>
+            <input
+              className="auth-input"
+              type="text"
+              name="contactNumber"
+              placeholder="Enter your contact number"
+              value={formData.contactNumber || ""}
+              onChange={handleChange}
             />
           </div>
 

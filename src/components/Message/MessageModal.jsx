@@ -49,7 +49,22 @@ export default function MessageModal({
         setFeedback({ type: "", text: "" });
       }, 1500);
     } catch (error) {
-      setFeedback({ type: "error", text: "Failed to send message. Please try again." });
+      console.error("Message send failed:", error);
+      let errMsg = "Failed to send message.";
+      if (error.response?.status === 401 || error.response?.status === 403) {
+          errMsg = "Session expired. Please login again.";
+          // Optional: You could trigger a logout/redirect here
+          // window.location.href = '/login'; 
+      } else if (error.response?.data) {
+          if (typeof error.response.data === 'string') {
+              errMsg = error.response.data;
+          } else if (error.response.data.message) {
+              errMsg = error.response.data.message;
+          }
+      } else if (error.message) {
+          errMsg = error.message;
+      }
+      setFeedback({ type: "error", text: errMsg });
     } finally {
       setSending(false);
     }

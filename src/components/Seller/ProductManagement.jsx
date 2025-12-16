@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./SellerProducts.css";
-import EditProductDrawer from "./EditProductDrawer";
-import SaleModal from "./SaleModal";
 import { 
   Plus, 
   Edit2, 
   Trash2, 
-  Tag, 
-  AlertCircle, 
-  CheckCircle, 
-  XCircle,
+  AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  X
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import EditProductDrawer from "./EditProductDrawer";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -30,6 +28,17 @@ function getCurrentUserId() {
   }
 }
 
+function safeParseList(input) {
+  if (Array.isArray(input)) return input;
+  if (typeof input !== 'string' || !input) return [];
+  try {
+    const parsed = JSON.parse(input);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return input.split(',').map(s => s.trim()).filter(s => s.length > 0);
+  }
+}
+
 function mapDtoToProduct(dto) {
   return {
     id: dto.id,
@@ -38,20 +47,29 @@ function mapDtoToProduct(dto) {
     category: dto.category || "",
     price: dto.price || 0,
     onSale: dto.onSale || false,
-    discountPercent: dto.discountPercent || 0,
-    salePrice: dto.salePrice != null ? dto.salePrice : dto.price || 0,
-    stock: dto.stock || 0,
+    discountPrice: dto.discountPrice || null,
+    salePrice: dto.discountPrice || dto.price || 0,
+    salePercentage: dto.salePercentage || null,
+    stock: dto.stockQuantity || 0,
     status: dto.status || "ACTIVE",
-    visible: dto.visible != null ? dto.visible : true,
     expiryDate: dto.expiryDate || "",
-    manufacturingDate: dto.manufacturingDate || "",
-    imagePath: dto.imagePath ? dto.imagePath : "",
-    additionalImages: dto.additionalImages || [],
+    manufactureDate: dto.manufactureDate || "",
+    imagePath: dto.imagePaths && dto.imagePaths.length > 0 ? dto.imagePaths[0] : "",
+    additionalImages: dto.imagePaths || [],
     shortDescription: dto.shortDescription || "",
     description: dto.description || "",
-    colors: dto.colors || [],
-    others: dto.others || "",
-    sellerId: dto.sellerId || null,
+    colors: safeParseList(dto.colorOptions),
+    storageOptions: safeParseList(dto.storageSpec),
+    features: dto.features || "",
+    specification: dto.specification || "",
+    warrantyMonths: dto.warrantyMonths || 0,
+    sellerProfileId: dto.sellerProfileId || null,
+    visible: true,
+    // New Fields
+    totalViews: dto.totalViews || 0,
+    freeShipping: dto.freeShipping || false,
+    insideValleyShipping: dto.insideValleyShipping,
+    outsideValleyShipping: dto.outsideValleyShipping,
   };
 }
 
@@ -75,21 +93,32 @@ export default function ProductManagement() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState(null);
   const [showExpiringOnly, setShowExpiringOnly] = useState(false);
-
   const [editingProduct, setEditingProduct] = useState(null);
-  const [saleProduct, setSaleProduct] = useState(null);
   const [deleteProduct, setDeleteProduct] = useState(null);
 
   const currentUserId = getCurrentUserId();
+  const navigate = useNavigate();
 
   useEffect(() => { loadProducts(); }, []);
 
   async function loadProducts() {
     setLoading(true); setMessage("");
+    
+    if (!currentUserId) {
+      showError("User not logged in");
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const res = await axios.get(`${BASE_URL}/api/products/my-products?sellerId=${currentUserId}`);
+      // Use the new endpoint: GET /api/products/seller/{sellerUserId}/all
+      const res = await axios.get(`${BASE_URL}/api/products/seller/${currentUserId}/all`);
+      console.log("Products fetched:", res.data);
       setProducts(res.data.map(mapDtoToProduct));
-    } catch (err) { console.error(err); showError("Failed to load products"); }
+    } catch (err) {
+      console.error("Failed to load products:", err);
+      showError(err.response?.data?.message || err.message || "Failed to load products"); 
+    }
     setLoading(false);
   }
 
@@ -101,13 +130,19 @@ export default function ProductManagement() {
 
   function openDeleteDialog(p) { setDeleteProduct(p); }
   function closeDeleteDialog() { setDeleteProduct(null); }
+  
   async function confirmDelete() {
     if (!deleteProduct) return;
     try {
-      await axios.delete(`${BASE_URL}/api/products/delete/${deleteProduct.id}`, { params: { sellerId: currentUserId }});
+      // Use the hard delete endpoint: DELETE /api/products/{productId}/seller/{sellerUserId}/hard
+      await axios.delete(`${BASE_URL}/api/products/${deleteProduct.id}/seller/${currentUserId}/hard`);
       setProducts((prev) => prev.filter(p => p.id !== deleteProduct.id));
-      showSuccess("Product deleted"); closeDeleteDialog();
-    } catch (err) { console.error(err); showError("Delete failed"); }
+      showSuccess("Product deleted permanently"); 
+      closeDeleteDialog();
+    } catch (err) { 
+      console.error(err); 
+      showError(err.response?.data?.message || err.message || "Delete failed"); 
+    }
   }
 
   return (
@@ -117,7 +152,7 @@ export default function ProductManagement() {
           <h1 className="sp-title">Product Management</h1>
           <p className="sp-subtitle">Manage your inventory, pricing, and stock levels.</p>
         </div>
-        <button className="sp-add-btn" onClick={() => setEditingProduct({})}>
+        <button className="sp-add-btn" onClick={() => navigate('/seller/add-product')}>
           <Plus size={20} /> Add Product
         </button>
       </div>
@@ -155,6 +190,7 @@ export default function ProductManagement() {
                 <th>Category</th>
                 <th>Price</th>
                 <th>Stock</th>
+                <th>Views</th>
                 <th>Status</th>
                 <th>Expiry</th>
                 <th>Actions</th>
@@ -167,11 +203,23 @@ export default function ProductManagement() {
                   <tr key={p.id}>
                     <td>
                       <div className="sp-product-cell">
-                        <img 
-                          src={p.imagePath ? `${BASE_URL}/api/products/images/${p.imagePath}` : "https://via.placeholder.com/48"} 
-                          alt={p.name} 
-                          className="sp-product-img"
-                        />
+                        <div style={{position: 'relative'}}>
+                          <img 
+                            src={p.imagePath ? `${BASE_URL}/uploads/${p.imagePath}` : "https://via.placeholder.com/48"} 
+                            alt={p.name} 
+                            className="sp-product-img"
+                          />
+                          {p.onSale && (
+                            <div style={{
+                              position: 'absolute', top: '-5px', left: '-5px',
+                              background: '#dc2626', color: '#fff', 
+                              fontSize: '0.6rem', fontWeight: 'bold', 
+                              padding: '2px 4px', borderRadius: '4px'
+                            }}>
+                              {p.salePercentage ? `${Math.round(p.salePercentage)}%` : 'SALE'}
+                            </div>
+                          )}
+                        </div>
                         <div>
                           <div className="sp-product-name">{p.name}</div>
                           <div className="sp-product-brand">{p.brand}</div>
@@ -195,6 +243,11 @@ export default function ProductManagement() {
                       </span>
                     </td>
                     <td>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#6b7280'}}>
+                         <Eye size={14}/> {p.totalViews}
+                      </div>
+                    </td>
+                    <td>
                       <div style={{display: 'flex', gap: '0.5rem', flexDirection: 'column'}}>
                         <span className={`sp-badge ${p.status === 'ACTIVE' ? 'sp-badge-success' : 'sp-badge-gray'}`}>
                           {p.status}
@@ -215,9 +268,6 @@ export default function ProductManagement() {
                       <div className="sp-actions">
                         <button className="sp-action-btn" onClick={() => setEditingProduct(p)} title="Edit">
                           <Edit2 size={16} />
-                        </button>
-                        <button className="sp-action-btn" onClick={() => setSaleProduct(p)} title="Sale">
-                          <Tag size={16} color={p.onSale ? "#dc2626" : "currentColor"} />
                         </button>
                         <button className="sp-action-btn delete" onClick={() => openDeleteDialog(p)} title="Delete">
                           <Trash2 size={16} />
@@ -246,19 +296,6 @@ export default function ProductManagement() {
         />
       )}
 
-      {/* Sale Modal */}
-      {saleProduct && (
-        <SaleModal
-          product={saleProduct}
-          setProduct={setSaleProduct}
-          setProducts={setProducts}
-          showSuccess={showSuccess}
-          showError={showError}
-          currentUserId={currentUserId}
-          BASE_URL={BASE_URL}
-        />
-      )}
-
       {/* Delete Confirmation */}
       {deleteProduct && (
         <div className="sp-modal-overlay">
@@ -277,3 +314,5 @@ export default function ProductManagement() {
     </div>
   );
 }
+
+

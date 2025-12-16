@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, Send, ArrowLeft, User, ChevronRight } from "lucide-react";
 import { getCurrentUserId } from "../AddCart/cartUtils";
-import { getMessagesForReceiver, getConversation, sendReply } from "./messageService";
+import { getInbox, getSentMessages, getConversation, sendMessage } from "./messageService";
 import { API_BASE } from "../config/config";
 import "./MessagesPage.css";
 
@@ -10,7 +10,6 @@ export default function MessagesPage() {
   const navigate = useNavigate();
   const currentUserId = getCurrentUserId();
 
-  const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [conversationMessages, setConversationMessages] = useState([]);
@@ -29,30 +28,44 @@ export default function MessagesPage() {
   const loadMessages = async () => {
     try {
       setLoading(true);
-      const data = await getMessagesForReceiver(currentUserId);
-      setMessages(data);
+      // Fetch both inbox and sent to build full conversation list
+      const [inbox, sent] = await Promise.all([
+          getInbox(),
+          getSentMessages()
+      ]);
+      
+      const allMessages = [...inbox, ...sent];
+      
+      // Sort by date desc
+      allMessages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       // Group messages by the other person in conversation
       const grouped = {};
-      data.forEach((msg) => {
-        // Determine the other user in the conversation
-        const otherUserId = msg.senderId === parseInt(currentUserId) ? msg.receiverId : msg.senderId;
-        const otherUserName = msg.senderId === parseInt(currentUserId) ? msg.receiverUsername : msg.senderUsername;
+      
+      allMessages.forEach((msg) => {
+        const myId = parseInt(currentUserId);
+        const isSender = msg.senderId === myId;
+        
+        // Determine the other user
+        const otherUserId = isSender ? msg.receiverId : msg.senderId;
+        const otherUserName = isSender ? msg.receiverName : msg.senderName;
+        const otherUserProfile = isSender ? msg.receiverProfileImage : msg.senderProfileImage;
 
         if (!grouped[otherUserId]) {
-          // Format last message with product info if it's a product enquiry
+          // Format last message
           let lastMessagePreview = msg.content;
-          if (msg.productId && msg.messageType === "PRODUCT_ENQUIRY") {
+          if (msg.productId) {
             const prodName = msg.productName || `ID: ${msg.productId}`;
-            lastMessagePreview = `📦 Enquiry (${prodName}): ${msg.content}`;
+            lastMessagePreview = `📦 Enquiry: ${msg.content}`;
           }
 
           grouped[otherUserId] = {
             userId: otherUserId,
-            userName: otherUserName,
+            userName: otherUserName || `User ${otherUserId}`,
+            userImage: otherUserProfile,
             lastMessage: lastMessagePreview,
-            lastMessageTime: msg.sentAt,
-            unread: msg.senderId !== parseInt(currentUserId),
+            lastMessageTime: msg.createdAt,
+            unread: !isSender && !msg.read, // Use 'read' field from DTO
           };
         }
       });
@@ -65,28 +78,16 @@ export default function MessagesPage() {
     }
   };
 
-  const loadConversation = async (otherUserId, otherUserName) => {
+  const loadConversationData = async (otherUserId, otherUserName) => {
     try {
-      const data = await getConversation(currentUserId, otherUserId);
-      setConversationMessages(data);
+      const data = await getConversation(otherUserId);
+      // Sort oldest to newest for chat view
+      const sorted = data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      
+      setConversationMessages(sorted);
       setSelectedConversation({ userId: otherUserId, userName: otherUserName });
       
-      // Mark all messages from this user as read
-      try {
-        await fetch(`${API_BASE}/api/messages/mark-read`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            receiverId: currentUserId,
-            senderId: otherUserId
-          })
-        });
-        
-        // Trigger navbar to refresh message count
-        window.dispatchEvent(new Event('messages-updated'));
-      } catch (error) {
-        console.error('Failed to mark messages as read:', error);
-      }
+      // Mark read logic would go here if backend supported it
     } catch (error) {
       console.error("Failed to load conversation:", error);
     }
@@ -97,10 +98,11 @@ export default function MessagesPage() {
 
     setSending(true);
     try {
-      await sendReply(currentUserId, selectedConversation.userId, replyText);
+      // Use generic sendMessage
+      await sendMessage(selectedConversation.userId, replyText, null);
       setReplyText("");
-      // Reload conversation
-      await loadConversation(selectedConversation.userId, selectedConversation.userName);
+      // Reload conversation to show new message
+      await loadConversationData(selectedConversation.userId, selectedConversation.userName);
     } catch (error) {
       console.error("Failed to send reply:", error);
       alert("Failed to send message");
@@ -112,10 +114,10 @@ export default function MessagesPage() {
   const handleBackToList = () => {
     setSelectedConversation(null);
     setConversationMessages([]);
-    loadMessages();
+    loadMessages(); // Refresh list to update last message
   };
 
-  if (loading) {
+  if (loading && !selectedConversation) {
     return (
       <div className="messages-page">
         <div className="messages-loading">Loading messages...</div>
@@ -146,10 +148,12 @@ export default function MessagesPage() {
                   <div
                     key={conv.userId}
                     className="conversation-item"
-                    onClick={() => loadConversation(conv.userId, conv.userName)}
+                    onClick={() => loadConversationData(conv.userId, conv.userName)}
                   >
                     <div className="conversation-avatar">
-                      <User size={24} />
+                      {conv.userImage ? (
+                          <img src={`${API_BASE}/uploads/${conv.userImage}`} alt="" style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}}/>
+                      ) : <User size={24} />}
                     </div>
                     <div className="conversation-details">
                       <h3>{conv.userName}</h3>
@@ -183,7 +187,7 @@ export default function MessagesPage() {
                   }`}
                 >
                   {/* Show product info if it's a product enquiry */}
-                  {msg.productId && msg.messageType === "PRODUCT_ENQUIRY" && (
+                  {msg.productId && (
                     <div 
                       className="message-product-tag clickable"
                       onClick={(e) => {
@@ -194,11 +198,11 @@ export default function MessagesPage() {
                     >
                       {msg.productImage && (
                         <img 
-                          src={`${API_BASE}/product-images/${msg.productImage}`} 
+                          src={`${API_BASE}/uploads/${msg.productImage}`} 
                           alt={msg.productName} 
                           className="msg-product-thumb"
                           onError={(e) => {
-                            e.target.onerror = null; // Prevent infinite loop
+                            e.target.onerror = null; 
                             e.target.src = "https://via.placeholder.com/40?text=Img";
                           }}
                         />
@@ -213,7 +217,7 @@ export default function MessagesPage() {
                   
                   <div className="message-content">{msg.content}</div>
                   <div className="message-time">
-                    {new Date(msg.sentAt).toLocaleString()}
+                    {new Date(msg.createdAt).toLocaleString()}
                   </div>
                 </div>
               ))}

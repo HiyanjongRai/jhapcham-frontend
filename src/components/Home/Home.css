@@ -1,0 +1,373 @@
+/* --- Global Reset & Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.amazon-home {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #0F1111;
+  background-color: #EAEDED; /* Amazon-like light gray background */
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.amz-container {
+  max-width: 1400px; /* Wider container */
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+}
+
+/* --- 1. Hero Carousel --- */
+.amz-carousel-container {
+  position: relative;
+  width: 100%;
+  height: 400px; /* Reduced height for modern look */
+  overflow: hidden;
+  background: #232f3e;
+}
+
+.amz-slides {
+  display: flex;
+  height: 100%;
+  transition: transform 0.5s ease-in-out;
+}
+
+.amz-slide {
+  min-width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative; 
+}
+
+/* Gradient Overlay for text readability */
+.amz-slide::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 60%);
+}
+
+.amz-slide-content {
+  position: absolute;
+  top: 50%;
+  left: 60px;
+  transform: translateY(-50%);
+  color: white;
+  max-width: 500px;
+  z-index: 2;
+}
+
+.amz-slide-content h2 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.amz-slide-content p {
+  font-size: 1.2rem;
+  margin-bottom: 24px;
+  opacity: 0.9;
+}
+
+.amz-hero-btn {
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111;
+  background: #FFD814; /* Amazon Yellow */
+  border: 1px solid #FCD200;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.amz-hero-btn:hover {
+  background: #F7CA00;
+}
+
+.amz-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,0.5);
+  color: white;
+  width: 50px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: background 0.2s;
+  border-radius: 4px;
+}
+
+.amz-arrow:hover {
+  background: rgba(255,255,255,0.5);
+}
+
+.amz-arrow.left { left: 10px; }
+.amz-arrow.right { right: 10px; }
+
+.amz-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 5;
+}
+
+.amz-dot {
+  width: 10px;
+  height: 10px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.amz-dot.active {
+  background: white;
+  transform: scale(1.2);
+}
+
+/* --- 2. Compact Categories Row --- */
+.amz-cat-row-section {
+  background: white;
+  padding: 15px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.amz-cat-row {
+  display: flex;
+  justify-content: space-between;
+  overflow-x: auto;
+  gap: 20px;
+  padding-bottom: 5px;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+.amz-cat-row::-webkit-scrollbar { display: none; }
+
+.amz-cat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  min-width: 80px;
+  transition: transform 0.2s;
+}
+
+.amz-cat-item:hover {
+  transform: translateY(-3px);
+  color: #E47911; /* Amazon Orange */
+}
+
+.amz-cat-item span {
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.amz-cat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+}
+
+/* --- Sections Common --- */
+.amz-section {
+  padding: 24px 0;
+  margin-bottom: 20px;
+}
+
+.bg-white { background: white; }
+.bg-gray { background: transparent; } /* Transparent to show page bg */
+
+.amz-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.amz-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.amz-link {
+  font-size: 0.9rem;
+  color: #007185; /* Amazon Link Blue */
+  text-decoration: none;
+}
+.amz-link:hover {
+  text-decoration: underline;
+  color: #C7511F;
+}
+
+/* Scarcity / Timer */
+.amz-info-bar {
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  color: #565959;
+}
+.scarcity-text strong {
+  color: #B12704; /* Urgent Red */
+}
+
+/* --- Scroll Rows (Products) --- */
+.amz-scroll-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding: 4px 0 20px 0; /* Space for shadow */
+  scrollbar-width: thin;
+}
+
+.amz-scroll-row::-webkit-scrollbar {
+  height: 8px;
+}
+.amz-scroll-row::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.amz-card-mini {
+  min-width: 240px;
+  max-width: 240px;
+  flex-shrink: 0;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.amz-card-mini .product-card {
+  box-shadow: none !important; /* Override default card shadow */
+  border: none !important;
+}
+
+.no-items {
+  padding: 20px;
+  color: #666;
+}
+
+/* --- Banner Strip --- */
+.amz-banner-strip {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto 20px auto;
+  padding: 0 20px;
+}
+.amz-banner-strip img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  cursor: pointer;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+/* --- Grids --- */
+.amz-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.amz-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* Smaller items */
+  gap: 16px;
+}
+
+.amz-grid-item-sm {
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  transition: transform 0.2s;
+}
+.amz-grid-item-sm:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* --- Promise Section --- */
+.amz-promise-section {
+  background: white;
+  padding: 40px 0;
+  margin-top: 40px;
+  border-top: 1px solid #ddd;
+}
+
+.amz-promise-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  text-align: center;
+}
+
+.p-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.promise-item h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .amz-carousel-container { height: 250px; }
+  .amz-slide-content h2 { font-size: 1.8rem; }
+  .amz-slide-content { left: 20px; width: 80%; }
+  .amz-arrow { display: none; } /* Hide arrows on mobile */
+  
+  .amz-grid-5 { grid-template-columns: 1fr 1fr; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-heading { font-size: 2.5rem; }
+  .shophub-hero { min-height: auto; text-align: center; }
+  .shophub-hero-static { flex-direction: column; text-align: center; }
+  .hero-inner-static { grid-template-columns: 1fr; gap: 40px; }
+  .hero-text-static { text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .hero-buttons { justify-content: center; }
+  .hero-trust-badges { justify-content: center; }
+  
+  .hero-image-static { width: 100%; max-width: 400px; margin: 0 auto; }
+  .main-hero-img { transform: none; }
+  .main-hero-img:hover { transform: none; }
+  
+  .flash-header-row { justify-content: center; text-align: center; }
+  .flash-title-group { flex-direction: column; }
+  
+  .stats-row-simple { flex-direction: column; gap: 24px; }
+}
+
+.loader-white {
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  padding: 40px;
+}

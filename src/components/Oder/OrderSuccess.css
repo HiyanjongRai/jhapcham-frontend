@@ -1,0 +1,113 @@
+.order-success-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 30px;
+    background: white;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #f0f0f0;
+}
+
+.success-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.order-success-container h1 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.order-id {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 5px;
+}
+
+.success-message {
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.order-details-card {
+    text-align: left;
+    background: #fafafa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    margin-bottom: 25px;
+}
+
+.order-details-card h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.order-item-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.item-meta {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+.order-summary-section {
+    margin-top: 20px;
+    border-top: 1px dashed #ddd;
+    padding-top: 15px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: #555;
+}
+
+.summary-row.total {
+    font-weight: bold;
+    color: #333;
+    font-size: 1.1rem;
+    margin-top: 10px;
+}
+
+.shipping-info-section {
+    margin-top: 20px;
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.shipping-info-section h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.continue-btn {
+    background: #111;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 500;
+    display: inline-block;
+    transition: all 0.2s;
+}
+
+.continue-btn:hover {
+    background: #333;
+    transform: translateY(-2px);
+}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { API_BASE } from "../config/config";
 import { 
   Star, 
@@ -10,17 +10,22 @@ import {
   Store, 
   ChevronRight,
   Share2,
-  MessageCircle
+  MessageCircle,
+  Flag
 } from "lucide-react";
 import {
   getCurrentUserId,
   loadGuestCart,
   saveGuestCart,
+  apiAddToCart,
 } from "../AddCart/cartUtils";
+import { apiAddToWishlist, apiRemoveFromWishlist, apiCheckWishlist } from "../WishlistPage/wishlistUtils";
 import MessageModal from "../Message/MessageModal";
+import ReportModal from "../Report/ReportModal";
 import ErrorToast from "../ErrorToast/ErrorToast";
 import "./ProductDetailModern.css";
 
+ 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -30,12 +35,13 @@ export default function ProductDetailPage() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [liked, setLiked] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState(null);
-
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedStorage, setSelectedStorage] = useState(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const userId = getCurrentUserId();
   const viewLogged = useRef(false);
@@ -63,25 +69,82 @@ export default function ProductDetailPage() {
       try {
         setLoading(true);
 
-        // Load product
-        const res = await fetch(`${API_BASE}/api/products/${id}`);
+        // Load product with userId for view tracking
+        const res = await fetch(`${API_BASE}/api/products/${id}?userId=${userId || ''}`);
         const data = await res.json();
-        setProduct(data);
-        setMainImage(`${API_BASE}/product-images/${data.imagePath}`);
+        
+        // Map ProductDetailDTO to frontend format
+        const mappedProduct = {
+          ...data,
+          id: data.productId || data.id,
+          imagePath: data.imagePaths && data.imagePaths.length > 0 ? data.imagePaths[0] : "",
+          additionalImages: data.imagePaths || [],
+          stock: data.stockQuantity || 0,
+          colors: (() => {
+            if (Array.isArray(data.colorOptions)) return data.colorOptions;
+            if (typeof data.colorOptions !== 'string') return [];
+            try {
+              const res = JSON.parse(data.colorOptions);
+              return Array.isArray(res) ? res : [];
+            } catch { 
+              return data.colorOptions.split(',').map(s => s.trim()).filter(Boolean);
+            }
+          })(),
+          storage: (() => {
+            if (Array.isArray(data.storageSpec)) return data.storageSpec;
+            if (typeof data.storageSpec !== 'string') return [];
+            try {
+              const res = JSON.parse(data.storageSpec);
+              return Array.isArray(res) ? res : [];
+            } catch { 
+              return data.storageSpec.split(',').map(s => s.trim()).filter(Boolean);
+            }
+          })(),
+          rating: data.averageRating || 0,
+          sellerId: data.sellerUserId,
+          sellerStoreName: data.storeName,
+          sellerStoreAddress: data.storeAddress,
+          specification: data.specification || "",
+          salePrice: data.salePrice !== null ? data.salePrice : (data.discountPrice ?? data.price),
+          discountPercent: data.salePercentage || 0,
+          saleLabel: data.saleLabel,
+          freeShipping: data.freeShipping || false,
+          insideValleyShipping: data.insideValleyShipping,
+          outsideValleyShipping: data.outsideValleyShipping,
+          manufactureDate: data.manufactureDate,
+          expiryDate: data.expiryDate,
+          warrantyMonths: data.warrantyMonths,
+          features: data.features,
+          description: data.description,
+        };
+        
+        setProduct(mappedProduct);
+        setMainImage(`${API_BASE}/uploads/${mappedProduct.imagePath}`);
 
-        if (data.colors?.length) setSelectedColor(data.colors[0]);
-        if (data.storage?.length) setSelectedStorage(data.storage[0]);
+        if (mappedProduct.colors?.length) setSelectedColor(mappedProduct.colors[0]);
+        if (mappedProduct.storage?.length) setSelectedStorage(mappedProduct.storage[0]);
 
-        // Log view
-        if (!viewLogged.current) {
-          logView(data.id);
-          viewLogged.current = true;
+        // Check wishlist status
+        if (userId) {
+            const isLiked = await apiCheckWishlist(userId, id);
+            setLiked(isLiked);
         }
 
+        // auto-view logging handled by backend now
+
         // Load reviews
-        const rev = await fetch(`${API_BASE}/api/reviews/product/${id}`);
-        const revData = await rev.json();
-        setReviews(revData);
+        try {
+          const rev = await fetch(`${API_BASE}/api/reviews/product/${id}`);
+          if (rev.ok) {
+            const revData = await rev.json();
+            setReviews(Array.isArray(revData) ? revData : []);
+          } else {
+            setReviews([]);
+          }
+        } catch (revErr) {
+          console.error("Failed to load reviews:", revErr);
+          setReviews([]);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -90,7 +153,7 @@ export default function ProductDetailPage() {
     };
 
     load();
-  }, [id]);
+  }, [id, userId]);
 
   if (loading) return <div className="pd-container" style={{textAlign: 'center', paddingTop: '4rem'}}>Loading...</div>;
   if (!product) return <div className="pd-container" style={{textAlign: 'center', paddingTop: '4rem'}}>Product Not Found</div>;
@@ -99,59 +162,50 @@ export default function ProductDetailPage() {
   const increaseQty = () => setQuantity(quantity + 1);
   const decreaseQty = () => setQuantity(Math.max(1, quantity - 1));
 
-  const apiAddItem = async (userId, item) => {
-    const url = `${API_BASE}/api/cart/add`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(item),
-    });
-
-    if (!res.ok) {
-      // Parse backend error response
-      try {
-        const errorData = await res.json();
-        throw {
-          status: res.status,
-          message: errorData.message || 'Failed to add to cart',
-          details: errorData.details || errorData.error || res.statusText,
-          errors: errorData.errors || {},
-          timestamp: errorData.timestamp || new Date().toISOString(),
-          path: errorData.path || url,
-          trace: errorData.trace
-        };
-      } catch (e) {
-        if (e.status) throw e;
-        throw {
-          status: res.status,
-          message: 'Failed to add to cart',
-          details: await res.text().catch(() => 'Unknown error'),
-          timestamp: new Date().toISOString(),
-          path: url
-        };
-      }
+  const toggleWishlist = async () => {
+    if (!userId) {
+        navigate("/login");
+        return;
+    }
+    try {
+        if (liked) {
+            await apiRemoveFromWishlist(userId, id);
+            setLiked(false);
+            setMessage("Removed from wishlist");
+        } else {
+            await apiAddToWishlist(userId, id);
+            setLiked(true);
+            setMessage("Added to wishlist");
+        }
+        setTimeout(() => setMessage(""), 2000);
+    } catch (err) {
+        console.error(err);
     }
   };
 
   const handleAddToCart = async () => {
-    if (product.stock === 0) return;
+    if (product.stock === 0 || adding) return;
     setAdding(true);
-    setError(null); // Clear previous errors
+    setError(null);
 
     try {
-      const item = {
-        userId: userId,
-        productId: product.id,
-        quantity,
-        unitPrice: product.price,
-        lineTotal: product.price * quantity,
-        color: selectedColor,
-        storage: selectedStorage,
-      };
-
       if (userId) {
-        await apiAddItem(userId, item);
+        // Logged in: Use API
+        await apiAddToCart(userId, product.id, quantity, selectedColor, selectedStorage);
       } else {
+        // Guest: Local Logic
+        const item = {
+          userId: null,
+          productId: product.id,
+          name: product.name,
+          imagePath: product.imagePath,
+          quantity,
+          unitPrice: product.price,
+          lineTotal: product.price * quantity,
+          color: selectedColor,
+          storage: selectedStorage,
+        };
+
         const cart = loadGuestCart();
         const idx = cart.findIndex(
           (c) =>
@@ -174,7 +228,6 @@ export default function ProductDetailPage() {
     } catch (err) {
       console.error("Add to cart error:", err);
       
-      // Display error using ErrorToast
       if (err.status) {
         setError(err);
       } else {
@@ -189,6 +242,13 @@ export default function ProductDetailPage() {
       setAdding(false);
     }
   };
+
+  // Calculate Rating Distribution
+  const ratingDist = [5, 4, 3, 2, 1].map(star => {
+    const count = reviews.filter(r => Math.round(r.rating) === star).length;
+    const percentage = reviews.length ? (count / reviews.length) * 100 : 0;
+    return { star, count, percentage };
+  });
 
   return (
     <>
@@ -206,6 +266,15 @@ export default function ProductDetailPage() {
           </div>
         )}
 
+      {/* Breadcrumb */}
+      <div className="pd-breadcrumb">
+         <Link to="/">Home</Link> 
+         <ChevronRight size={14} />
+         <Link to="/products">Products</Link>
+         <ChevronRight size={14} />
+         <span>{product.name}</span>
+      </div>
+
       <div className="pd-grid">
         {/* Left: Image Gallery */}
         <div className="pd-gallery">
@@ -216,9 +285,9 @@ export default function ProductDetailPage() {
             {[product.imagePath, ...(product.additionalImages || [])].map((img, i) => (
               <img
                 key={i}
-                src={`${API_BASE}/product-images/${img}`}
+                src={`${API_BASE}/uploads/${img}`}
                 className={`pd-thumb ${mainImage.includes(img) ? "active" : ""}`}
-                onClick={() => setMainImage(`${API_BASE}/product-images/${img}`)}
+                onClick={() => setMainImage(`${API_BASE}/uploads/${img}`)}
                 alt="thumbnail"
               />
             ))}
@@ -231,14 +300,13 @@ export default function ProductDetailPage() {
             <div className="pd-brand">{product.brand}</div>
             <h1 className="pd-title">{product.name}</h1>
             
-
             
 
 
-          <div className="stock">
+          <div className="pd-stock-status">
               {product.stock > 0 ? (
-              <p style={{ color: "green" , marginTop : "10px", marginBottom : "10px" , fontWeight : "bold" , fontSize: "20px" }}>In Stock : {product.stock}</p>) : (
-              <p style={{ color: "red" }}>Out of Stock</p>)}
+              <p className="status-in-stock">In Stock : {product.stock}</p>) : (
+              <p className="status-out-stock">Out of Stock</p>)}
           </div>
   
             <div className="pd-rating">
@@ -246,9 +314,9 @@ export default function ProductDetailPage() {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    size={18}
-                    fill={i < Math.round(product.rating) ? "#fbbf24" : "none"}
-                    color={i < Math.round(product.rating) ? "#fbbf24" : "#d1d5db"}
+                    size={20}
+                    fill={i < Math.round(product.rating) ? "#1a1a1a" : "none"}
+                    color={i < Math.round(product.rating) ? "#1a1a1a" : "#d1d5db"}
                   />
                 ))}
               </div>
@@ -259,16 +327,52 @@ export default function ProductDetailPage() {
           <div className="pd-price-block">
             {product.onSale ? (
               <>
-                <span className="pd-price">₹{product.salePrice}</span>
-                <span className="pd-old-price">₹{product.price}</span>
-                <span className="pd-discount">-{product.discountPercent}%</span>
+                <span className="pd-price-new">₹{product.salePrice}</span>
+                <span className="pd-price-old">₹{product.price}</span>
+                <span className="pd-discount-badge">
+                  {product.saleLabel || `-${Math.round(product.discountPercent)}%`}
+                </span>
               </>
             ) : (
-              <span className="pd-price">₹{product.price}</span>
+              <span className="pd-price-new">₹{product.price}</span>
+            )}
+            {product.freeShipping && (
+               <span className="pd-shipping-badge">
+                  Free Shipping
+               </span>
             )}
           </div>
 
           <p className="pd-description">{product.shortDescription}</p>
+          
+          {product.specification && (
+            <div className="pd-section">
+              <h4 className="pd-section-title">Specifications</h4>
+              <p className="pd-text-content">{product.specification}</p>
+            </div>
+          )}
+
+          {product.features && (
+            <div className="pd-section">
+              <h4 className="pd-section-title">Features</h4>
+              <ul className="pd-features-list">
+                {product.features.split('\n').map((f, i) => f.trim() && <li key={i}>{f}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {product.description && (
+             <div className="pd-section">
+                <h4 className="pd-section-title">Description</h4>
+                <p className="pd-text-content">{product.description}</p>
+             </div>
+          )}
+          
+          <div className="pd-meta-info">
+             {product.warrantyMonths > 0 && <p className="meta-item"><strong>Warranty:</strong> {product.warrantyMonths} Months</p>}
+             {product.expiryDate && <p className="meta-item"><strong>Expiry Date:</strong> {new Date(product.expiryDate).toLocaleDateString()}</p>}
+             {product.manufactureDate && <p className="meta-item"><strong>Manufactured:</strong> {new Date(product.manufactureDate).toLocaleDateString()}</p>}
+          </div>
 
           <div className="pd-options">
             {product.colors?.length > 0 && (
@@ -308,45 +412,64 @@ export default function ProductDetailPage() {
 
           <div className="pd-actions">
             <div className="pd-qty-wrapper">
-              <button className="pd-qty-btn" onClick={decreaseQty} disabled={product.stock === 0}><Minus size={16} /></button>
+              <button className="pd-qty-btn" onClick={decreaseQty} disabled={product.stock === 0}><Minus size={18} /></button>
               <span className="pd-qty-val">{quantity}</span>
-              <button className="pd-qty-btn" onClick={increaseQty} disabled={product.stock === 0}><Plus size={16} /></button>
+              <button className="pd-qty-btn" onClick={increaseQty} disabled={product.stock === 0}><Plus size={18} /></button>
             </div>
 
             <button 
               className="pd-add-btn" 
               onClick={handleAddToCart}
               disabled={product.stock === 0 || adding}
-              style={{ opacity: product.stock === 0 ? 0.5 : 1 }}
             >
               <ShoppingCart size={20} />
-              {product.stock === 0 ? "Out of Stock" : adding ? "Adding..." : "Add to Cart"}
+              {product.stock === 0 ? "OUT OF STOCK" : adding ? "ADDING..." : "ADD TO CART"}
             </button>
 
             <button 
-              className="pd-wish-btn" 
+              className="pd-message-btn" 
               onClick={() => setShowMessageModal(true)}
               title="Ask Seller"
             >
               <MessageCircle size={24} />
             </button>
 
-            <button className="pd-wish-btn">
-              <Heart size={24} />
+             <button 
+              className="pd-message-btn" // Reusing styling for now, or add pd-report-btn
+              onClick={() => setShowReportModal(true)}
+              title="Report Product"
+              style={{ color: '#ef4444', borderColor: '#ef4444' }}
+            >
+              <Flag size={24} />
+            </button>
+
+            <button 
+              className="pd-wish-btn" 
+              onClick={toggleWishlist}
+              style={{ 
+                  color: liked ? '#dc2626' : 'inherit',
+                  borderColor: liked ? '#dc2626' : '#e5e7eb',
+                  background: liked ? '#fef2f2' : 'white'
+              }}
+            >
+              <Heart size={24} fill={liked ? "#dc2626" : "none"} />
             </button>
           </div>
 
           {/* Seller Card */}
           <div className="pd-seller-card" onClick={() => navigate(`/seller/${product.sellerId}`)}>
             <div className="pd-seller-avatar">
-              <Store size={32} color="#4b5563" />
+              <Store size={24} color="#1a1a1a" />
             </div>
-            <div className="pd-seller-info" style={{ flex: 1 }}>
-              <p>Sold by</p>
+            <div className="sellerProfile">
+
+            </div>
+            <div className="pd-seller-info">
+              <p className="seller-label">Sold by</p>
               <h3>{product.sellerStoreName}</h3>
-              <p>{product.sellerStoreAddress}</p>
+              <p className="seller-address">{product.sellerStoreAddress}</p>
             </div>
-            <ChevronRight color="#9ca3af" />
+            <ChevronRight color="#1a1a1a" />
           </div>
         </div>
       </div>
@@ -354,21 +477,35 @@ export default function ProductDetailPage() {
       {/* Reviews Section */}
       <div className="pd-reviews-section">
         <div className="pd-reviews-header">
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>Customer Reviews</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontSize: '3rem', fontWeight: '800' }}>{product.rating}</span>
-            <div>
-              <div className="pd-stars">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    size={20}
-                    fill={i < Math.round(product.rating) ? "#fbbf24" : "none"}
-                    color={i < Math.round(product.rating) ? "#fbbf24" : "#d1d5db"}
-                  />
+          <h2 className="section-title">Customer Reviews</h2>
+          <div className="pd-rating-summary">
+            <div className="pd-rating-hero">
+                <span className="rating-number">{product.rating ? Math.round(product.rating * 10) / 10 : 0}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div className="pd-stars">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                            key={i}
+                            size={20}
+                            fill={i < Math.round(product.rating) ? "#1a1a1a" : "none"}
+                            color={i < Math.round(product.rating) ? "#1a1a1a" : "#d1d5db"}
+                        />
+                        ))}
+                    </div>
+                     <p className="rating-count">{reviews.length} reviews</p>
+                </div>
+            </div>
+
+            <div className="pd-rating-bars">
+                {ratingDist.map(item => (
+                    <div key={item.star} className="rating-bar-row">
+                        <span className="star-label">{item.star} <Star size={10} fill="#666" stroke="none" /></span>
+                        <div className="rating-track">
+                            <div className="rating-fill" style={{ width: `${item.percentage}%` }}></div>
+                        </div>
+                        <span className="count-label">{item.count}</span>
+                    </div>
                 ))}
-              </div>
-              <p style={{ margin: 0, color: '#6b7280' }}>Based on {reviews.length} reviews</p>
             </div>
           </div>
         </div>
@@ -378,12 +515,14 @@ export default function ProductDetailPage() {
             <div className="pd-review-card" key={r.id}>
               <div className="pd-review-user">
                 <img
-                  src={r.reviewerProfileImage ? `${API_BASE}/${r.reviewerProfileImage}` : "https://via.placeholder.com/40"}
+                  src={r.userProfileImage 
+                        ? (r.userProfileImage.startsWith('http') ? r.userProfileImage : `${API_BASE}/uploads/${r.userProfileImage}`) 
+                        : "https://via.placeholder.com/40"}
                   className="pd-review-avatar"
-                  alt={r.reviewerName}
+                  alt={r.userName || "User"}
                 />
                 <div>
-                  <div style={{ fontWeight: '600' }}>{r.reviewerName}</div>
+                  <div style={{ fontWeight: '600' }}>{r.userName || "Anonymous"}</div>
                   <div className="pd-stars" style={{ fontSize: '0.8rem' }}>
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
@@ -397,11 +536,13 @@ export default function ProductDetailPage() {
                 </div>
               </div>
               <p className="pd-review-content">{r.comment}</p>
-              {r.images?.length > 0 && (
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                  {r.images.map((img, i) => (
-                    <img key={i} src={`${API_BASE}/${img}`} alt="review" style={{ width: 80, height: 80, borderRadius: 8, objectFit: 'cover' }} />
-                  ))}
+              {r.imagePath && (
+                <div style={{ marginTop: '1rem' }}>
+                    <img 
+                        src={r.imagePath.startsWith('http') ? r.imagePath : `${API_BASE}/uploads/${r.imagePath}`} 
+                        alt="review" 
+                        style={{ width: 100, height: 100, borderRadius: 8, objectFit: 'cover' }} 
+                    />
                 </div>
               )}
             </div>
@@ -419,6 +560,14 @@ export default function ProductDetailPage() {
         recipientName={product.sellerStoreName}
         productId={product.id}
         productName={product.name}
+      />
+      
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        type="PRODUCT"
+        reportedEntityId={product.id}
+        entityName={product.name}
       />
       </div>
     </>

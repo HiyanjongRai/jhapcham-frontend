@@ -1,24 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { getCurrentUserId } from "../AddCart/cartUtils";
+import { API_BASE } from "../config/config";
 import "./UpdateAccount.css";
-
-
-const API_BASE = "http://localhost:8080";
 
 export default function UpdateAccount() {
   const [profile, setProfile] = useState({
     fullName: "",
-    email: "",
+    email: "", // Read-only
     contactNumber: "",
-    profileImageUrl: "",
+  });
+  
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
   });
 
   const [selectedFile, setSelectedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [changePasswordMode, setChangePasswordMode] = useState(false);
+
   const userId = getCurrentUserId();
 
   // Load user profile
   async function loadProfile() {
     try {
+      // Assuming GET /api/users/{userId} or similar exists to fetch data. 
+      // If not, we might need to rely on what was previously working or use the new controller if it had a GET.
+      // The user only provided PUT for CustomerController. 
+      // Let's stick to the existing fetch endpoint for reading, assuming it still works.
       const res = await fetch(`${API_BASE}/users/profile/${userId}`);
       if (!res.ok) throw new Error("Failed to load profile");
       const data = await res.json();
@@ -26,105 +37,111 @@ export default function UpdateAccount() {
         fullName: data.fullName || "",
         email: data.email || "",
         contactNumber: data.contactNumber || "",
-        profileImageUrl: data.profileImagePath
-          ? `${API_BASE}/uploads/customer-profile/${data.profileImagePath}`
-          : "",
       });
+      // Set existing image
+      if (data.profileImagePath) {
+        setPreviewImage(
+          data.profileImagePath.startsWith("http") 
+            ? data.profileImagePath 
+            : `${API_BASE}/uploads/customer-profile/${data.profileImagePath}`
+        );
+      }
     } catch (err) {
       console.error(err);
-      alert("Error loading profile");
     }
   }
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    if (userId) loadProfile();
+  }, [userId]);
 
-  // Update text fields
-  async function handleUpdate(e) {
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
-      const res = await fetch(`${API_BASE}/users/profile/${userId}`, {
+      const formData = new FormData();
+      formData.append("fullName", profile.fullName);
+      formData.append("contactNumber", profile.contactNumber);
+      
+      if (selectedFile) {
+        formData.append("profileImage", selectedFile);
+      }
+
+      if (changePasswordMode && passwords.newPassword) {
+        formData.append("currentPassword", passwords.currentPassword);
+        formData.append("newPassword", passwords.newPassword);
+        formData.append("confirmPassword", passwords.confirmPassword);
+      }
+
+      // Updated endpoint: PUT /api/customers/{userId}
+      const res = await fetch(`${API_BASE}/api/customers/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: profile.fullName,
-          email: profile.email,
-          contactNumber: profile.contactNumber,
-        }),
+        body: formData,
       });
 
       if (res.ok) {
+        const updatedUser = await res.json();
         alert("Profile updated successfully!");
-      } else {
-        alert("Failed to update profile");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error updating profile");
-    }
-  }
-
-  // Upload profile image
-  async function handleFileUpload(e) {
-    e.preventDefault();
-    if (!selectedFile) {
-      alert("Please select an image first!");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
-    try {
-      const res = await fetch(
-        `${API_BASE}/users/profile/${userId}/profile-image`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        setProfile((prev) => ({
-          ...prev,
-          profileImageUrl: `${API_BASE}/uploads/customer-profile/${data.profileImagePath}`,
+        // Update local state with response
+        setProfile(prev => ({
+            ...prev,
+            fullName: updatedUser.fullName,
+            contactNumber: updatedUser.contactNumber
         }));
-        alert("Profile image updated successfully!");
-        setSelectedFile(null);
+        if (updatedUser.profileImagePath) {
+             setPreviewImage(`${API_BASE}/uploads/customer-profile/${updatedUser.profileImagePath}`);
+        }
+        setSelectedFile(null); // Clear file selection
+        
+        // Reset password fields
+        setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        setChangePasswordMode(false);
+        
       } else {
-        alert("Failed to upload profile image");
+        const errorData = await res.json();
+        alert(errorData.message || "Failed to update profile");
       }
     } catch (err) {
       console.error(err);
-      alert("Error uploading profile image");
+      alert("Error updating profile. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="ua-wrapper">
       <div className="ua-card">
-        {/* Profile Image */}
-        <div className="ua-img-section">
-          <img
-            src={profile.profileImageUrl || "/default-avatar.png"}
-            alt="Profile"
-            className="ua-profile-img"
-          />
-          <label className="ua-upload-btn">
-            Upload New Image
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setSelectedFile(e.target.files[0])}
-              style={{ display: "none" }}
+        <h2 className="ua-title">Update Profile</h2>
+        
+        <form className="ua-form" onSubmit={handleSubmit}>
+          {/* Profile Image Section */}
+          <div className="ua-img-section">
+            <img
+              src={previewImage || "https://via.placeholder.com/150"}
+              alt="Profile"
+              className="ua-profile-img"
             />
-          </label>
-        </div>
+            <label className="ua-upload-btn">
+              Change Photo
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+              />
+            </label>
+          </div>
 
-        {/* Update Text Info */}
-        <form className="ua-form" onSubmit={handleUpdate}>
           <label className="ua-label">Full Name</label>
           <input
             className="ua-input"
@@ -141,11 +158,12 @@ export default function UpdateAccount() {
             className="ua-input"
             type="email"
             value={profile.email}
-            onChange={(e) =>
-              setProfile({ ...profile, email: e.target.value })
-            }
-            required
+            disabled 
+            style={{ backgroundColor: "#f5f5f5", cursor: "not-allowed" }}
           />
+          <small style={{ display: 'block', color: '#999', marginBottom: '1rem' }}>
+            Email cannot be changed.
+          </small>
 
           <label className="ua-label">Contact Number</label>
           <input
@@ -157,15 +175,47 @@ export default function UpdateAccount() {
             }
           />
 
-          <button className="ua-primary-btn" type="submit">
-            Update Profile
-          </button>
-        </form>
+          {/* Password Change Toggle */}
+          <div style={{ marginTop: '20px', marginBottom: '10px' }}>
+            <span 
+                style={{ color: '#5A67F8', cursor: 'pointer', fontWeight: '500' }}
+                onClick={() => setChangePasswordMode(!changePasswordMode)}
+            >
+                {changePasswordMode ? "Cancel Password Change" : "Change Password?"}
+            </span>
+          </div>
 
-        {/* Update Profile Image */}
-        <form onSubmit={handleFileUpload}>
-          <button className="ua-secondary-btn" type="submit">
-            Update Profile Image
+          {changePasswordMode && (
+              <div style={{ background: '#f9f9f9', padding: '15px', borderRadius: '12px', marginBottom: '15px' }}>
+                  <label className="ua-label" style={{marginTop: 0}}>Current Password</label>
+                  <input
+                    className="ua-input"
+                    type="password"
+                    value={passwords.currentPassword}
+                    onChange={(e) => setPasswords({...passwords, currentPassword: e.target.value})}
+                  />
+                  
+                  <label className="ua-label">New Password</label>
+                  <input
+                    className="ua-input"
+                    type="password"
+                    value={passwords.newPassword}
+                    onChange={(e) => setPasswords({...passwords, newPassword: e.target.value})}
+                  />
+
+                  <label className="ua-label">Confirm New Password</label>
+                  <input
+                    className="ua-input"
+                    type="password"
+                    value={passwords.confirmPassword}
+                    onChange={(e) => setPasswords({...passwords, confirmPassword: e.target.value})}
+                  />
+              </div>
+          )}
+
+
+          <button className="ua-primary-btn" type="submit" disabled={loading}>
+            {loading ? "Updating..." : "Save Changes"}
           </button>
         </form>
       </div>

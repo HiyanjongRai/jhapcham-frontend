@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
+import Home from "./components/Home/Home";
 import CartPage from "./components/AddCart/CartPage";
 import LoginPage from "./components/Login/LoginPage";
 import SignupPage from "./components/Register/SignupPage";
@@ -50,7 +51,10 @@ function App() {
       <Routes>
 
         {/* Home */}
-        <Route path="/" element={<ProductGrid />} />
+        <Route path="/" element={<Home />} />
+        
+        {/* All Products */}
+        <Route path="/products" element={<ProductGrid />} />
 
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />

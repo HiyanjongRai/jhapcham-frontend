@@ -10,6 +10,11 @@ export default function SellerSettings() {
         description: "",
         about: "",
         address: "",
+        contactNumber: "",
+        insideValleyDeliveryFee: "",
+        outsideValleyDeliveryFee: "",
+        freeShippingEnabled: false,
+        freeShippingMinOrder: ""
     });
     const [logoFile, setLogoFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -28,14 +33,25 @@ export default function SellerSettings() {
 
     const fetchProfile = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/seller-profiles/${userId}`);
+            // Updated endpoint: GET /api/seller/{userId}
+            const res = await fetch(`${API_BASE}/api/seller/${userId}`);
             if (res.ok) {
                 const data = await res.json();
+                
+                // Note: Response structure might be flat or nested depending on DTO. 
+                // Assuming keys match DTO provided in earlier context.
+                // data.sellerContactNumber is usually mapped to contactNumber from user
+                
                 setFormData({
                     storeName: data.storeName || "",
                     description: data.description || "",
                     about: data.about || "",
                     address: data.address || "",
+                    contactNumber: data.sellerContactNumber || "",
+                    insideValleyDeliveryFee: data.insideValleyDeliveryFee || "",
+                    outsideValleyDeliveryFee: data.outsideValleyDeliveryFee || "",
+                    freeShippingEnabled: data.freeShippingEnabled || false,
+                    freeShippingMinOrder: data.freeShippingMinOrder || ""
                 });
                 if (data.logoImagePath) {
                     setPreviewUrl(`${API_BASE}/seller-logos/${data.logoImagePath}`);
@@ -47,8 +63,11 @@ export default function SellerSettings() {
     };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: type === "checkbox" ? checked : value
+        }));
     };
 
     const handleFileChange = (e) => {
@@ -65,25 +84,36 @@ export default function SellerSettings() {
         setMessage("");
 
         try {
+            // New Controller uses @ModelAttribute, so we use FormData (Multipart)
+            // Endpoint: PUT /api/seller/{userId}
+            
             const data = new FormData();
             data.append("storeName", formData.storeName);
             data.append("description", formData.description);
             data.append("about", formData.about);
             data.append("address", formData.address);
+            data.append("contactNumber", formData.contactNumber);
+            data.append("insideValleyDeliveryFee", formData.insideValleyDeliveryFee || 0);
+            data.append("outsideValleyDeliveryFee", formData.outsideValleyDeliveryFee || 0);
+            data.append("freeShippingEnabled", formData.freeShippingEnabled);
+            data.append("freeShippingMinOrder", formData.freeShippingMinOrder || 0);
+
             if (logoFile) {
                 data.append("logoImage", logoFile);
             }
 
-            const res = await fetch(`${API_BASE}/api/seller-profiles/${userId}`, {
-                method: "POST",
+            const res = await fetch(`${API_BASE}/api/seller/${userId}`, {
+                method: "PUT",
+                // Do NOT set Content-Type header manually for FormData, browser sets boundary
                 body: data,
             });
 
             if (res.ok) {
-                setMessage("Profile updated successfully!");
-                fetchProfile(); // Refresh data
+                setMessage("Settings updated successfully!");
+                fetchProfile(); 
             } else {
-                setMessage("Failed to update profile.");
+                const errData = await res.json();
+                setMessage(errData.message || "Failed to update settings.");
             }
         } catch (err) {
             console.error("Update error:", err);
@@ -101,20 +131,13 @@ export default function SellerSettings() {
 
             <div className="spp-card">
                 <form onSubmit={handleSubmit}>
-                    {/* Logo Upload */}
+                    {/* Logo Section */}
                     <div className="form-group" style={{ marginBottom: "1.5rem", textAlign: "center" }}>
                         <div
                             style={{
-                                width: "120px",
-                                height: "120px",
-                                borderRadius: "50%",
-                                overflow: "hidden",
-                                margin: "0 auto 1rem",
-                                border: "2px solid #eee",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                backgroundColor: "#f9f9f9"
+                                width: "120px", height: "120px", borderRadius: "50%",
+                                overflow: "hidden", margin: "0 auto 1rem", border: "2px solid #eee",
+                                display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#f9f9f9"
                             }}
                         >
                             {previewUrl ? (
@@ -123,7 +146,11 @@ export default function SellerSettings() {
                                 <FontAwesomeIcon icon={faStore} size="3x" color="#ccc" />
                             )}
                         </div>
-                        <label htmlFor="logo-upload" className="btn-secondary" style={{ cursor: "pointer", padding: "0.5rem 1rem", background: "#f0f0f0", borderRadius: "4px" }}>
+                        
+                        <label htmlFor="logo-upload" style={{
+                            cursor: "pointer", padding: "0.5rem 1rem", background: "#f0f0f0", 
+                            borderRadius: "4px", display: 'inline-block', fontWeight: '500'
+                        }}>
                             <FontAwesomeIcon icon={faUpload} /> Change Logo
                         </label>
                         <input
@@ -145,6 +172,18 @@ export default function SellerSettings() {
                             className="form-control"
                             style={{ width: "100%", padding: "0.8rem", borderRadius: "4px", border: "1px solid #ddd" }}
                             required
+                        />
+                    </div>
+                    
+                    <div className="form-group" style={{ marginBottom: "1rem" }}>
+                        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>Contact Number</label>
+                        <input
+                            type="text"
+                            name="contactNumber"
+                            value={formData.contactNumber}
+                            onChange={handleChange}
+                            className="form-control"
+                            style={{ width: "100%", padding: "0.8rem", borderRadius: "4px", border: "1px solid #ddd" }}
                         />
                     </div>
 
@@ -180,6 +219,61 @@ export default function SellerSettings() {
                             className="form-control"
                             style={{ width: "100%", padding: "0.8rem", borderRadius: "4px", border: "1px solid #ddd" }}
                         />
+                    </div>
+
+                    <h3 style={{fontSize: '1.2rem', marginTop: '2rem', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem'}}>Delivery Settings</h3>
+
+                    <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
+                        <div className="form-group" style={{ marginBottom: "1rem", flex: 1 }}>
+                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>Inside Valley Fee (₹)</label>
+                            <input
+                                type="number"
+                                name="insideValleyDeliveryFee"
+                                value={formData.insideValleyDeliveryFee}
+                                onChange={handleChange}
+                                className="form-control"
+                                style={{ width: "100%", padding: "0.8rem", borderRadius: "4px", border: "1px solid #ddd" }}
+                            />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: "1rem", flex: 1 }}>
+                            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>Outside Valley Fee (₹)</label>
+                            <input
+                                type="number"
+                                name="outsideValleyDeliveryFee"
+                                value={formData.outsideValleyDeliveryFee}
+                                onChange={handleChange}
+                                className="form-control"
+                                style={{ width: "100%", padding: "0.8rem", borderRadius: "4px", border: "1px solid #ddd" }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: "1rem", background: '#f9f9f9', padding: '1rem', borderRadius: '8px' }}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem'}}>
+                            <input
+                                type="checkbox"
+                                name="freeShippingEnabled"
+                                checked={formData.freeShippingEnabled}
+                                onChange={handleChange}
+                                id="freeShipCheck"
+                                style={{width: '20px', height: '20px'}}
+                            />
+                            <label htmlFor="freeShipCheck" style={{ marginBottom: 0, fontWeight: "600" }}>Enable Free Shipping</label>
+                        </div>
+                        
+                        {formData.freeShippingEnabled && (
+                            <div>
+                                <label style={{ display: "block", marginBottom: "0.5rem" }}>Minimum Order Amount (₹)</label>
+                                <input
+                                    type="number"
+                                    name="freeShippingMinOrder"
+                                    value={formData.freeShippingMinOrder}
+                                    onChange={handleChange}
+                                    className="form-control"
+                                    style={{ width: "100%", padding: "0.8rem", borderRadius: "4px", border: "1px solid #ddd" }}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     {message && (

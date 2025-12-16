@@ -48,8 +48,12 @@ const LoginPage = () => {
 
       let userId = data.id || data.userId || data.user?.id;
       let role = data.role || data.user?.role;
+      let token = data.token;
 
       if (Array.isArray(role)) role = role[0];
+
+      console.log("Login Response Data:", data);
+      console.log("Extracted Role:", role);
 
       if (!userId || !role) {
         setMessage("Login failed. Role or user ID missing.");
@@ -58,39 +62,22 @@ const LoginPage = () => {
       }
 
       const roleForRouting = role.toUpperCase().replace(/^ROLE_/, "");
+      console.log("Role for Routing:", roleForRouting);
       const encodedId = encodeUserId(userId);
       localStorage.setItem("userId", encodedId);
       localStorage.setItem("userRole", roleForRouting);
+      
+      if (token) {
+          localStorage.setItem("token", token);
+      }
 
       await mergeGuestCartIntoUser(userId);
 
-      // Seller check
-      if (roleForRouting === "SELLER") {
-        try {
-          const statusRes = await fetch(`${API_BASE}/api/seller/application/${userId}`);
-          const statusData = await statusRes.json();
-          const status = statusData.status?.toUpperCase();
-          const note = statusData.note || "No note";
-
-          if (status === "REJECTED") {
-            alert(`Application rejected. Reason: ${note}`);
-            setLoading(false);
-            return;
-          }
-
-          if (status === "APPROVED") {
-            navigate("/seller/dashboard", { replace: true });
-            return;
-          }
-
-        } catch (err) {
-          console.log("Status check failed", err);
-        }
-      }
-
-      // Other roles
+      // Simple role-based routing
       if (roleForRouting === "CUSTOMER") {
         navigate("/customer/dashboard", { replace: true });
+      } else if (roleForRouting === "SELLER") {
+        navigate("/seller/dashboard", { replace: true });
       } else if (roleForRouting === "ADMIN") {
         navigate("/admin/dashboard", { replace: true });
       } else {

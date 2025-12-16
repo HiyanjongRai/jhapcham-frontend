@@ -6,9 +6,11 @@ import {
   faUser,
   faCartArrowDown,
   faList,
+  faSearch
 } from "@fortawesome/free-solid-svg-icons";
 import { MessageCircle } from "lucide-react";
 import { API_BASE } from "../config/config";
+import { apiGetCart, loadGuestCart } from "../AddCart/cartUtils";
 
 const navLinks = [
   { label: "Shop", labelKey: "Shop", path: "/" },
@@ -31,9 +33,27 @@ const Navbar = () => {
 
   // Load cart count when navbar loads
   useEffect(() => {
-    const count = Number(localStorage.getItem("cartCount")) || 0;
-    setCartCount(count);
-  }, []);
+    const syncCart = async () => {
+      let count = 0;
+      if (encodedId) {
+         try {
+           const userId = atob(encodedId);
+           const cart = await apiGetCart(userId);
+           if (Array.isArray(cart)) {
+             count = cart.reduce((sum, item) => sum + item.quantity, 0);
+           }
+         } catch (e) { console.error("Nav sync cart failed", e); }
+      } else {
+         const cart = loadGuestCart();
+         count = cart.reduce((sum, item) => sum + item.quantity, 0);
+      }
+      
+      setCartCount(count);
+      localStorage.setItem("cartCount", count);
+    };
+
+    syncCart();
+  }, [encodedId]);
 
   // Listen for cart updates from any component
   useEffect(() => {
@@ -122,6 +142,21 @@ const Navbar = () => {
             ))}
             <span className="nav-underline" style={underlineStyle}></span>
           </nav>
+        </div>
+
+        {/* CENTER SEARCH BAR */}
+        <div className="nav-center">
+            <form className="nav-search" onSubmit={(e) => {
+                e.preventDefault();
+                // Simple form handler logic repeated here or extracted
+                const val = e.target.querySelector('input').value;
+                if(val.trim()) navigate(`/products?search=${encodeURIComponent(val)}`);
+            }}>
+                <input type="text" placeholder="Search for products, brands and more..." />
+                <button type="submit">
+                    <FontAwesomeIcon icon={faSearch} />
+                </button>
+            </form>
         </div>
 
         {/* RIGHT SIDE */}

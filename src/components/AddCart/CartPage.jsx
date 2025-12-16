@@ -7,6 +7,7 @@ import {
   apiUpdateQuantity,
   apiRemoveItem
 } from "./cartUtils";
+import { API_BASE } from "../config/config";
 import "./CartPage.css";
 
 function CartPage() {
@@ -21,28 +22,39 @@ function CartPage() {
   const recalcTotal = (list) =>
     list.reduce((sum, i) => sum + i.lineTotal, 0);
 
-  const loadCart = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      if (isLoggedIn) {
-        const data = await apiGetCart(userId);
-        setItems(data.items || []);
-        setTotal(data.total ?? recalcTotal(data.items || []));
-      } else {
-        const guestItems = loadGuestCart();
-        setItems(guestItems);
-        setTotal(recalcTotal(guestItems));
-      }
-    } catch (e) {
-      setError(e.message || "Failed to load cart");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadCart = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        if (isLoggedIn) {
+          const data = await apiGetCart(userId);
+          // Map backend DTO to frontend state structure
+          const mappedItems = (data.items || []).map(i => ({
+            ...i,
+            cartItemId: i.cartItemId,
+            unitPrice: i.price,
+            lineTotal: i.price * i.quantity,
+            imagePath: i.image, // Map 'image' to 'imagePath'
+            color: i.selectedColor,
+            storage: i.selectedStorage
+          }));
+          
+          setItems(mappedItems);
+          setTotal(data.subtotal || 0);
+        } else {
+          const guestItems = loadGuestCart();
+          setItems(guestItems);
+          setTotal(recalcTotal(guestItems));
+        }
+      } catch (e) {
+        setError(e.message || "Failed to load cart");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadCart();
   }, [isLoggedIn, userId]);
 
@@ -53,34 +65,27 @@ function CartPage() {
 
     if (isLoggedIn) {
       try {
-        await apiUpdateQuantity(
+        // The backend returns the updated cart DTO
+        const data = await apiUpdateQuantity(
           userId,
-          item.productId,
-          newQty,
-          item.color || null,
-          item.storage || null
+          item.cartItemId,
+          newQty
         );
 
-        /* Update instantly without reload */
-        setItems((prev) =>
-          prev.map((i) =>
-            i.productId === item.productId &&
-            i.color === item.color &&
-            i.storage === item.storage
-              ? {
-                  ...i,
-                  quantity: newQty,
-                  lineTotal: i.unitPrice * newQty
-                }
-              : i
-          )
-        );
+        // Update state with new cart data
+        const mappedItems = (data.items || []).map(i => ({
+            ...i,
+            cartItemId: i.cartItemId,
+            unitPrice: i.price,
+            lineTotal: i.price * i.quantity,
+            imagePath: i.image,
+            color: i.selectedColor,
+            storage: i.selectedStorage
+          }));
+          
+        setItems(mappedItems);
+        setTotal(data.subtotal || 0);
 
-        setTotal((prev) => {
-          const oldLine = item.lineTotal;
-          const newLine = item.unitPrice * newQty;
-          return prev - oldLine + newLine;
-        });
       } catch (e) {
         alert(e.message || "Unable to update quantity");
       }
@@ -104,26 +109,26 @@ function CartPage() {
   const handleRemove = async (item) => {
     if (isLoggedIn) {
       try {
-        await apiRemoveItem(
+        // Backend returns updated cart DTO (or if it returns 200 OK with data)
+        // Since apiRemoveItem calls apiUpdateQuantity with 0, it returns the cart DTO.
+        const data = await apiRemoveItem(
           userId,
-          item.productId,
-          item.color || null,
-          item.storage || null
+          item.cartItemId
         );
 
-        /* Update instantly */
-        setItems((prev) =>
-          prev.filter(
-            (i) =>
-              !(
-                i.productId === item.productId &&
-                i.color === item.color &&
-                i.storage === item.storage
-              )
-          )
-        );
+        const mappedItems = (data.items || []).map(i => ({
+            ...i,
+            cartItemId: i.cartItemId,
+            unitPrice: i.price,
+            lineTotal: i.price * i.quantity,
+            imagePath: i.image,
+            color: i.selectedColor,
+            storage: i.selectedStorage
+          }));
+          
+        setItems(mappedItems);
+        setTotal(data.subtotal || 0);
 
-        setTotal((prev) => prev - item.lineTotal);
       } catch (e) {
         alert(e.message || "Unable to remove item");
       }
@@ -150,14 +155,14 @@ function CartPage() {
       <div className="cart-left">
         {items.map((item) => (
           <div
-            key={`${item.productId}-${item.color}-${item.storage}`}
+            key={item.cartItemId || `${item.productId}-${item.color}-${item.storage}`}
             className="cart-box"
           >
             <div className="item-info">
               <img
                 src={
                   item.imagePath
-                    ? `http://localhost:8080${item.imagePath}`
+                    ? `${API_BASE}/uploads/${item.imagePath}`
                     : "https://via.placeholder.com/130x130?text=Product"
                 }
                 alt={item.name}
@@ -234,7 +239,7 @@ function CartPage() {
 
           <button
             className="continue-button"
-            onClick={() => (window.location.href = "/index")}
+            onClick={() => (window.location.href = "/products")}
           >
             Continue Shopping
           </button>

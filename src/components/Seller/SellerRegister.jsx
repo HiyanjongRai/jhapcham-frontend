@@ -27,11 +27,13 @@ export default function SellerRegister() {
     try {
       const res = await axios.post(`${API_BASE}/api/auth/register/seller`, form);
 
-      const userId = res.data.userId;
+      const userId = res.data.userId; // Backend returns 'userId'
       const role = res.data.role;
+      const token = res.data.token;
 
       localStorage.setItem("userId", btoa(String(userId)));
       localStorage.setItem("userRole", role);
+      if(token) localStorage.setItem("token", token);
 
       setMessage({ type: "success", text: "Registration successful! Redirecting..." });
 

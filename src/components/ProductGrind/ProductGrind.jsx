@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import ProductCard from "../productCard/ProductCard";
 import "./ProjectGrind.css";
 import "./ProductGridFilters.css";
@@ -9,7 +9,19 @@ import { getCurrentUserId, addToGuestCart, apiAddToCart } from "../AddCart/cartU
 
 const API_BASE = "http://localhost:8080";
 
+// Map backend ProductResponseDTO to frontend product format
+function mapProductDto(dto) {
+  return {
+    ...dto,
+    imagePath: dto.imagePaths && dto.imagePaths.length > 0 ? dto.imagePaths[0] : "",
+    rating: dto.averageRating || 0,
+    stock: dto.stockQuantity || 0,
+  };
+}
+
+
 function ProductGrid() {
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -39,6 +51,19 @@ function ProductGrid() {
   const userId = getCurrentUserId();
   const isLoggedIn = !!userId;
 
+  // Read category and search from URL on mount
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam) {
+      setCategoryFilter(categoryParam);
+    }
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearch(searchParam);
+    }
+  }, [searchParams]);
+
+
   // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
@@ -46,87 +71,100 @@ function ProductGrid() {
         setLoading(true);
         setError("");
 
-        let data;
+        let data = [];
+        let url = "";
+        const params = new URLSearchParams();
 
-        // Use search endpoint if there's a search keyword
+        // 1. Determine Endpoint & Primary Params
         if (search && search.trim()) {
-          const params = new URLSearchParams();
-          params.append("keyword", search.trim());
-          if (userId) params.append("userId", userId);
+           // Search Mode
+           url = `${API_BASE}/api/products/search`;
+           params.append("keyword", search.trim());
+           if (userId) params.append("userId", userId);
+        } else {
+           // Filter Mode (or List All)
+           // If any backend-supported filter is present, use /filter, otherwise /products (or just use /filter for all?)
+           // The provided controller has /filter mapped separately. Let's use it if any filter param matches.
+           // Actually, /filter with empty params might act like list all or empty logic. 
+           // Let's check the snippet: if params null, it ignores. if all null, returns all active.
+           // So we can use /filter safely or standard /products.
+           // Let's use /filter if valid backend filters exist, else /products for simplicity.
+           
+           const hasBackendFilter = minPrice || maxPrice || (brand && brand.trim()) || (categoryFilter && categoryFilter !== "ALL");
+           
+           if (hasBackendFilter) {
+               url = `${API_BASE}/api/products/filter`;
+               if (minPrice) params.append("minPrice", minPrice);
+               if (maxPrice) params.append("maxPrice", maxPrice);
+               if (brand) params.append("brand", brand);
+               if (categoryFilter && categoryFilter !== "ALL") params.append("category", categoryFilter);
+           } else {
+               url = `${API_BASE}/api/products`;
+           }
+        }
 
-          const res = await fetch(`${API_BASE}/api/products/search?${params.toString()}`);
-          if (!res.ok) throw new Error(`Failed to search products. Status: ${res.status}`);
-          
-          data = await res.json();
-          
-          // Apply client-side filters to search results
-          let filtered = Array.isArray(data) ? data : [];
-          
-          // Filter by category
-          if (categoryFilter && categoryFilter !== "ALL") {
-            filtered = filtered.filter(p => p.category?.toLowerCase() === categoryFilter.toLowerCase());
-          }
-          
-          // Filter by price range
-          if (minPrice) {
-            filtered = filtered.filter(p => p.price >= parseFloat(minPrice));
-          }
-          if (maxPrice) {
-            filtered = filtered.filter(p => p.price <= parseFloat(maxPrice));
-          }
-          
-          // Filter by rating
-          if (minRating) {
+        // 2. Fetch Data
+        const queryString = params.toString();
+        const fullUrl = queryString ? `${url}?${queryString}` : url;
+        
+        const res = await fetch(fullUrl);
+        if (!res.ok) throw new Error(`Failed to load products. Status: ${res.status}`);
+        
+        data = await res.json();
+        
+        // 3. Map DTO
+        let filtered = Array.isArray(data) ? data.map(mapProductDto) : [];
+        
+        // 4. Apply Client-Side Filters (for fields NOT handled by backend)
+        
+        // Note: Backend handles Category, Brand, Price Min/Max in logical filter.
+        // But if we used Search endpoint, it ONLY does keyword. 
+        // So for Search mode, we might need to re-apply basic filters client side if the user set them?
+        // Usually search overrides category selectors, but Sidebar filters + Search bar = Multi-faceted search.
+        // Current Backend Search ignores category/price params. So we MUST apply them client-side for search results.
+        
+        if (search && search.trim()) {
+            if (categoryFilter && categoryFilter !== "ALL") {
+                filtered = filtered.filter(p => p.category?.toLowerCase() === categoryFilter.toLowerCase());
+            }
+            if (minPrice) filtered = filtered.filter(p => p.price >= parseFloat(minPrice));
+            if (maxPrice) filtered = filtered.filter(p => p.price <= parseFloat(maxPrice));
+            if (brand) filtered = filtered.filter(p => p.brand?.toLowerCase().includes(brand.toLowerCase()));
+        }
+
+        // Common client-side filters (Rating, Views, OnSale - not in backend filter)
+        if (minRating) {
             filtered = filtered.filter(p => (p.rating || 0) >= parseFloat(minRating));
-          }
-          
-          // Sort results
-          if (sortBy) {
+        }
+        if (maxRating) {
+            filtered = filtered.filter(p => (p.rating || 0) <= parseFloat(maxRating));
+        }
+        
+        if (minViews) {
+            filtered = filtered.filter(p => (p.totalViews || 0) >= parseInt(minViews));
+        }
+        if (maxViews) {
+            filtered = filtered.filter(p => (p.totalViews || 0) <= parseInt(maxViews));
+        }
+        
+        if (onSale === "true") {
+            filtered = filtered.filter(p => p.onSale === true);
+        } else if (onSale === "false") {
+            filtered = filtered.filter(p => !p.onSale);
+        }
+        
+        // 5. Client-Side Sorting (Backend defaults to ID desc)
+        if (sortBy) {
             const [field, direction] = sortBy.split(',');
             filtered.sort((a, b) => {
-              const aVal = a[field] || 0;
-              const bVal = b[field] || 0;
-              return direction === 'asc' ? aVal - bVal : bVal - aVal;
+                const aVal = a[field] || 0;
+                const bVal = b[field] || 0;
+                return direction === 'asc' ? aVal - bVal : bVal - aVal;
             });
-          }
-          
-          setProducts(filtered);
-        } else {
-          // Use filter endpoint for browsing without search
-          const params = new URLSearchParams();
-          if (categoryFilter && categoryFilter !== "ALL") params.append("category", categoryFilter);
-          if (sortBy) params.append("sort", sortBy);
-          if (minPrice) params.append("minPrice", minPrice);
-          if (maxPrice) params.append("maxPrice", maxPrice);
-          if (minRating) params.append("minRating", minRating);
-          if (maxRating) params.append("maxRating", maxRating);
-          if (minViews) params.append("minViews", minViews);
-          if (maxViews) params.append("maxViews", maxViews);
-          if (brand) params.append("brand", brand);
-          if (onSale !== "") params.append("onSale", onSale);
-          if (mfgStart) params.append("mfgStart", mfgStart);
-          if (mfgEnd) params.append("mfgEnd", mfgEnd);
-          if (expStart) params.append("expStart", expStart);
-          if (expEnd) params.append("expEnd", expEnd);
-          
-          // Handle array parameters
-          if (selectedColors && selectedColors.length > 0) {
-            selectedColors.forEach(color => params.append("colors", color));
-          }
-          if (selectedStorage && selectedStorage.length > 0) {
-            selectedStorage.forEach(storage => params.append("storage", storage));
-          }
-          
-          // Ensure visible products only
-          params.append("visible", "true");
-          params.append("status", "ACTIVE");
-
-          const res = await fetch(`${API_BASE}/api/products/filter?${params.toString()}`);
-          if (!res.ok) throw new Error(`Failed to load products. Status: ${res.status}`);
-
-          data = await res.json();
-          setProducts(Array.isArray(data.content) ? data.content : []);
         }
+
+        setProducts(filtered);
+
       } catch (err) {
         setError(err.message || "Something went wrong");
       } finally {

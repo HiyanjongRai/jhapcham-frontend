@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { API_BASE } from "../config/config";
 import { useNavigate } from "react-router-dom";
-import { getCurrentUserId } from "../AddCart/cartUtils";
+import { getCurrentUserId, apiAddToCart } from "../AddCart/cartUtils";
+import { apiGetWishlist, apiRemoveFromWishlist } from "./wishlistUtils";
 import "./WishlistPage.css";
 
 function WishlistPage() {
@@ -19,10 +20,20 @@ function WishlistPage() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/wishlist?userId=${userId}`);
-      const data = await res.json();
-      setItems(data || []);
+      const data = await apiGetWishlist(userId);
+      
+      // Map DTO to frontend format (ensure imagePath matches)
+      const mapped = Array.isArray(data) ? data.map(dto => ({
+        ...dto,
+        productId: dto.id, // Ensure productId is available if old code uses it
+        imagePath: dto.imagePaths && dto.imagePaths.length > 0 ? dto.imagePaths[0] : (dto.imagePath || ""),
+        rating: dto.averageRating || 0,
+        views: dto.totalViews || 0
+      })) : [];
+
+      setItems(mapped);
     } catch (e) {
+      console.error(e);
       setError("Unable to load wishlist.");
     } finally {
       setLoading(false);
@@ -35,20 +46,14 @@ function WishlistPage() {
 
   const handleRemove = async (productId) => {
     const userId = getCurrentUserId();
-    if (!userId) {
-      navigate("/login");
-      return;
-    }
+    if (!userId) return;
 
     try {
-      await fetch(
-        `${API_BASE}/wishlist/remove?userId=${userId}&productId=${productId}`,
-        { method: "DELETE" }
-      );
-
-      setItems((prev) => prev.filter((it) => it.productId !== productId));
+      await apiRemoveFromWishlist(userId, productId);
+      setItems((prev) => prev.filter((it) => it.id !== productId && it.productId !== productId));
     } catch (e) {
       console.error(e);
+      alert("Failed to remove item");
     }
   };
 
@@ -65,20 +70,11 @@ function WishlistPage() {
     }
 
     try {
-      const res = await fetch(
-        `${API_BASE}/api/cart/add?userId=${userId}&productId=${product.productId}&quantity=1`,
-        { method: "POST" }
-      );
-
-      if (!res.ok) {
-        alert("Unable to add product to cart");
-        return;
-      }
-
+      await apiAddToCart(userId, product.productId, 1, null, null);
       navigate("/cart");
-
     } catch (err) {
       console.error("Buy Now failed", err);
+      alert(err.message || "Unable to add product to cart");
     }
   };
 
@@ -121,7 +117,7 @@ function WishlistPage() {
       <div className="wl-grid">
         {items.map((item) => {
           const imgSrc = item.imagePath
-            ? `${API_BASE}/product-images/${item.imagePath}`
+            ? `${API_BASE}/uploads/${item.imagePath}`
             : "https://via.placeholder.com/400x260?text=No+Image";
 
           const rating = item.rating ?? 0;

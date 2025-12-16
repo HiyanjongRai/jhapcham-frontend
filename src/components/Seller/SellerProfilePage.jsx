@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config/config";
 import { getCurrentUserId } from "../AddCart/cartUtils";
 import MessageModal from "../Message/MessageModal";
+import ReportModal from "../Report/ReportModal";
+import FollowService from "./followService";
 import "./SellerProfilePage.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -16,7 +18,8 @@ import {
   faUndo,
   faMapMarkerAlt,
   faCalendarAlt,
-  faStore
+  faStore,
+  faFlag
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function SellerProfilePage() {
@@ -29,6 +32,7 @@ export default function SellerProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     loadSellerProfile();
@@ -54,12 +58,8 @@ export default function SellerProfilePage() {
   // Check if user is already following
   const checkFollowStatus = async () => {
     try {
-      const res = await fetch(
-        `${API_BASE}/api/follow/${customerId}/is-following/${id}`
-      );
-
-      const result = await res.text();
-      setIsFollowing(result === "true");
+      const isFollowing = await FollowService.isFollowing(customerId, id);
+      setIsFollowing(isFollowing);
     } catch (err) {
       console.error("Follow status error:", err);
     }
@@ -70,24 +70,16 @@ export default function SellerProfilePage() {
     try {
       if (isFollowing) {
         // UNFOLLOW
-        const res = await fetch(
-          `${API_BASE}/api/follow/${customerId}/unfollow/${id}`,
-          { method: "DELETE" }
-        );
-
-        const msg = await res.text();
-        alert(msg);
+        await FollowService.unfollowSeller(customerId, id);
         setIsFollowing(false);
+        // Optimize: Update local count immediately to reflect change without re-fetching
+         setSeller(prev => ({...prev, followerCount: (prev.followerCount || 0) - 1}));
       } else {
         // FOLLOW
-        const res = await fetch(
-          `${API_BASE}/api/follow/${customerId}/follow/${id}`,
-          { method: "POST" }
-        );
-
-        const msg = await res.text();
-        alert(msg);
+        await FollowService.followSeller(customerId, id);
         setIsFollowing(true);
+        // Optimize: Update local count immediately
+        setSeller(prev => ({...prev, followerCount: (prev.followerCount || 0) + 1}));
       }
     } catch (err) {
       console.error("Follow toggle error:", err);
@@ -107,7 +99,7 @@ export default function SellerProfilePage() {
           <div className="spp-logo-box">
             {seller.logoImagePath ? (
               <img
-                src={`${API_BASE}/seller-logos/${seller.logoImagePath}`}
+                src={`${API_BASE}/uploads/${seller.logoImagePath}`}
                 alt="Logo"
                 className="spp-store-logo"
               />
@@ -129,6 +121,11 @@ export default function SellerProfilePage() {
                   />
                 ))}
                 <span className="spp-rating-text">4.8 (3450 reviews)</span>
+              </div>
+
+              <div className="spp-rating-row" style={{ marginLeft: "1.5rem" }}>
+                <FontAwesomeIcon icon={faPlus} className="spp-icon-mr" style={{ color: '#FFD700' }} />
+                <span className="spp-rating-text">{seller.followerCount || 0} Followers</span>
               </div>
 
               {seller.isVerified && (
@@ -157,6 +154,15 @@ export default function SellerProfilePage() {
             >
               <FontAwesomeIcon icon={faCommentDots} />
               {" Message Store"}
+            </button>
+
+             <button
+              className="spp-follow-btn"
+              onClick={() => setShowReportModal(true)}
+              style={{ background: '#ef4444' }}
+            >
+              <FontAwesomeIcon icon={faFlag} />
+              {" Report"}
             </button>
           </div>
         </div>
@@ -284,13 +290,13 @@ export default function SellerProfilePage() {
       <div className="spp-products-grid">
         {products.map((p) => (
           <div
-            key={p.id}
+            key={p.productId}
             className="spp-prod-card"
-            onClick={() => navigate(`/products/${p.id}`)}
+            onClick={() => navigate(`/products/${p.productId}`)}
           >
             <div className="spp-prod-img-wrap">
               <img
-                src={`${API_BASE}/product-images/${p.imagePath}`}
+                src={`${API_BASE}/uploads/${p.mainImage}`}
                 alt={p.name}
               />
             </div>
@@ -326,6 +332,14 @@ export default function SellerProfilePage() {
         type="store"
         recipientId={seller.userId}
         recipientName={seller.storeName}
+      />
+      
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        type="SELLER"
+        reportedEntityId={seller.userId} // Reporting the User ID of seller
+        entityName={seller.storeName}
       />
     </div>
   );
