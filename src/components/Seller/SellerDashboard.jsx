@@ -12,12 +12,15 @@ import {
   HelpCircle,
   DollarSign,
   TrendingUp,
-  Clock
+
+  Clock,
+  Flag
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getCurrentUserId } from "../config/authUtils";
 import { apiGetSellerOrders } from "../AddCart/cartUtils";
 import { API_BASE } from "../config/config";
+import UpdateAccount from "../Profile/UpdateAccount.jsx";
 
 export default function SellerDashboard() {
   const navigate = useNavigate();
@@ -30,7 +33,9 @@ export default function SellerDashboard() {
     pendingOrders: 0,
     productsCount: 0 
   });
+  const [activeTab, setActiveTab] = useState("overview");
   const [recentOrders, setRecentOrders] = useState([]);
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
    // Stats Loading
@@ -89,7 +94,31 @@ export default function SellerDashboard() {
     };
 
     if (sellerId) fetchData();
+    if (sellerId) fetchData();
   }, [sellerId, navigate]);
+
+  // Fetch Reports when tab is active
+  useEffect(() => {
+    if (activeTab === 'reports' && sellerId) {
+        // Fetch reports
+        const fetchReports = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/reports/seller/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setReports(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch reports", err);
+            }
+        };
+        fetchReports();
+    }
+  }, [activeTab, sellerId]);
 
   const menuItems = [
     { icon: <Home size={18} />, label: "Overview", path: "/seller/dashboard" }, // Fixed path
@@ -97,15 +126,22 @@ export default function SellerDashboard() {
     { icon: <Package size={18} />, label: "Products", path: "/seller/products" },
     { icon: <Users size={18} />, label: "Customer", path: "/seller/customers" }, // Note: No route for this yet in App.js
     { icon: <ShoppingBag size={18} />, label: "Orders", path: "/seller/orders" },
-    { icon: <Truck size={18} />, label: "Shipment", path: "/seller/shipment" }, // Note: No route for this yet
-    { icon: <Settings size={18} />, label: "Store Setting", path: "/seller/settings" },
-    { icon: <Share2 size={18} />, label: "Platform Partner", path: "/seller/partners" }, // No route
+    { icon: <Truck size={18} />, label: "Shipment", path: "/seller/shipment" }, 
+    { icon: <Settings size={18} />, label: "Store Setting", tab: "settings" },
+    { icon: <Share2 size={18} />, label: "Platform Partner", path: "/seller/partners" }, 
+    { icon: <Share2 size={18} />, label: "Platform Partner", path: "/seller/partners" },
+    { icon: <Flag size={18} />, label: "Reports", tab: "reports" }, 
     { icon: <MessageCircle size={18} />, label: "Feedback", path: "/seller/feedback" }, // No route
     { icon: <HelpCircle size={18} />, label: "Help & Support", path: "/seller/help" }, // No route
   ];
 
-  const handleMenuClick = (path) => {
-    navigate(path);
+  const handleMenuClick = (item) => {
+    if (item.tab) {
+      setActiveTab(item.tab);
+    } else {
+      setActiveTab("overview");
+      navigate(item.path);
+    }
   };
 
   return (
@@ -121,8 +157,8 @@ export default function SellerDashboard() {
             return (
               <button
                 key={item.label}
-                className={"sidebar-menu-item" + (isActive ? " active" : "")}
-                onClick={() => handleMenuClick(item.path)}
+                className={"sidebar-menu-item" + ((activeTab === item.tab || location.pathname === item.path) ? " active" : "")}
+                onClick={() => handleMenuClick(item)}
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -140,7 +176,7 @@ export default function SellerDashboard() {
            </div>
            
            <div style={{display:'flex', gap:'10px'}}>
-             <button className="btn-secondary" onClick={() => navigate('/seller/settings')} style={{backgroundColor:'#f0f0f0', color:'#333', border:'1px solid #ccc'}}>Edit Profile</button>
+             <button className="btn-secondary" onClick={() => setActiveTab('settings')} style={{backgroundColor:'#f0f0f0', color:'#333', border:'1px solid #ccc'}}>Edit Profile</button>
              <button className="btn-primary" onClick={() => navigate('/seller/add-product')}>+ Add Product</button>
            </div>
         </div>
@@ -207,13 +243,13 @@ export default function SellerDashboard() {
                           {recentOrders.map(order => (
                              <tr key={order.id || order.orderId}>
                                 <td>#{String(order.id || order.orderId).slice(-6)}</td>
-                                <td>{order.customerName || "Guest"}</td>
+                                <td>{order.customer?.fullName || order.customer?.username || order.customerName || "Guest"}</td>
                                 <td>
                                    <span className={`status-badge ${order.status?.toLowerCase()}`}>
                                       {order.status}
                                    </span>
                                 </td>
-                                <td>${(order.grandTotal || 0).toFixed(2)}</td>
+                                <td>${(order.totalPrice || order.grandTotal || 0).toFixed(2)}</td>
                              </tr>
                           ))}
                        </tbody>
@@ -251,6 +287,63 @@ export default function SellerDashboard() {
             </div>
 
         </div>
+
+        {activeTab === 'settings' && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+             <UpdateAccount />
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+            <div className="dashboard-panel" style={{ marginTop: '2rem' }}>
+                <div className="panel-header">
+                    <h3>Reports on Your Products</h3>
+                </div>
+                <div className="recent-orders-table-wrapper">
+                    {reports.length > 0 ? (
+                        <table className="simple-table">
+                            <thead>
+                                <tr>
+                                    <th>Report ID</th>
+                                    <th>Entity</th>
+                                    <th>Reason</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {reports.map(report => (
+                                    <tr key={report.id}>
+                                        <td>#{report.id}</td>
+                                        <td>
+                                            <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                                                {report.reportedEntityImage && (
+                                                    <img src={report.reportedEntityImage.startsWith('http') ? report.reportedEntityImage : `${API_BASE}/uploads/${report.reportedEntityImage}`} 
+                                                         alt="" style={{width:'32px', height:'32px', borderRadius:'4px', objectFit:'cover'}} />
+                                                )}
+                                                <span>{report.reportedEntityName}</span>
+                                                <span style={{fontSize:'0.8em', background:'#eee', padding:'2px 6px', borderRadius:'4px', marginLeft:'5px'}}>
+                                                    {report.type}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>{report.reason}</td>
+                                        <td>{new Date(report.createdAt).toLocaleDateString()}</td>
+                                        <td>
+                                            <span className={`status-badge ${report.status?.toLowerCase()}`}>
+                                                {report.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <p className="empty-text">No reports found.</p>
+                    )}
+                </div>
+            </div>
+        )}
 
       </div>
     </div>

@@ -61,9 +61,12 @@ function ProductCard({ product, onAddToCart }) {
   const safeRating = averageRating ?? 0;
   const inStock = (stock ?? 0) > 0 && (visible ?? true) && status === "ACTIVE";
 
-  const imgSrc = imagePath
-    ? `${API_BASE}/uploads/${imagePath}`
-    : "https://via.placeholder.com/600x400?text=No+Image";
+  // Resolve image source (handle both imagePath and legacy imagePaths)
+  const imgSrc = (product.imagePaths && product.imagePaths.length > 0)
+    ? `${API_BASE}/${product.imagePaths[0]}`
+    : (product.imagePath
+        ? `${API_BASE}/${product.imagePath}`
+        : "https://via.placeholder.com/600x400?text=No+Image");
 
   const handleCardClick = () => {
     navigate(`/products/${id}`);

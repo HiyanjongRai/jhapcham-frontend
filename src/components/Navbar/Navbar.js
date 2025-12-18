@@ -38,11 +38,14 @@ const Navbar = () => {
       if (encodedId) {
          try {
            const userId = atob(encodedId);
-           const cart = await apiGetCart(userId);
-           if (Array.isArray(cart)) {
-             count = cart.reduce((sum, item) => sum + item.quantity, 0);
+           const cartData = await apiGetCart(userId);
+           // Legacy DTO has .items array
+           if (cartData && Array.isArray(cartData.items)) {
+             count = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
            }
-         } catch (e) { console.error("Nav sync cart failed", e); }
+         } catch (e) { 
+           console.error("Nav sync cart failed", e); 
+         }
       } else {
          const cart = loadGuestCart();
          count = cart.reduce((sum, item) => sum + item.quantity, 0);

@@ -7,7 +7,7 @@ import {
   apiPlaceOrderFromCart,
   apiPreviewOrder, // Add this
 } from "../AddCart/cartUtils";
-import axios from "axios";
+import api from "../../api/axios";
 import { API_BASE } from "../config/config";
 import ErrorToast from "../ErrorToast/ErrorToast";
 import "./CheckoutPage.css";
@@ -58,22 +58,24 @@ function CheckoutPage() {
     try {
       const payload = {
         userId,
-        fullName: formData.fullName || "Guest",
-        phone: formData.phone || "9999999999",
-        email: formData.email || "guest@example.com",
-        address: formData.address || "Kathmandu",
-        shippingLocation: insideValley ? "INSIDE" : "OUTSIDE",
-        paymentMethod: paymentMethod === "WALLET" ? "ONLINE" : "COD",
+        deliveryZone: insideValley ? "INSIDE_VALLEY" : "OUTSIDE_VALLEY",
         items: items.map(item => ({
             productId: item.productId,
             quantity: item.quantity,
-            selectedColor: item.selectedColor,
-            selectedStorage: item.selectedStorage
+            color: item.selectedColor,
+            storage: item.selectedStorage
         }))
       };
 
       const data = await apiPreviewOrder(payload);
       setPreviewData(data);
+      if (data.items) {
+        setItems(data.items.map(i => ({
+          ...i,
+          productName: i.name,
+          productId: i.productId
+        })));
+      }
     } catch (e) {
       console.warn("Preview calculation failed", e);
     }
@@ -84,9 +86,9 @@ function CheckoutPage() {
       const data = await apiGetCart(userId);
       const mappedItems = (data.items || []).map(i => ({
         ...i,
-        unitPrice: i.price,
-        lineTotal: i.price * i.quantity,
-        imagePath: i.image,
+        unitPrice: i.unitPrice || 0,
+        lineTotal: i.lineTotal || 0,
+        imagePath: i.imagePath,
         productName: i.name,
         selectedColor: i.selectedColor,
         selectedStorage: i.selectedStorage
@@ -100,10 +102,8 @@ function CheckoutPage() {
 
   const loadUser = async () => {
     try {
-      const res = await fetch(`${API_BASE}/users/profile/${userId}`);
-      if (!res.ok) return;
-
-      const u = await res.json();
+      const res = await api.get(`/api/users/profile/${userId}`);
+      const u = res.data;
 
       setFormData(prev => ({
         ...prev,
@@ -358,7 +358,7 @@ function CheckoutPage() {
               <img
                 src={
                   item.imagePath
-                    ? `${API_BASE}/uploads/${item.imagePath}`
+                    ? `${API_BASE}/${item.imagePath}`
                     : "https://via.placeholder.com/70"
                 }
                 alt=""
@@ -389,12 +389,12 @@ function CheckoutPage() {
   </div>
 
   <div className="summary-item-price">
-    ${item.unitPrice?.toFixed(2)}
+    ${(item.unitPrice || 0).toFixed(2)}
   </div>
 </div>
 
 
-              <div className="summary-line">$ {item.lineTotal.toFixed(2)}</div>
+              <div className="summary-line">$ {(item.lineTotal || 0).toFixed(2)}</div>
             </div>
           ))}
 
@@ -402,14 +402,14 @@ function CheckoutPage() {
 
           <div className="summary-row">
             <span>Subtotal</span>
-            <span>$ {(previewData ? previewData.itemsTotal : total).toFixed(2)}</span>
+            <span>$ {(previewData ? (previewData.itemsTotal || 0) : (total || 0)).toFixed(2)}</span>
           </div>
 
           <div className="summary-row">
             <span>Shipping</span>
             <span>
                 {previewData 
-                  ? (previewData.shippingFee === 0 ? "Free Shipping" : `$ ${previewData.shippingFee.toFixed(2)}`)
+                  ? (previewData.shippingFee === 0 ? "Free Shipping" : `$ ${(previewData.shippingFee || 0).toFixed(2)}`)
                   : "Calculating..."}
             </span>
           </div>
@@ -417,14 +417,14 @@ function CheckoutPage() {
           {previewData && previewData.discountTotal > 0 && (
              <div className="summary-row" style={{ color: 'green' }}>
                 <span>Discount</span>
-                <span>- $ {previewData.discountTotal.toFixed(2)}</span>
+                <span>- $ {(previewData.discountTotal || 0).toFixed(2)}</span>
              </div>
           )}
 
           <div className="summary-row total">
             <strong>Grand Total</strong>
             <strong>
-              $ {(previewData ? previewData.grandTotal : total).toFixed(2)}
+              $ {(previewData ? (previewData.grandTotal || 0) : (total || 0)).toFixed(2)}
             </strong>
           </div>
           

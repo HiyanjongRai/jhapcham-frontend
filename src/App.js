@@ -19,7 +19,7 @@ import NotificationList from "./components/NotificationPage/NotificationList";
 import ReviewForm from "./components/Review/ReviewForm.jsx";
 import WishlistPage from "./components/WishlistPage/WishlistPage.jsx";
 import AddProduct from "./components/Seller/AddProductPage.jsx";
-import UpdateAccount from "./components/Customer/UpdateAccount.jsx";
+import UpdateAccount from "./components/Profile/UpdateAccount.jsx";
 import ProductManagement from "./components/Seller/ProductManagement.jsx";
 import MessagesPage from "./components/Message/MessagesPage.jsx";
 import OnSalePage from "./components/Collections/OnSalePage.jsx";
@@ -27,7 +27,6 @@ import NewArrivalsPage from "./components/Collections/NewArrivalsPage.jsx";
 import BrandsPage from "./components/Collections/BrandsPage.jsx";
 
 import SellerProfilePage from "./components/Seller/SellerProfilePage.jsx";
-import SellerSettings from "./components/Seller/SellerSettings.jsx";
 
 // Error Pages
 import { 
@@ -95,7 +94,7 @@ function App() {
         {/* Seller Product Management */}
         <Route path="/seller/add-product" element={<AddProduct />} />
         <Route path="/seller/products" element={<ProductManagement />} />
-        <Route path="/seller/settings" element={<SellerSettings />} />
+        <Route path="/seller/settings" element={<UpdateAccount />} />
 
         {/* Messages */}
         <Route path="/messages" element={<MessagesPage />} />

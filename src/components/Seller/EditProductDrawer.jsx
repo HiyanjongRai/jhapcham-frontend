@@ -57,14 +57,16 @@ export default function EditProductDrawer({
 
       const form = new FormData();
 
-      const colorOptionsText =
-        product.colors && product.colors.length
-          ? JSON.stringify(product.colors)
-          : "[]";
-      const storageSpecText =
-        product.storage && product.storage.length
-          ? JSON.stringify(product.storage)
-          : "[]";
+      // Append sellerId explicitely
+      form.append("sellerId", sellerId);
+
+      // Handle arrays correctly for List<String> binding
+      if (product.colors && product.colors.length) {
+          product.colors.forEach(c => form.append("colors", c));
+      }
+      if (product.storage && product.storage.length) {
+          product.storage.forEach(s => form.append("storage", s));
+      }
 
       const baseFields = {
         name: product.name,
@@ -73,13 +75,12 @@ export default function EditProductDrawer({
         price: product.price,
         category: product.category,
         brand: product.brand,
-        stockQuantity: product.stock,
-        warrantyMonths: product.warrantyMonths,
-        specification: product.specification,
+        stockQuantity: product.stock,             
+        warrantyMonths: product.warrantyMonths, 
+        specification: product.specification, 
         features: product.features,
-        colorOptions: colorOptionsText,
-        storageSpec: storageSpecText,
-        freeShipping: product.freeShipping || false,
+        onSale: product.onSale?.toString(), // Use toString for FormData
+        freeShipping: product.freeShipping?.toString(),
         insideValleyShipping: product.insideValleyShipping,
         outsideValleyShipping: product.outsideValleyShipping
       };
@@ -92,34 +93,24 @@ export default function EditProductDrawer({
       
       // Sale Logic
       if (product.onSale) {
-          form.append("onSale", "true");
-          
           if (saleMode === "percentage") {
               if (product.salePercentage) form.append("salePercentage", product.salePercentage);
           } else {
               // Backend Logic: If 'salePercentage' is not provided, 
               // the 'discountPrice' field in DTO is treated as the FINAL SALE PRICE.
-              // So we send our 'salePrice' state (which is the final price) to 'discountPrice'.
               if (product.salePrice) form.append("discountPrice", product.salePrice);
           }
-      } else {
-          form.append("onSale", "false");
       }
 
       if (product.manufactureDate) form.append("manufactureDate", product.manufactureDate);
       if (product.expiryDate) form.append("expiryDate", product.expiryDate);
 
-      if (product.id) {
-        if (imageFile) form.append("newImages", imageFile);
-        if (additionalFiles.length) {
-          additionalFiles.forEach(f => form.append("newImages", f));
-        }
-      } else {
-        if (imageFile) form.append("images", imageFile);
-        if (additionalFiles.length) {
-          additionalFiles.forEach(f => form.append("images", f));
-        }
-      }
+      // Legacy backend expects 'images' (List<MultipartFile>) for create 
+      // and 'newImages' (List<MultipartFile>) for update in ProductUpdateRequestDTO
+      const filesToUpload = imageFile ? [imageFile, ...additionalFiles] : additionalFiles;
+      
+      const fileFieldName = product.id ? "newImages" : "images";
+      filesToUpload.forEach(f => form.append(fileFieldName, f));
 
       const url = product.id
         ? `${BASE_URL}/api/products/${product.id}`

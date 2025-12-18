@@ -19,6 +19,7 @@ import {
   saveGuestCart,
   apiAddToCart,
 } from "../AddCart/cartUtils";
+import api from "../../api/axios";
 import { apiAddToWishlist, apiRemoveFromWishlist, apiCheckWishlist } from "../WishlistPage/wishlistUtils";
 import MessageModal from "../Message/MessageModal";
 import ReportModal from "../Report/ReportModal";
@@ -55,11 +56,11 @@ export default function ProductDetailPage() {
         localStorage.setItem("anonKey", anonKey);
       }
 
-      const url = userId
-        ? `${API_BASE}/api/views/log?productId=${productId}&userId=${userId}`
-        : `${API_BASE}/api/views/log?productId=${productId}&anonKey=${anonKey}`;
-
-      await fetch(url, { method: "POST" });
+      await api.post("/api/views/log", null, {
+        params: userId 
+          ? { productId, userId }
+          : { productId, anonKey }
+      });
     } catch { }
   };
 
@@ -70,56 +71,66 @@ export default function ProductDetailPage() {
         setLoading(true);
 
         // Load product with userId for view tracking
-        const res = await fetch(`${API_BASE}/api/products/${id}?userId=${userId || ''}`);
-        const data = await res.json();
+        const res = await api.get(`/api/products/${id}`, {
+          params: { userId: userId || '' }
+        });
+        const data = res.data;
         
         // Map ProductDetailDTO to frontend format
         const mappedProduct = {
           ...data,
           id: data.productId || data.id,
-          imagePath: data.imagePaths && data.imagePaths.length > 0 ? data.imagePaths[0] : "",
-          additionalImages: data.imagePaths || [],
-          stock: data.stockQuantity || 0,
-          colors: (() => {
-            if (Array.isArray(data.colorOptions)) return data.colorOptions;
-            if (typeof data.colorOptions !== 'string') return [];
-            try {
-              const res = JSON.parse(data.colorOptions);
-              return Array.isArray(res) ? res : [];
-            } catch { 
-              return data.colorOptions.split(',').map(s => s.trim()).filter(Boolean);
-            }
-          })(),
-          storage: (() => {
-            if (Array.isArray(data.storageSpec)) return data.storageSpec;
-            if (typeof data.storageSpec !== 'string') return [];
-            try {
-              const res = JSON.parse(data.storageSpec);
-              return Array.isArray(res) ? res : [];
-            } catch { 
-              return data.storageSpec.split(',').map(s => s.trim()).filter(Boolean);
-            }
-          })(),
-          rating: data.averageRating || 0,
-          sellerId: data.sellerUserId,
-          sellerStoreName: data.storeName,
-          sellerStoreAddress: data.storeAddress,
-          specification: data.specification || "",
+          imagePath: (data.imagePaths && data.imagePaths.length > 0) ? data.imagePaths[0] : (data.imagePath || ""),
+          additionalImages: data.additionalImages || [],
+          stock: data.stockQuantity ?? data.stock ?? 0,
+          colors: Array.isArray(data.colors) ? data.colors : (
+            (() => {
+              if (Array.isArray(data.colorOptions)) return data.colorOptions;
+              if (typeof data.colorOptions === 'string') {
+                try {
+                  const res = JSON.parse(data.colorOptions);
+                  return Array.isArray(res) ? res : [];
+                } catch { 
+                  return data.colorOptions.split(',').map(s => s.trim()).filter(Boolean);
+                }
+              }
+              return [];
+            })()
+          ),
+          storage: Array.isArray(data.storage) ? data.storage : (
+            (() => {
+              if (Array.isArray(data.storageSpec)) return data.storageSpec;
+              if (typeof data.storageSpec === 'string') {
+                try {
+                  const res = JSON.parse(data.storageSpec);
+                  return Array.isArray(res) ? res : [];
+                } catch { 
+                  return data.storageSpec.split(',').map(s => s.trim()).filter(Boolean);
+                }
+              }
+              return [];
+            })()
+          ),
+          rating: data.averageRating ?? data.rating ?? 0,
+          sellerId: data.sellerUserId ?? data.sellerId,
+          sellerStoreName: data.storeName ?? data.sellerStoreName,
+          sellerStoreAddress: data.storeAddress ?? data.sellerStoreAddress,
+          specification: data.specification || data.specifications || "",
           salePrice: data.salePrice !== null ? data.salePrice : (data.discountPrice ?? data.price),
-          discountPercent: data.salePercentage || 0,
+          discountPercent: data.discountPercent ?? data.salePercentage ?? 0,
           saleLabel: data.saleLabel,
           freeShipping: data.freeShipping || false,
           insideValleyShipping: data.insideValleyShipping,
           outsideValleyShipping: data.outsideValleyShipping,
-          manufactureDate: data.manufactureDate,
+          manufactureDate: data.manufactureDate || data.manufacturingDate,
           expiryDate: data.expiryDate,
-          warrantyMonths: data.warrantyMonths,
+          warrantyMonths: data.warrantyMonths || data.warranty,
           features: data.features,
           description: data.description,
         };
         
         setProduct(mappedProduct);
-        setMainImage(`${API_BASE}/uploads/${mappedProduct.imagePath}`);
+        setMainImage(`${API_BASE}/${mappedProduct.imagePath}`);
 
         if (mappedProduct.colors?.length) setSelectedColor(mappedProduct.colors[0]);
         if (mappedProduct.storage?.length) setSelectedStorage(mappedProduct.storage[0]);
@@ -130,17 +141,10 @@ export default function ProductDetailPage() {
             setLiked(isLiked);
         }
 
-        // auto-view logging handled by backend now
-
         // Load reviews
         try {
-          const rev = await fetch(`${API_BASE}/api/reviews/product/${id}`);
-          if (rev.ok) {
-            const revData = await rev.json();
-            setReviews(Array.isArray(revData) ? revData : []);
-          } else {
-            setReviews([]);
-          }
+          const rev = await api.get(`/api/reviews/product/${id}`);
+          setReviews(Array.isArray(rev.data) ? rev.data : []);
         } catch (revErr) {
           console.error("Failed to load reviews:", revErr);
           setReviews([]);
@@ -282,15 +286,18 @@ export default function ProductDetailPage() {
             <img src={mainImage} className="pd-main-image" alt={product.name} />
           </div>
           <div className="pd-thumbnails">
-            {[product.imagePath, ...(product.additionalImages || [])].map((img, i) => (
-              <img
-                key={i}
-                src={`${API_BASE}/uploads/${img}`}
-                className={`pd-thumb ${mainImage.includes(img) ? "active" : ""}`}
-                onClick={() => setMainImage(`${API_BASE}/uploads/${img}`)}
-                alt="thumbnail"
-              />
-            ))}
+            {[product.imagePath, ...(product.additionalImages || [])].map((img, i) => {
+              const src = `${API_BASE}/${img}`;
+              return (
+                <img
+                  key={i}
+                  src={src}
+                  className={`pd-thumb ${mainImage === src ? "active" : ""}`}
+                  onClick={() => setMainImage(src)}
+                  alt="thumbnail"
+                />
+              )
+            })}
           </div>
         </div>
 
@@ -516,7 +523,7 @@ export default function ProductDetailPage() {
               <div className="pd-review-user">
                 <img
                   src={r.userProfileImage 
-                        ? (r.userProfileImage.startsWith('http') ? r.userProfileImage : `${API_BASE}/uploads/${r.userProfileImage}`) 
+                        ? (r.userProfileImage.startsWith('http') ? r.userProfileImage : `${API_BASE}/${r.userProfileImage}`) 
                         : "https://via.placeholder.com/40"}
                   className="pd-review-avatar"
                   alt={r.userName || "User"}
@@ -539,7 +546,7 @@ export default function ProductDetailPage() {
               {r.imagePath && (
                 <div style={{ marginTop: '1rem' }}>
                     <img 
-                        src={r.imagePath.startsWith('http') ? r.imagePath : `${API_BASE}/uploads/${r.imagePath}`} 
+                        src={r.imagePath.startsWith('http') ? r.imagePath : `${API_BASE}/${r.imagePath}`} 
                         alt="review" 
                         style={{ width: 100, height: 100, borderRadius: 8, objectFit: 'cover' }} 
                     />

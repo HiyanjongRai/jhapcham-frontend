@@ -30,13 +30,13 @@ function CartPage() {
 
         if (isLoggedIn) {
           const data = await apiGetCart(userId);
-          // Map backend DTO to frontend state structure
+          // Legacy DTO has 'subtotal' and 'items'
+          // Each item has 'cartItemId', 'price', 'image', etc.
           const mappedItems = (data.items || []).map(i => ({
             ...i,
-            cartItemId: i.cartItemId,
-            unitPrice: i.price,
-            lineTotal: i.price * i.quantity,
-            imagePath: i.image, // Map 'image' to 'imagePath'
+            unitPrice: i.price || 0,
+            lineTotal: (i.price || 0) * (i.quantity || 1),
+            imagePath: i.image,
             color: i.selectedColor,
             storage: i.selectedStorage
           }));
@@ -66,18 +66,20 @@ function CartPage() {
     if (isLoggedIn) {
       try {
         // The backend returns the updated cart DTO
-        const data = await apiUpdateQuantity(
+        // The backend returns a message, not the cart. So we must refetch.
+        await apiUpdateQuantity(
           userId,
-          item.cartItemId,
+          item.cartItemId, // Legacy uses cartItemId
           newQty
         );
 
-        // Update state with new cart data
+        // Refetch cart
+        const data = await apiGetCart(userId);
+        
         const mappedItems = (data.items || []).map(i => ({
             ...i,
-            cartItemId: i.cartItemId,
-            unitPrice: i.price,
-            lineTotal: i.price * i.quantity,
+            unitPrice: i.price || 0,
+            lineTotal: (i.price || 0) * (i.quantity || 1),
             imagePath: i.image,
             color: i.selectedColor,
             storage: i.selectedStorage
@@ -111,16 +113,18 @@ function CartPage() {
       try {
         // Backend returns updated cart DTO (or if it returns 200 OK with data)
         // Since apiRemoveItem calls apiUpdateQuantity with 0, it returns the cart DTO.
-        const data = await apiRemoveItem(
+        // Backend returns message. Refetch needed.
+        await apiRemoveItem(
           userId,
-          item.cartItemId
+          item.cartItemId // Legacy uses cartItemId
         );
+
+        const data = await apiGetCart(userId);
 
         const mappedItems = (data.items || []).map(i => ({
             ...i,
-            cartItemId: i.cartItemId,
-            unitPrice: i.price,
-            lineTotal: i.price * i.quantity,
+            unitPrice: i.price || 0,
+            lineTotal: (i.price || 0) * (i.quantity || 1),
             imagePath: i.image,
             color: i.selectedColor,
             storage: i.selectedStorage
@@ -162,7 +166,7 @@ function CartPage() {
               <img
                 src={
                   item.imagePath
-                    ? `${API_BASE}/uploads/${item.imagePath}`
+                    ? `${API_BASE}/${item.imagePath}`
                     : "https://via.placeholder.com/130x130?text=Product"
                 }
                 alt={item.name}

@@ -24,6 +24,16 @@ export default function SellerRegister() {
     setLoading(true);
     setMessage(null);
 
+    // Password validation
+    if (form.password.length < 8) {
+      setMessage({
+        type: "error",
+        text: "Password must be at least 8 characters long"
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await axios.post(`${API_BASE}/api/auth/register/seller`, form);
 
@@ -91,9 +101,10 @@ export default function SellerRegister() {
               className="sa-input"
               type="password"
               name="password"
-              placeholder="Create a password"
+              placeholder="Create a password (min. 8 characters)"
               value={form.password}
               onChange={handleChange}
+              minLength={8}
               required
             />
           </div>

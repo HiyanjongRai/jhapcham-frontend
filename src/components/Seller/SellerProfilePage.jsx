@@ -99,7 +99,7 @@ export default function SellerProfilePage() {
           <div className="spp-logo-box">
             {seller.logoImagePath ? (
               <img
-                src={`${API_BASE}/uploads/${seller.logoImagePath}`}
+                src={`${API_BASE}/${seller.logoImagePath}`}
                 alt="Logo"
                 className="spp-store-logo"
               />
@@ -296,7 +296,7 @@ export default function SellerProfilePage() {
           >
             <div className="spp-prod-img-wrap">
               <img
-                src={`${API_BASE}/uploads/${p.mainImage}`}
+                src={`${API_BASE}/${p.imagePaths?.[0] || p.mainImage || p.imagePath}`}
                 alt={p.name}
               />
             </div>

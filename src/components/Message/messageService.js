@@ -1,4 +1,5 @@
 import api from "../../api/axios";
+import { getCurrentUserId } from "../AddCart/cartUtils";
 
 /**
  * Message Service - API utilities for messaging functionality
@@ -7,7 +8,8 @@ import api from "../../api/axios";
 // Send a message (product inquiry or direct message)
 export const sendMessage = async (receiverId, content, productId = null) => {
   try {
-    const response = await api.post("/api/messages", {
+    const endpoint = "/api/messages"; // Backend has single POST endpoint for messages
+    const response = await api.post(endpoint, {
       receiverId,
       productId,
       content,
@@ -37,7 +39,7 @@ export const getSentMessages = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching sent messages:", error);
-    throw error;
+    return []; // Return empty instead of throwing to allow MessagesPage to still show Received
   }
 };
 

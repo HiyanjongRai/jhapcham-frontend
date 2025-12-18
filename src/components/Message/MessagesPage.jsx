@@ -17,15 +17,7 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    if (!currentUserId) {
-      navigate("/login");
-      return;
-    }
-    loadMessages();
-  }, [currentUserId]);
-
-  const loadMessages = async () => {
+  const loadMessages = React.useCallback(async () => {
     try {
       setLoading(true);
       // Fetch both inbox and sent to build full conversation list
@@ -55,7 +47,6 @@ export default function MessagesPage() {
           // Format last message
           let lastMessagePreview = msg.content;
           if (msg.productId) {
-            const prodName = msg.productName || `ID: ${msg.productId}`;
             lastMessagePreview = `📦 Enquiry: ${msg.content}`;
           }
 
@@ -76,7 +67,15 @@ export default function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId]);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      navigate("/login");
+      return;
+    }
+    loadMessages();
+  }, [currentUserId, loadMessages, navigate]);
 
   const loadConversationData = async (otherUserId, otherUserName) => {
     try {
@@ -152,7 +151,7 @@ export default function MessagesPage() {
                   >
                     <div className="conversation-avatar">
                       {conv.userImage ? (
-                          <img src={`${API_BASE}/uploads/${conv.userImage}`} alt="" style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}}/>
+                          <img src={`${API_BASE}/api/users/${conv.userId}/profile-image`} alt="" style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}}/>
                       ) : <User size={24} />}
                     </div>
                     <div className="conversation-details">
@@ -198,7 +197,7 @@ export default function MessagesPage() {
                     >
                       {msg.productImage && (
                         <img 
-                          src={`${API_BASE}/uploads/${msg.productImage}`} 
+                          src={`${API_BASE}/api/products/images/${msg.productImage}`} 
                           alt={msg.productName} 
                           className="msg-product-thumb"
                           onError={(e) => {

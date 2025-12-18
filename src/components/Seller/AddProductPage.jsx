@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./AddProduct.css";
 import { getCurrentUserId } from "../config/authUtils";
+import { API_BASE } from "../config/config";
 
 export default function AddProductPage() {
   const [formData, setFormData] = useState({
@@ -70,7 +71,10 @@ export default function AddProductPage() {
     try {
       const data = new FormData();
       
-      // Match ProductCreateRequestDTO fields
+      // Add sellerId first - backend expects this
+      data.append("sellerId", sellerId);
+      
+      // Match ProductDto fields exactly
       data.append("name", formData.name);
       data.append("price", formData.price);
       data.append("category", formData.category);
@@ -79,27 +83,24 @@ export default function AddProductPage() {
       data.append("brand", formData.brand);
       data.append("stockQuantity", formData.stock || "0");
       
-      // Color options as JSON string
+      // Colors - Append individually for List<String> binding
       if (formData.colors.length > 0) {
-        data.append("colorOptions", JSON.stringify(formData.colors));
+        formData.colors.forEach(color => data.append("colorOptions", color));
       }
       
-      // Storage spec as JSON string
+      // Storage - Append individually for List<String> binding
       if (formData.storage.length > 0) {
-        data.append("storageSpec", JSON.stringify(formData.storage));
+        formData.storage.forEach(storage => data.append("storageSpec", storage));
       }
       
       // Optional fields
       if (formData.manufactureDate) data.append("manufactureDate", formData.manufactureDate);
       if (formData.expiryDate) data.append("expiryDate", formData.expiryDate);
-      if (formData.warranty) {
-        const warrantyMonths = parseInt(formData.warranty) || 0;
-        data.append("warrantyMonths", warrantyMonths.toString());
-      }
+      if (formData.warranty) data.append("warrantyMonths", formData.warranty);
       if (formData.features) data.append("features", formData.features.trim());
       if (formData.specification) data.append("specification", formData.specification.trim());
       
-      // Images - backend expects 'images' array
+      // Images - backend expects 'images' (List<MultipartFile>)
       if (formData.image) {
         data.append("images", formData.image);
       }
@@ -107,9 +108,9 @@ export default function AddProductPage() {
         data.append("images", img);
       });
 
-      // Use new endpoint with seller ID in path
+      // Use correct legacy endpoint: /api/products/seller/{id}
       const response = await axios.post(
-        `http://localhost:8080/api/products/seller/${sellerId}`,
+        `${API_BASE}/api/products/seller/${sellerId}`,
         data,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -122,7 +123,7 @@ export default function AddProductPage() {
         name: "", price: "", category: "", description: "", shortDescription: "",
         brand: "", stock: "", colors: [], storage: [],
         image: null, additionalImages: [], manufactureDate: "",
-        expiryDate: "", warranty: "", features: ""
+        expiryDate: "", warranty: "", features: "", specification: ""
       });
     } catch (error) {
       console.error("Add Product Error:", error);
@@ -205,8 +206,8 @@ export default function AddProductPage() {
         <div className="field">
           <label>Specification</label>
           <textarea
-             name="specification"
-             value={formData.specification}
+             name="specifications"
+             value={formData.specifications}
              onChange={handleInput}
              placeholder="Technical specifications..."
           />
@@ -216,10 +217,10 @@ export default function AddProductPage() {
         <div className="field">
           <label>Features (one per line)</label>
           <textarea
-            name="features"
-            value={formData.features}
-            onChange={handleInput}
-            placeholder="• Feature 1&#10;• Feature 2&#10;• Feature 3"
+             name="features"
+             value={formData.features}
+             onChange={handleInput}
+             placeholder="• Feature 1&#10;• Feature 2&#10;• Feature 3"
           />
         </div>
 
@@ -286,7 +287,7 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        <button className="submit-btn">Add Product</button>
+        <button className="submit-btn" type="submit">Add Product</button>
         {message && <p className="message">{message}</p>}
       </form>
     </div>

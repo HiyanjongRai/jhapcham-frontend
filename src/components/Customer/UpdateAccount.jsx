@@ -30,7 +30,7 @@ export default function UpdateAccount() {
       // If not, we might need to rely on what was previously working or use the new controller if it had a GET.
       // The user only provided PUT for CustomerController. 
       // Let's stick to the existing fetch endpoint for reading, assuming it still works.
-      const res = await fetch(`${API_BASE}/users/profile/${userId}`);
+      const res = await fetch(`${API_BASE}/api/users/${userId}`);
       if (!res.ok) throw new Error("Failed to load profile");
       const data = await res.json();
       setProfile({
@@ -43,7 +43,7 @@ export default function UpdateAccount() {
         setPreviewImage(
           data.profileImagePath.startsWith("http") 
             ? data.profileImagePath 
-            : `${API_BASE}/uploads/customer-profile/${data.profileImagePath}`
+            : `${API_BASE}/uploads/${data.profileImagePath}`
         );
       }
     } catch (err) {
@@ -68,51 +68,70 @@ export default function UpdateAccount() {
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("fullName", profile.fullName);
-      formData.append("contactNumber", profile.contactNumber);
-      
-      if (selectedFile) {
-        formData.append("profileImage", selectedFile);
-      }
+      // 1. Update Profile (Text Data)
+      const updateBody = {
+        fullName: profile.fullName,
+        contactNumber: profile.contactNumber,
+        email: profile.email
+      };
 
       if (changePasswordMode && passwords.newPassword) {
-        formData.append("currentPassword", passwords.currentPassword);
-        formData.append("newPassword", passwords.newPassword);
-        formData.append("confirmPassword", passwords.confirmPassword);
+         if (passwords.newPassword !== passwords.confirmPassword) {
+             alert("Passwords do not match!");
+             setLoading(false);
+             return;
+         }
+         updateBody.password = passwords.newPassword;
       }
 
-      // Updated endpoint: PUT /api/customers/{userId}
-      const res = await fetch(`${API_BASE}/api/customers/${userId}`, {
+      // Updated endpoint: PUT /api/users/{userId}
+      const res = await fetch(`${API_BASE}/api/users/${userId}`, {
         method: "PUT",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateBody),
       });
 
-      if (res.ok) {
-        const updatedUser = await res.json();
-        alert("Profile updated successfully!");
-        // Update local state with response
-        setProfile(prev => ({
-            ...prev,
-            fullName: updatedUser.fullName,
-            contactNumber: updatedUser.contactNumber
-        }));
-        if (updatedUser.profileImagePath) {
-             setPreviewImage(`${API_BASE}/uploads/customer-profile/${updatedUser.profileImagePath}`);
-        }
-        setSelectedFile(null); // Clear file selection
-        
-        // Reset password fields
-        setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
-        setChangePasswordMode(false);
-        
-      } else {
-        const errorData = await res.json();
-        alert(errorData.message || "Failed to update profile");
+      if (!res.ok) {
+         throw new Error("Failed to update profile info");
       }
+      
+      let updatedUser = await res.json();
+
+      // 2. Upload Image (if selected)
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        
+        const imgRes = await fetch(`${API_BASE}/api/users/${userId}/profile-image`, {
+             method: "POST",
+             body: formData
+        });
+        
+        if (imgRes.ok) {
+             updatedUser = await imgRes.json();
+        }
+      }
+
+      alert("Profile updated successfully!");
+      // Update local state with response
+      setProfile(prev => ({
+          ...prev,
+          fullName: updatedUser.fullName,
+          contactNumber: updatedUser.contactNumber
+      }));
+      if (updatedUser.profileImagePath) {
+           // Use the API endpoint to fetch the image, with a timestamp to bust cache
+           setPreviewImage(`${API_BASE}/uploads/${updatedUser.profileImagePath}?t=${Date.now()}`);
+      }
+      setSelectedFile(null); // Clear file selection
+      
+      // Reset password fields
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setChangePasswordMode(false);
+        
     } catch (err) {
       console.error(err);
-      alert("Error updating profile. Please try again.");
+      alert(err.message || "Error updating profile");
     } finally {
       setLoading(false);
     }

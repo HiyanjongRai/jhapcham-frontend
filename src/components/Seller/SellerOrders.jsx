@@ -58,6 +58,11 @@ export default function SellerOrders() {
         await axios.put(url);
         alert("Order canceled successfully");
       } 
+      else if (statusUpper === 'PROCESSING') {
+        const url = `${API_BASE}/api/orders/seller/${sellerId}/process/${orderId}`;
+        await axios.put(url);
+        alert("Order moved to PROCESSING");
+      }
       else if (statusUpper === 'SHIPPED' || statusUpper === 'SHIPPED_TO_BRANCH') {
          // Map SHIPPED to seller assigning branch
          if (!branch) {
@@ -97,7 +102,7 @@ export default function SellerOrders() {
   const buildImageUrl = (imagePath) => {
     if (!imagePath) return "https://via.placeholder.com/48";
     if (imagePath.startsWith("http")) return imagePath;
-    return `${API_BASE}/uploads/${imagePath}`;
+    return `${API_BASE}/${imagePath}`;
   };
 
   const stats = useMemo(() => {
@@ -206,7 +211,7 @@ export default function SellerOrders() {
                 <div className="so-order-header">
                   <div>
                     <h3 className="so-order-id">Order #{String(currentId).padStart(4, "0")}</h3>
-                    <div style={{fontSize: '0.8rem', color: '#666'}}>Customer: {order.customerName || "Guest"}</div>
+                    <div style={{fontSize: '0.8rem', color: '#666'}}>Customer: {order.customer?.fullName || order.customerName || "Guest"}</div>
                   </div>
                   <div className="so-order-meta">
                     <span className={`so-badge so-badge-${(order.status || 'PENDING').toLowerCase()}`}>
@@ -216,7 +221,7 @@ export default function SellerOrders() {
                       {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ""}
                     </span>
                     <span style={{fontSize: '0.875rem', fontWeight: '600', color: '#111827'}}>
-                      ${(order.grandTotal || 0).toFixed(2)}
+                      ${(order.totalPrice || order.grandTotal || 0).toFixed(2)}
                     </span>
                      {order.paymentMethod && (
                          <span className="so-badge" style={{background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db'}}>
@@ -233,10 +238,10 @@ export default function SellerOrders() {
                         {/* Customer Image */}
                         <img 
                            src={
-                             orderDetails[currentId].customerProfileImagePath
-                               ? (orderDetails[currentId].customerProfileImagePath.startsWith('http') 
-                                   ? orderDetails[currentId].customerProfileImagePath 
-                                   : `${API_BASE}/uploads/${orderDetails[currentId].customerProfileImagePath}`)
+                             orderDetails[currentId].customer?.profileImagePath
+                               ? (orderDetails[currentId].customer.profileImagePath.startsWith('http') 
+                                   ? orderDetails[currentId].customer.profileImagePath 
+                                   : `${API_BASE}/${orderDetails[currentId].customer.profileImagePath}`)
                                : "https://via.placeholder.com/60"
                            }
                            alt="Customer"
@@ -248,22 +253,20 @@ export default function SellerOrders() {
                         />
                         <div className="so-customer-info">
                           <h4>
-                            {orderDetails[currentId].customerName || "No name"}
+                            {orderDetails[currentId].customer?.fullName || orderDetails[currentId].customer?.username || "No name"}
                             <span style={{fontSize:'0.8em', fontWeight:'normal', marginLeft:'10px'}}>
-                                ({orderDetails[currentId].customerPhone})
+                                ({orderDetails[currentId].customer?.contactNumber || "N/A"})
                             </span>
                           </h4>
-                          <p>📧 {orderDetails[currentId].customerEmail || "Not provided"}</p>
-                          <p>📍 {orderDetails[currentId].shippingAddress || "No address provided"}</p>
-                          {orderDetails[currentId].shippingLocation && (
-                              <p>Zone: {orderDetails[currentId].shippingLocation}</p>
-                          )}
+                          <p>📧 {orderDetails[currentId].customerEmail || orderDetails[currentId].customer?.email || "Not provided"}</p>
+                          <p>📍 {orderDetails[currentId].deliveryAddress?.fullAddress || "No address provided"}</p>
+                          {/* Shipping Zone is not on Order entity currently, seemingly lost or not saved */}
                         </div>
                      </div>
                   ) : (
                      /* collapsed view, minimal info */
                      <div style={{padding: '0 1rem', color: '#888', fontStyle: 'italic', fontSize: '0.9rem'}}>
-                        {order.totalItems} items • Click to view details
+                        {order.items?.length || order.totalItems || 0} items • Click to view details
                      </div>
                   )}
 
@@ -297,6 +300,7 @@ export default function SellerOrders() {
                       style={{ marginRight: '0.5rem', minWidth: '160px' }}
                     >
                       <option value="">Select Action</option>
+                      <option value="PROCESSING">Process Order</option>
                       <option value="SHIPPED">Ship Order (To Branch)</option>
                       <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
                       <option value="DELIVERED">Mark Delivered</option>
@@ -341,13 +345,13 @@ export default function SellerOrders() {
                         </thead>
                         <tbody>
                           {orderDetails[currentId].items.map((item) => {
-                             const productName = item.name || item.productName || item.productNameSnapshot || "Unknown";
-                             const productImage = item.imagePath || item.imagePathSnapshot;
-                             const itemTotal = item.lineTotal;
-                             const productId = item.productId || item.productIdSnapshot;
+                             const productName = item.product?.name || item.name || "Unknown";
+                             const productImage = item.product?.imagePath || item.imagePath; // Product entity has imagePath
+                             const itemTotal = item.unitPrice * item.quantity;
+                             const productId = item.product?.id || item.productId;
 
                             return (
-                              <tr key={productId || Math.random()}>
+                              <tr key={item.id || Math.random()}>
                                 <td>
                                   <img
                                     src={buildImageUrl(productImage)}
@@ -360,7 +364,7 @@ export default function SellerOrders() {
                                   <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '2px' }}>
                                     {item.selectedColor && (
                                       <span style={{ marginRight: '8px' }}>
-                                        Running Color: {item.selectedColor}
+                                        Color: {item.selectedColor}
                                       </span>
                                     )}
                                     {item.selectedStorage && (

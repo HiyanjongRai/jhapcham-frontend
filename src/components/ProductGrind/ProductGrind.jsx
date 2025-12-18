@@ -13,9 +13,10 @@ const API_BASE = "http://localhost:8080";
 function mapProductDto(dto) {
   return {
     ...dto,
-    imagePath: dto.imagePaths && dto.imagePaths.length > 0 ? dto.imagePaths[0] : "",
+    // Legacy uses 'imagePaths' array
+    imagePath: (dto.imagePaths && dto.imagePaths.length > 0) ? dto.imagePaths[0] : (dto.imagePath || ""),
     rating: dto.averageRating || 0,
-    stock: dto.stockQuantity || 0,
+    stock: dto.stockQuantity ?? dto.stock ?? 0,
   };
 }
 

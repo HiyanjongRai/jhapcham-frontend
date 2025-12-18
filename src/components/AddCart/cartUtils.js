@@ -1,4 +1,6 @@
-const API_BASE = "http://localhost:8080";
+import api from "../../api/axios";
+import { API_BASE } from "../config/config";
+
 const GUEST_CART_KEY = "guestCart";
 
 export function getCurrentUserId() {
@@ -79,120 +81,93 @@ export function addToGuestCart(product, quantity = 1, color = null, storage = nu
 }
 
 /**
- * Helper function to parse error responses from backend
+ * Helper function to parse error responses from axios
  */
-async function parseErrorResponse(response, url) {
-  try {
-    const errorData = await response.json();
-    
-    // Return structured error object
+function handleApiError(error, path) {
+  const response = error.response;
+  if (response) {
+    const errorData = response.data || {};
     return {
       status: response.status,
       message: errorData.message || 'An error occurred',
       details: errorData.details || errorData.error || response.statusText,
-      errors: errorData.errors || {},
       timestamp: errorData.timestamp || new Date().toISOString(),
-      path: errorData.path || url,
-      trace: errorData.trace
-    };
-  } catch (e) {
-    // If response is not JSON, create error from status text
-    return {
-      status: response.status,
-      message: response.statusText || 'An error occurred',
-      details: await response.text().catch(() => 'Unknown error'),
-      timestamp: new Date().toISOString(),
-      path: url
+      path: path
     };
   }
+  return {
+    status: 500,
+    message: error.message || 'Network error',
+    details: 'Unable to connect to the server',
+    timestamp: new Date().toISOString(),
+    path: path
+  };
 }
 
 // ---- API CALLS -----
 export async function apiAddToCart(userId, productId, quantity, color, storage) {
-  const url = `${API_BASE}/api/cart/${userId}/add/${productId}`;
+  // Legacy Path: POST /api/cart/${userId}/add/${productId}
+  const path = `/api/cart/${userId}/add/${productId}`;
 
-  const body = {
-    quantity: quantity,
-    selectedColor: color,
-    selectedStorage: storage
-  };
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
-  }
-  
-  const data = await res.json();
-  
-  // Sync Count
   try {
-     const cart = await apiGetCart(userId);
-     if(Array.isArray(cart.items)) { // check cart.items for the new structure
-         const total = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-         updateGlobalCartCount(total);
-     } else if (Array.isArray(cart)) { 
-        // fallback if apiGetCart returns list directly (old behavior)
-        const total = cart.reduce((sum, item) => sum + item.quantity, 0);
-        updateGlobalCartCount(total);
-     }
-  } catch(e) { console.error("Failed to sync cart count", e); }
+    const res = await api.post(path, {
+      quantity: quantity,
+      selectedColor: color,
+      selectedStorage: storage
+    });
 
-  return data;
+    // Legacy backend returns the updated cart DTO (CartResponseDTO)
+    // with 'subtotal' and 'items'
+    const cartData = res.data;
+    if (cartData && Array.isArray(cartData.items)) {
+        const totalCount = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
+        updateGlobalCartCount(totalCount);
+    }
+
+    return cartData;
+  } catch (err) {
+    throw handleApiError(err, path);
+  }
 }
 
 export async function apiGetCart(userId) {
-  const url = `${API_BASE}/api/cart/${userId}`;
-  const res = await fetch(url);
-  
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
+  // Legacy Path: GET /api/cart/${userId}
+  const path = `/api/cart/${userId}`;
+  try {
+    const res = await api.get(path);
+    return res.data;
+  } catch (err) {
+    throw handleApiError(err, path);
   }
-  
-  return res.json();
 }
 
 /**
- * Updates cart item quantity. using cartItemId.
+ * Updates cart item quantity. Needs cartItemId for legacy PUT endpoint.
  */
 export async function apiUpdateQuantity(userId, cartItemId, quantity) {
-  const url = `${API_BASE}/api/cart/${userId}/update/${cartItemId}?qty=${quantity}`;
+  // Legacy Path: PUT /api/cart/${userId}/update/${cartItemId}?qty=${quantity}
+  const path = `/api/cart/${userId}/update/${cartItemId}`;
 
-  const res = await fetch(url, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" }
-  });
-
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
-  }
-  
-  const data = await res.json();
-  
-  // Sync Count
   try {
-     const cart = await apiGetCart(userId);
-     if(cart && Array.isArray(cart.items)) {
-         const total = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-         updateGlobalCartCount(total);
-     } else if (Array.isArray(cart)) {
-         const total = cart.reduce((sum, item) => sum + item.quantity, 0);
-         updateGlobalCartCount(total);
-     }
-  } catch(e) { console.error("Failed to sync cart count", e); }
-  
-  return data;
+    const res = await api.put(path, null, {
+        params: { qty: quantity }
+    });
+
+    const cartData = res.data;
+    if (cartData && Array.isArray(cartData.items)) {
+        const totalCount = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
+        updateGlobalCartCount(totalCount);
+    }
+    
+    return cartData;
+  } catch (err) {
+    throw handleApiError(err, path);
+  }
 }
 
 /**
- * Removes an item by setting quantity to 0 via update endpoint
+ * Removes an item. Legacy approach uses updateQuantity with qty=0.
+ * We need the cartItemId here.
  */
 export async function apiRemoveItem(userId, cartItemId) {
   return apiUpdateQuantity(userId, cartItemId, 0);
@@ -203,13 +178,17 @@ export async function mergeGuestCartIntoUser(userId) {
   if (!guestCart || guestCart.length === 0) return;
 
   for (const item of guestCart) {
-    await apiAddToCart(
-      userId,
-      item.productId,
-      item.quantity,
-      item.color,
-      item.storage
-    );
+    try {
+      await apiAddToCart(
+        userId,
+        item.productId,
+        item.quantity,
+        item.color,
+        item.storage
+      );
+    } catch (e) {
+      console.error("Failed to merge item:", item.productId, e);
+    }
   }
 
   localStorage.removeItem(GUEST_CART_KEY);
@@ -217,149 +196,121 @@ export async function mergeGuestCartIntoUser(userId) {
 
 // New method matching OrderController.preview
 export async function apiPreviewOrder(checkoutRequest) {
-  const url = `${API_BASE}/api/orders/preview`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(checkoutRequest),
-  });
-
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
+  const path = "/api/orders/preview";
+  try {
+    const res = await api.post(path, checkoutRequest);
+    return res.data;
+  } catch (err) {
+    throw handleApiError(err, path);
   }
-  return res.json();
 }
 
 // Checkout from Cart (Authenticated)
-// Uses CartCheckoutRequestDTO (no items list needed)
 export async function apiPlaceOrderFromCart(cartCheckoutRequest) {
-  const url = `${API_BASE}/api/orders/cart`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(cartCheckoutRequest),
-  });
-
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
+  const path = "/api/orders/cart";
+  try {
+    const res = await api.post(path, cartCheckoutRequest);
+    return res.data;
+  } catch (err) {
+    throw handleApiError(err, path);
   }
-  return res.json();
 }
 
 // Direct Checkout / Guest Checkout / Buy Now
-// Uses CheckoutRequestDTO (includes items list)
 export async function apiPlaceOrder(checkoutRequest) {
-  const url = `${API_BASE}/api/orders`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(checkoutRequest),
-  });
-
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
+  const path = "/api/orders";
+  try {
+    const res = await api.post(path, checkoutRequest);
+    return res.data;
+  } catch (err) {
+    throw handleApiError(err, path);
   }
-  return res.json();
 }
 
 // Seller: Assign Branch
 export async function apiSellerAssignBranch(sellerId, orderId, branchName) {
-   const url = `${API_BASE}/api/orders/seller/${sellerId}/assign/${orderId}`;
-   const res = await fetch(url, {
-       method: "PUT",
-       headers: { "Content-Type": "application/json" },
-       body: JSON.stringify({ branch: branchName })
-   });
-   
-   if (!res.ok) {
-     const error = await parseErrorResponse(res, url);
-     throw error;
+   const path = `/api/orders/seller/${sellerId}/assign/${orderId}`;
+   try {
+     const res = await api.put(path, { branch: branchName });
+     return res.data;
+   } catch (err) {
+     throw handleApiError(err, path);
    }
-   return res.json();
 }
 
 // Branch: Update Status
 export async function apiBranchUpdateStatus(orderId, branchName, nextStatus) {
-    const params = new URLSearchParams({ branch: branchName, nextStatus: nextStatus });
-    const url = `${API_BASE}/api/orders/branch/${orderId}/status?${params.toString()}`;
-    const res = await fetch(url, { method: "PUT" });
-    
-    if (!res.ok) {
-      const error = await parseErrorResponse(res, url);
-      throw error;
+    const path = `/api/orders/branch/${orderId}/status`;
+    try {
+      const res = await api.put(path, null, {
+        params: { branch: branchName, nextStatus: nextStatus }
+      });
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err, path);
     }
-    return res.json();
 }
 
 // Customer: Cancel Order
 export async function apiCustomerCancelOrder(userId, orderId) {
-    const url = `${API_BASE}/api/orders/user/${userId}/cancel/${orderId}`;
-    const res = await fetch(url, { method: "PUT" });
-    
-    if (!res.ok) {
-      const error = await parseErrorResponse(res, url);
-      throw error;
+    const path = `/api/orders/customer/${userId}/cancel/${orderId}`;
+    try {
+      const res = await api.put(path);
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err, path);
     }
-    return res.json();
 }
 
 // Seller: Cancel Order
 export async function apiSellerCancelOrder(sellerId, orderId) {
-    const url = `${API_BASE}/api/orders/seller/${sellerId}/cancel/${orderId}`;
-    const res = await fetch(url, { method: "PUT" });
-    
-    if (!res.ok) {
-      const error = await parseErrorResponse(res, url);
-      throw error;
+    const path = `/api/orders/seller/${sellerId}/cancel/${orderId}`;
+    try {
+      const res = await api.put(path);
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err, path);
     }
-    return res.json();
 }
 
 export async function apiGetOrder(orderId) {
-  const url = `${API_BASE}/api/orders/${orderId}`;
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
+  const path = `/api/orders/${orderId}`;
+  try {
+    const res = await api.get(path);
+    return res.data;
+  } catch (err) {
+    throw handleApiError(err, path);
   }
-  return res.json();
 }
 
 export async function apiGetOrdersForUser(userId) {
-  const url = `${API_BASE}/api/orders/user/${userId}`;
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
+  const path = `/api/orders/user/${userId}`;
+  try {
+    const res = await api.get(path);
+    return res.data;
+  } catch (err) {
+    throw handleApiError(err, path);
   }
-  return res.json();
 }
 
 export async function apiGetUserOrdersSimple(userId) {
-  const url = `${API_BASE}/api/orders/user/${userId}/list`;
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
+  const path = `/api/orders/user/${userId}/list`;
+  try {
+    const res = await api.get(path);
+    return res.data;
+  } catch (err) {
+    throw handleApiError(err, path);
   }
-  return res.json();
 }
 
 export async function apiGetSellerOrders(sellerUserId) {
-  const url = `${API_BASE}/api/orders/seller/${sellerUserId}`;
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    const error = await parseErrorResponse(res, url);
-    throw error;
+  const path = `/api/orders/seller/${sellerUserId}`;
+  try {
+    const res = await api.get(path);
+    return res.data;
+  } catch (err) {
+    throw handleApiError(err, path);
   }
-  return res.json();
 }
 
 // Deprecated methods kept for backward compatibility if needed, 
@@ -369,37 +320,29 @@ export async function apiStartCheckout(userId, fullAddress, insideValley, paymen
   // We can't easily map this to strict OrderController without item details.
   // Leaving as is but it will likely fail if backend removed the old controller.
   
-  const params = new URLSearchParams({
+  const params = {
     userId: userId,
     fullAddress: fullAddress,
     insideValley: insideValley.toString(),
     paymentMethod: paymentMethod, 
-  });
+  };
   
-  if (lat) params.append('lat', lat);
-  if (lng) params.append('lng', lng);
+  if (lat) params.lat = lat;
+  if (lng) params.lng = lng;
 
-  const url = `${API_BASE}/api/checkout/start?` + params.toString();
-
-  const res = await fetch(url, {
-    method: "POST",
-  });
-
-  if (!res.ok) {
-      const error = await parseErrorResponse(res, url);
-      throw error;
+  try {
+    const res = await api.post("/api/checkout/start", null, { params });
+    return res.data;
+  } catch (error) {
+    throw handleApiError(error, "/api/checkout/start");
   }
-  return res.json();
 }
 
 export async function apiMarkPaid(checkoutId) {
-    const url = `${API_BASE}/api/checkout/pay/${checkoutId}`;
-     const res = await fetch(url, {
-        method: "POST"
-     });
-     if (!res.ok) {
-         const error = await parseErrorResponse(res, url);
-         throw error;
-     }
-     return res.json();
+    try {
+        const res = await api.post(`/api/checkout/pay/${checkoutId}`);
+        return res.data;
+    } catch (error) {
+        throw handleApiError(error, `/api/checkout/pay/${checkoutId}`);
+    }
 }

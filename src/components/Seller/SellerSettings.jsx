@@ -54,7 +54,7 @@ export default function SellerSettings() {
                     freeShippingMinOrder: data.freeShippingMinOrder || ""
                 });
                 if (data.logoImagePath) {
-                    setPreviewUrl(`${API_BASE}/seller-logos/${data.logoImagePath}`);
+                    setPreviewUrl(`${API_BASE}/${data.logoImagePath}`);
                 }
             }
         } catch (err) {

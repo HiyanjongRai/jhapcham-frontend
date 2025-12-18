@@ -3,6 +3,7 @@ import "./AdminDashboard.css";
 import { API_BASE } from "../config/config";
 import { useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
+import UpdateAccount from "../Profile/UpdateAccount.jsx";
 
 // Icons (Simple SVGs)
 const UserIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
@@ -10,6 +11,7 @@ const ProductIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 2
 const ReportIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>;
 const ClipboardIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>;
 const LogoutIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
+const SettingsIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("applications"); // Default to applications for visibility
@@ -53,7 +55,7 @@ const AdminDashboard = () => {
                 setReports(res.data);
                 setStats(prev => ({ ...prev, reports: res.data.length }));
             } else if (activeTab === "applications") {
-                const res = await axios.get(`${API_BASE}/api/auth/admin/seller-applications/pending`);
+                const res = await axios.get(`${API_BASE}/api/admin/sellers/applications/pending`);
                 setApplications(res.data);
                 setStats(prev => ({...prev, applications: res.data.length}));
             }
@@ -118,20 +120,26 @@ const AdminDashboard = () => {
     const handleApproveApp = async (appId) => {
         if(!window.confirm("Approve this seller application?")) return;
         try {
-            await axios.put(`${API_BASE}/api/auth/admin/seller-applications/${appId}/approve`);
+            await axios.post(`${API_BASE}/api/admin/sellers/applications/${appId}/approve`, {
+                note: "Approved by admin"
+            });
             fetchData();
         } catch (err) {
-            alert("Failed to approve application");
+            console.error("Approve error:", err);
+            alert("Failed to approve application: " + (err.response?.data?.message || err.message));
         }
     };
 
     const handleRejectApp = async (appId) => {
         if(!window.confirm("Reject this seller application?")) return;
         try {
-            await axios.put(`${API_BASE}/api/auth/admin/seller-applications/${appId}/reject`);
+            await axios.post(`${API_BASE}/api/admin/sellers/applications/${appId}/reject`, {
+                note: "Rejected by admin"
+            });
             fetchData();
         } catch (err) {
-            alert("Failed to reject application");
+            console.error("Reject error:", err);
+            alert("Failed to reject application: " + (err.response?.data?.message || err.message));
         }
     };
     
@@ -169,6 +177,12 @@ const AdminDashboard = () => {
             >
                 <ReportIcon /> Reports
                 <span className="ad-badge-count">{reports.length}</span>
+            </button>
+            <button 
+                className={`ad-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+                onClick={() => setActiveTab('settings')}
+            >
+                <SettingsIcon /> Settings
             </button>
         </nav>
     );
@@ -297,7 +311,25 @@ const AdminDashboard = () => {
                         <tr key={r.id}>
                             <td className="ad-id">#{r.id}</td>
                             <td>{r.type}</td>
-                            <td>{r.reportedEntityId}</td>
+                            <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    {r.reportedEntityImage ? (
+                                        <img 
+                                            src={r.reportedEntityImage.startsWith('http') ? r.reportedEntityImage : `${API_BASE}/${r.reportedEntityImage}`} 
+                                            alt="Target" 
+                                            style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <div style={{ width: '40px', height: '40px', borderRadius: '4px', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', color: '#888' }}>
+                                            N/A
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div style={{ fontWeight: 500 }}>{r.reportedEntityName || "Unknown"}</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#666' }}>ID: {r.reportedEntityId}</div>
+                                    </div>
+                                </div>
+                            </td>
                             <td>{r.reason}</td>
                              <td>{r.reporterName}</td>
                              <td>
@@ -333,32 +365,32 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody>
                     {applications.map(app => (
-                        <tr key={app.id}>
-                            <td className="ad-id">#{app.id}</td>
+                        <tr key={app.applicationId}>
+                            <td className="ad-id">#{app.applicationId}</td>
                             <td>
                                 <div className="ad-user-name">{app.storeName}</div>
                                 <div className="ad-user-email">{app.address}</div>
                             </td>
                             <td>
                                 <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
-                                    {app.taxCertificatePath && (
-                                        <a href={`${API_BASE}/uploads/${app.taxCertificatePath}`} target="_blank" rel="noopener noreferrer" className="ad-link">Tax Cert</a>
+                                    {app.taxCertificateUrl && (
+                                        <a href={`${API_BASE}${app.taxCertificateUrl}`} target="_blank" rel="noopener noreferrer" className="ad-link">Tax Cert</a>
                                     )}
-                                    {app.businessLicensePath && (
-                                        <a href={`${API_BASE}/uploads/${app.businessLicensePath}`} target="_blank" rel="noopener noreferrer" className="ad-link">License</a>
+                                    {app.businessLicenseUrl && (
+                                        <a href={`${API_BASE}${app.businessLicenseUrl}`} target="_blank" rel="noopener noreferrer" className="ad-link">License</a>
                                     )}
-                                    {app.idDocumentPath && (
-                                        <a href={`${API_BASE}/uploads/${app.idDocumentPath}`} target="_blank" rel="noopener noreferrer" className="ad-link">ID Doc</a>
+                                    {app.idDocumentUrl && (
+                                        <a href={`${API_BASE}${app.idDocumentUrl}`} target="_blank" rel="noopener noreferrer" className="ad-link">ID Doc</a>
                                     )}
                                 </div>
                             </td>
-                            <td>{new Date(app.submittedAt).toLocaleDateString()}</td>
+                            <td>{app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : 'N/A'}</td>
                             <td>
                                 <div className="ad-action-buttons">
-                                    <button className="ad-btn ad-btn-approve" onClick={() => handleApproveApp(app.id)}>
+                                    <button className="ad-btn ad-btn-approve" onClick={() => handleApproveApp(app.applicationId)}>
                                         Approve
                                     </button>
-                                    <button className="ad-btn ad-btn-reject" onClick={() => handleRejectApp(app.id)}>
+                                    <button className="ad-btn ad-btn-reject" onClick={() => handleRejectApp(app.applicationId)}>
                                         Reject
                                     </button>
                                 </div>
@@ -427,6 +459,11 @@ const AdminDashboard = () => {
                         {activeTab === 'products' && renderProducts()}
                         {activeTab === 'reports' && renderReports()}
                         {activeTab === 'applications' && renderApplications()}
+                        {activeTab === 'settings' && (
+                            <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
+                                <UpdateAccount />
+                            </div>
+                        )}
                     </>
                 )}
             </main>

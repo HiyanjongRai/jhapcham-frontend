@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import axios from '../../api/axios';
 import { API_BASE } from '../config/config';
 
@@ -13,16 +14,21 @@ const ReportModal = ({ isOpen, onClose, type, reportedEntityId, entityName }) =>
         setLoading(true);
 
         try {
-            await axios.post(`${API_BASE}/api/reports`, {
-                type: type.toUpperCase(), // PRODUCT or SELLER
-                reportedEntityId,
-                reason
-            });
+            const payload = {
+                type: type, // "PRODUCT" or "SELLER"
+                reportedEntityId: reportedEntityId,
+                reason: reason
+            };
+            await axios.post('/api/reports', payload);
             alert('Report submitted successfully');
             onClose();
         } catch (error) {
             console.error(error);
-            alert('Failed to submit report. Ensure you are logged in.');
+            if (error.response && error.response.status === 401) {
+                alert('Session expired. Please log in again.');
+            } else {
+                alert('Failed to submit report. Please try again.');
+            }
         } finally {
             setLoading(false);
         }

@@ -228,7 +228,7 @@ export default function ReviewForm() {
                       onClick={removeExistingImage}
                     />
                   </div>
-                  <img src={`${API_BASE}/uploads/${existingImage}`} alt="Review" style={{ height: 60, marginTop: '0.5rem', borderRadius: 4 }} />
+                  <img src={`${API_BASE}/${existingImage}`} alt="Review" style={{ height: 60, marginTop: '0.5rem', borderRadius: 4 }} />
              </div>
           )}
           

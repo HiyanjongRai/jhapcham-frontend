@@ -9,6 +9,7 @@ import {
 import "./Home.css";
 import ProductCard from "../productCard/ProductCard";
 import { API_BASE } from "../config/config";
+import api from "../../api/axios";
 
 // --- Mock Data for Carousel ---
 const CAROUSEL_SLIDES = [
@@ -61,17 +62,18 @@ function Home() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/products`);
-        if (res.ok) {
-          const data = await res.json();
-          // Sort and map
-          const mapped = data.map(dto => ({
-            ...dto,
-            imagePath: dto.imagePaths && dto.imagePaths.length > 0 ? dto.imagePaths[0] : "",
-            rating: dto.averageRating || 0,
-          }));
-          setProducts(mapped);
-        }
+        const res = await api.get("/api/products");
+        const data = res.data;
+        // Sort and map
+        const mapped = data.map(dto => ({
+          ...dto,
+          // Legacy backend uses 'imagePaths' array
+          imagePath: (dto.imagePaths && dto.imagePaths.length > 0) ? dto.imagePaths[0] : (dto.imagePath || ""),
+          rating: dto.averageRating || 0,
+          stock: dto.stockQuantity ?? dto.stock ?? 0,
+          originalImagePath: dto.imagePaths // Keep for reference if needed
+        }));
+        setProducts(mapped);
       } catch (err) {
         console.error("Failed to fetch products", err);
       } finally {
@@ -220,11 +222,19 @@ function Home() {
         <div className="amz-container">
           <h2 className="amz-title">Just For You</h2>
           <div className="amz-grid-5">
-             {products.slice(0, 10).sort(() => 0.5 - Math.random()).map(p => (
-               <div key={p.id} className="amz-grid-item-sm">
-                 <ProductCard product={p} />
-               </div>
-             ))}
+             {(() => {
+               // Fisher-Yates shuffle for better performance
+               const shuffled = [...products.slice(0, 10)];
+               for (let i = shuffled.length - 1; i > 0; i--) {
+                 const j = Math.floor(Math.random() * (i + 1));
+                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+               }
+               return shuffled.map(p => (
+                 <div key={p.id} className="amz-grid-item-sm">
+                   <ProductCard product={p} />
+                 </div>
+               ));
+             })()}
           </div>
         </div>
       </section>

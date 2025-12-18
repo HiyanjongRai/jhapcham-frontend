@@ -32,15 +32,15 @@ function OrderSuccess() {
         
         <div className="order-items-list">
           {(session.items || []).map((item, idx) => (
-            <div key={item.productId || idx} className="order-item-row">
+            <div key={item.id || idx} className="order-item-row">
               <div className="item-info">
-                <strong>{item.name || item.productName || item.productNameSnapshot}</strong>
+                <strong>{item.product?.name || item.productName || "Unknown Product"}</strong>
                 <div className="item-meta">
                   <span>Qty: {item.quantity}</span>
                 </div>
               </div>
               <div className="item-price">
-                 Rs. {(item.lineTotal || 0).toFixed(2)}
+                 Rs. {(item.unitPrice * item.quantity).toFixed(2)}
               </div>
             </div>
           ))}
@@ -49,28 +49,22 @@ function OrderSuccess() {
         <div className="order-summary-section">
           <div className="summary-row">
             <span>Subtotal</span>
-            <span>Rs. {(session.itemsTotal || session.subtotal || 0).toFixed(2)}</span>
+            <span>Rs. {(session.totalPrice || 0).toFixed(2)}</span>
           </div>
           <div className="summary-row">
             <span>Shipping Fee</span>
-            <span>Rs. {(session.shippingFee || 0).toFixed(2)}</span>
+            <span>Rs. 0.00</span> 
           </div>
-          {session.discountTotal > 0 && (
-            <div className="summary-row" style={{ color: 'green' }}>
-                <span>Discount</span>
-                <span>- Rs. {(session.discountTotal || 0).toFixed(2)}</span>
-            </div>
-          )}
           <hr />
           <div className="summary-row total">
             <span>Grand Total</span>
-            <span>Rs. {(session.grandTotal || 0).toFixed(2)}</span>
+            <span>Rs. {(session.totalPrice || 0).toFixed(2)}</span>
           </div>
         </div>
 
         <div className="shipping-info-section">
             <h4>Shipping To:</h4>
-            <p style={{ whiteSpace: 'pre-line' }}>{session.shippingAddress || session.fullAddress}</p>
+            <p style={{ whiteSpace: 'pre-line' }}>{session.deliveryAddress?.fullAddress || session.shippingAddress || session.fullAddress || "N/A"}</p>
         </div>
       </div>
 

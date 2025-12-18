@@ -25,8 +25,8 @@ function WishlistPage() {
       // Map DTO to frontend format (ensure imagePath matches)
       const mapped = Array.isArray(data) ? data.map(dto => ({
         ...dto,
-        productId: dto.id, // Ensure productId is available if old code uses it
-        imagePath: dto.imagePaths && dto.imagePaths.length > 0 ? dto.imagePaths[0] : (dto.imagePath || ""),
+        productId: dto.id, // Ensure productId is available
+        imagePath: (dto.imagePaths && dto.imagePaths.length > 0) ? dto.imagePaths[0] : (dto.imagePath || ""),
         rating: dto.averageRating || 0,
         views: dto.totalViews || 0
       })) : [];
@@ -61,7 +61,6 @@ function WishlistPage() {
     navigate(`/products/${productId}`);
   };
 
-  // BUY NOW → ADD TO CART → REDIRECT TO CART
   const handleBuyNow = async (product) => {
     const userId = getCurrentUserId();
     if (!userId) {
@@ -117,7 +116,7 @@ function WishlistPage() {
       <div className="wl-grid">
         {items.map((item) => {
           const imgSrc = item.imagePath
-            ? `${API_BASE}/uploads/${item.imagePath}`
+            ? `${API_BASE}/${item.imagePath}`
             : "https://via.placeholder.com/400x260?text=No+Image";
 
           const rating = item.rating ?? 0;

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./CustomerDashboard.css";
 import { API_BASE } from "../config/config";
-import { getCurrentUserId, apiGetOrdersForUser } from "../AddCart/cartUtils";
+import { getCurrentUserId, apiGetOrdersForUser, apiCustomerCancelOrder } from "../AddCart/cartUtils";
 import { apiGetWishlist, apiRemoveFromWishlist } from "../WishlistPage/wishlistUtils";
+import api from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -17,6 +18,7 @@ import {
   XCircle,
   Trash2
 } from "lucide-react";
+import UpdateAccount from "../Profile/UpdateAccount.jsx";
 
 export default function CustomerDashboard() {
   // Dashboard Component
@@ -38,73 +40,66 @@ export default function CustomerDashboard() {
   }, [userId]);
 
   const fetchData = async () => {
+    setLoading(true);
+    
+    // 1. Fetch User Profile
     try {
-      setLoading(true);
-      // Parallel fetch for better performance
-      const [profileRes, reviewsRes] = await Promise.all([
-        fetch(`${API_BASE}/users/profile/${userId}`),
-        fetch(`${API_BASE}/api/reviews/user/${userId}`)
-      ]);
-
-      if (profileRes.ok) {
-        const profileData = await profileRes.json();
-        setUserProfile(profileData);
-      }
-      
-      try {
-        const ordersData = await apiGetOrdersForUser(userId);
-        setOrders(ordersData || []);
-      } catch (err) {
-        console.error("Orders API failed", err);
-        setOrders([]);
-      }
-      
-      try {
-        const wishlistData = await apiGetWishlist(userId);
-        // Map DTO to dashboard format
-        const mappedWishlist = Array.isArray(wishlistData) ? wishlistData.map(item => ({
-            ...item,
-            productId: item.id,
-            productName: item.name,
-            imagePath: item.imagePaths && item.imagePaths.length > 0 ? item.imagePaths[0] : (item.imagePath || "")
-        })) : [];
-        setWishlist(mappedWishlist);
-      } catch (err) {
-        console.error("Wishlist API failed", err);
-        setWishlist([]);
-      }
-
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
+      const profileRes = await api.get(`/api/users/${userId}`);
+      setUserProfile(profileRes.data);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
     }
+
+    // 2. Fetch Orders
+    try {
+      const ordersData = await apiGetOrdersForUser(userId);
+      setOrders(ordersData || []);
+    } catch (err) {
+      console.error("Orders API failed:", err);
+      setOrders([]);
+    }
+    
+    // 3. Fetch Wishlist
+    try {
+      console.log("Fetching wishlist for userId:", userId);
+      const wishlistData = await apiGetWishlist(userId);
+      console.log("Wishlist data received raw:", wishlistData);
+      
+      // Map DTO to dashboard format
+      const mappedWishlist = Array.isArray(wishlistData) ? wishlistData.map(item => ({
+          ...item,
+          productId: item.id || item.productId,
+          productName: item.name || item.productName,
+          imagePath: item.imagePaths && item.imagePaths.length > 0 ? item.imagePaths[0] : (item.imagePath || "")
+      })) : [];
+      
+      console.log("Mapped wishlist:", mappedWishlist);
+      setWishlist(mappedWishlist);
+    } catch (err) {
+      console.error("Wishlist API failed:", err);
+      setWishlist([]);
+    }
+
+    // 4. Fetch Reviews (Optionally, don't let it block)
+    try {
+      await api.get(`/api/reviews/user/${userId}`);
+    } catch (err) {
+      console.warn("Reviews API failed (this is normal if user has no reviews):", err);
+    }
+
+    setLoading(false);
   };
 
   const handleCancelOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
 
-   try {
-  const res = await fetch(
-    `${API_BASE}/api/orders/user/${userId}/cancel/${orderId}`,
-    {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-      if (res.ok) {
-        alert("Order cancelled successfully");
-        fetchData();
-      } else {
-        const data = await res.json();
-        alert(data.error || "Failed to cancel order");
-      }
+    try {
+      await apiCustomerCancelOrder(userId, orderId);
+      alert("Order cancelled successfully");
+      fetchData();
     } catch (error) {
       console.error("Error cancelling order:", error);
-      alert("An error occurred");
+      alert(error.message || "An error occurred");
     }
   };
 
@@ -136,7 +131,7 @@ export default function CustomerDashboard() {
       case "reviews":
         return <ReviewsTab orders={orders} navigate={navigate} />;
       case "settings":
-        return <SettingsTab user={userProfile} navigate={navigate} />;
+        return <UpdateAccount onUpdateSuccess={(updatedData) => setUserProfile({...userProfile, ...updatedData})} />;
       default:
         return <OverviewTab user={userProfile} orders={orders} wishlist={wishlist} onCancelOrder={handleCancelOrder} />;
     }
@@ -152,7 +147,7 @@ export default function CustomerDashboard() {
               userProfile?.profileImagePath 
                 ? (userProfile.profileImagePath.startsWith('http') 
                     ? userProfile.profileImagePath 
-                    : `${API_BASE}/uploads/${userProfile.profileImagePath}`) 
+                    : `${API_BASE}/uploads/${userProfile.profileImagePath}`)
                 : "https://via.placeholder.com/150"
             }
             alt="Profile"
@@ -220,7 +215,7 @@ const WishlistTab = ({ wishlist, navigate, onRemove }) => (
         <div key={item.productId} className="cd-card" style={{ padding: '0', cursor: 'pointer', overflow: 'hidden', position: 'relative' }}>
           <div style={{ position: 'relative', height: '220px'}}>
              <img
-                src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/uploads/${item.imagePath}`) : "https://via.placeholder.com/220"}
+                src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : "https://via.placeholder.com/220"}
                 alt={item.productName}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onClick={() => navigate(`/products/${item.productId}`)}
@@ -267,7 +262,7 @@ const OrderItemsList = ({ items }) => (
       {items.map((item, index) => (
         <div key={index} style={{ display: 'flex', gap: '1rem', background: 'white', padding: '1rem', borderRadius: '8px', alignItems: 'center' }}>
           <img 
-            src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/uploads/${item.imagePath}`) : "https://via.placeholder.com/80"}
+            src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : "https://via.placeholder.com/80"}
             alt={item.name || item.productName || 'Product'}
             style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', background: '#f5f5f5' }}
           />
@@ -374,7 +369,7 @@ const OverviewTab = ({ user, orders, wishlist, onCancelOrder }) => {
               {order.items && order.items.length > 0 && (
                 <img 
                   src={(order.items[0].imagePath || order.items[0].imagePathSnapshot)
-                        ? `${API_BASE}/uploads/${order.items[0].imagePath || order.items[0].imagePathSnapshot}` 
+                        ? `${API_BASE}/${order.items[0].imagePath || order.items[0].imagePathSnapshot}` 
                         : "https://via.placeholder.com/60"}
                   alt={order.items[0].name || order.items[0].productName || "Product"}
                   style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginRight: '1rem' }}
@@ -471,7 +466,7 @@ const OrdersTab = ({ orders, onCancelOrder }) => {
               {order.items && order.items.length > 0 && (
                 <img 
                   src={(order.items[0].imagePath || order.items[0].imagePathSnapshot)
-                        ? `${API_BASE}/uploads/${order.items[0].imagePath || order.items[0].imagePathSnapshot}` 
+                        ? `${API_BASE}/${order.items[0].imagePath || order.items[0].imagePathSnapshot}` 
                         : "https://via.placeholder.com/60"}
                   alt={order.items[0].name || order.items[0].productName}
                   style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginRight: '1rem' }}
@@ -599,7 +594,7 @@ const ReviewsTab = ({ orders, navigate }) => {
               {/* Product Image */}
               {order.items && order.items.length > 0 && (
                 <img 
-                  src={order.items[0].imagePath ? (order.items[0].imagePath.startsWith('http') ? order.items[0].imagePath : `${API_BASE}/uploads/${order.items[0].imagePath}`) : "https://via.placeholder.com/60"}
+                  src={order.items[0].imagePath ? (order.items[0].imagePath.startsWith('http') ? order.items[0].imagePath : `${API_BASE}/${order.items[0].imagePath}`) : "https://via.placeholder.com/60"}
                   alt={order.items[0].productName}
                   style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', marginRight: '1rem' }}
                 />
@@ -671,7 +666,7 @@ const SettingsTab = ({ user, navigate }) => (
               user?.profileImagePath 
                 ? (user.profileImagePath.startsWith('http') 
                     ? user.profileImagePath 
-                    : `${API_BASE}/uploads/${user.profileImagePath}`) 
+                    : `${API_BASE}/uploads/${user.profileImagePath}`)
                 : "https://via.placeholder.com/150"
           }
           alt="Profile"

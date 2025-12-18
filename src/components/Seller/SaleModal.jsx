@@ -7,20 +7,47 @@ export default function SaleModal({ product, setProduct, setProducts, showSucces
 
   async function applySale() {
     try {
-      const sellerId = product.sellerId || currentUserId;
-      const res = await axios.patch(`${BASE_URL}/api/products/${product.id}/sale`, null, { params: { sellerId, discountPercent: discount }});
-      setProducts(prev => prev.map(p => p.id === res.data.id ? { ...res.data, imagePath: `${BASE_URL}/api/products/images/${res.data.imagePath}` } : p));
-      showSuccess("Sale applied successfully"); setProduct(null);
-    } catch (err) { console.error(err); showError("Sale update failed"); }
+      const form = new FormData();
+      form.append("onSale", "true");
+      form.append("salePercentage", discount.toString());
+      
+      const res = await axios.put(`${BASE_URL}/api/products/${product.id}`, form, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
+      setProducts(prev => prev.map(p => p.id === res.data.id ? { 
+        ...res.data, 
+        imagePath: res.data.imagePaths && res.data.imagePaths.length > 0 ? res.data.imagePaths[0] : res.data.imagePath 
+      } : p));
+      
+      showSuccess("Sale applied successfully"); 
+      setProduct(null);
+    } catch (err) { 
+      console.error(err); 
+      showError("Sale update failed"); 
+    }
   }
 
   async function removeSale() {
     try {
-      const sellerId = product.sellerId || currentUserId;
-      const res = await axios.delete(`${BASE_URL}/api/products/${product.id}/sale`, { params: { sellerId }});
-      setProducts(prev => prev.map(p => p.id === res.data.id ? { ...res.data, imagePath: `${BASE_URL}/api/products/images/${res.data.imagePath}` } : p));
-      showSuccess("Sale removed successfully"); setProduct(null);
-    } catch (err) { console.error(err); showError("Remove sale failed"); }
+      const form = new FormData();
+      form.append("onSale", "false");
+      
+      const res = await axios.put(`${BASE_URL}/api/products/${product.id}`, form, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
+      setProducts(prev => prev.map(p => p.id === res.data.id ? { 
+        ...res.data, 
+        imagePath: res.data.imagePaths && res.data.imagePaths.length > 0 ? res.data.imagePaths[0] : res.data.imagePath 
+      } : p));
+      
+      showSuccess("Sale removed successfully"); 
+      setProduct(null);
+    } catch (err) { 
+      console.error(err); 
+      showError("Remove sale failed"); 
+    }
   }
 
   return (

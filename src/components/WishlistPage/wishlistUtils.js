@@ -1,27 +1,44 @@
-import { API_BASE } from "../config/config";
+import api from "../../api/axios";
 
 export async function apiAddToWishlist(userId, productId) {
-  const res = await fetch(`${API_BASE}/api/wishlist/${userId}/${productId}`, {
-    method: "POST"
-  });
-  if (!res.ok) throw new Error("Failed to add to wishlist");
+  try {
+    // New backend: @PostMapping("/{userId}/{productId}")
+    await api.post(`/api/wishlist/${userId}/${productId}`);
+  } catch (err) {
+    console.error("Failed to add to wishlist", err);
+    throw new Error(err.response?.data?.message || "Failed to add to wishlist");
+  }
 }
 
 export async function apiRemoveFromWishlist(userId, productId) {
-  const res = await fetch(`${API_BASE}/api/wishlist/${userId}/${productId}`, {
-    method: "DELETE"
-  });
-  if (!res.ok) throw new Error("Failed to remove from wishlist");
+  try {
+    // New backend: @DeleteMapping("/{userId}/{productId}")
+    await api.delete(`/api/wishlist/${userId}/${productId}`);
+  } catch (err) {
+    console.error("Failed to remove from wishlist", err);
+    throw new Error(err.response?.data?.message || "Failed to remove from wishlist");
+  }
 }
 
 export async function apiGetWishlist(userId) {
-  const res = await fetch(`${API_BASE}/api/wishlist/${userId}`);
-  if (!res.ok) throw new Error("Failed to load wishlist");
-  return await res.json();
+  try {
+    // New backend: @GetMapping("/{userId}")
+    const res = await api.get(`/api/wishlist/${userId}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to load wishlist", err);
+    throw new Error(err.response?.data?.message || "Failed to load wishlist");
+  }
 }
 
 export async function apiCheckWishlist(userId, productId) {
-  const res = await fetch(`${API_BASE}/api/wishlist/${userId}/check/${productId}`);
-  if (!res.ok) return false;
-  return await res.json(); // returns boolean true/false
+  try {
+    // New backend: @GetMapping("/{userId}/check/{productId}")
+    const res = await api.get(`/api/wishlist/${userId}/check/${productId}`);
+    return res.data; // returns boolean true/false
+  } catch (err) {
+    console.error("Check wishlist status fail", err);
+    return false;
+  }
 }
+

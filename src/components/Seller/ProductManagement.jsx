@@ -111,7 +111,7 @@ export default function ProductManagement() {
     }
     
     try {
-      // Use the new endpoint: GET /api/products/seller/{sellerUserId}/all
+      // Use the correct legacy endpoint: GET /api/products/seller/{sellerUserId}/all
       const res = await axios.get(`${BASE_URL}/api/products/seller/${currentUserId}/all`);
       console.log("Products fetched:", res.data);
       setProducts(res.data.map(mapDtoToProduct));
@@ -134,7 +134,7 @@ export default function ProductManagement() {
   async function confirmDelete() {
     if (!deleteProduct) return;
     try {
-      // Use the hard delete endpoint: DELETE /api/products/{productId}/seller/{sellerUserId}/hard
+      // Use the correct legacy endpoint: DELETE /api/products/{id}/seller/{sellerId}/hard
       await axios.delete(`${BASE_URL}/api/products/${deleteProduct.id}/seller/${currentUserId}/hard`);
       setProducts((prev) => prev.filter(p => p.id !== deleteProduct.id));
       showSuccess("Product deleted permanently"); 
@@ -205,7 +205,7 @@ export default function ProductManagement() {
                       <div className="sp-product-cell">
                         <div style={{position: 'relative'}}>
                           <img 
-                            src={p.imagePath ? `${BASE_URL}/uploads/${p.imagePath}` : "https://via.placeholder.com/48"} 
+                            src={p.imagePath ? `${BASE_URL}/${p.imagePath}` : "https://via.placeholder.com/48"} 
                             alt={p.name} 
                             className="sp-product-img"
                           />
