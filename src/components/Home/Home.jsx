@@ -64,18 +64,25 @@ function Home() {
       try {
         const res = await api.get("/api/products");
         const data = res.data;
-        // Sort and map
+        
+        if (!data || data.length === 0) {
+          throw new Error("No products returned");
+        }
+
         const mapped = data.map(dto => ({
           ...dto,
-          // Legacy backend uses 'imagePaths' array
           imagePath: (dto.imagePaths && dto.imagePaths.length > 0) ? dto.imagePaths[0] : (dto.imagePath || ""),
           rating: dto.averageRating || 0,
           stock: dto.stockQuantity ?? dto.stock ?? 0,
-          originalImagePath: dto.imagePaths // Keep for reference if needed
+          originalImagePath: dto.imagePaths
         }));
         setProducts(mapped);
       } catch (err) {
-        console.error("Failed to fetch products", err);
+        console.warn("Backend disconnected or error. Showing static products.", err);
+        // Load static products from config as fallback
+        import("../config/staticProducts").then(module => {
+           setProducts(module.STATIC_PRODUCTS);
+        });
       } finally {
         setLoading(false);
       }

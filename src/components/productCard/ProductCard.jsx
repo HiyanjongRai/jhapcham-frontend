@@ -61,10 +61,16 @@ function ProductCard({ product }) {
   const safeRating = averageRating ?? 0;
   const inStock = (stock ?? 0) > 0 && (visible ?? true) && status === "ACTIVE";
 
-  const imgSrc = (product.imagePaths && product.imagePaths.length > 0)
-    ? `${API_BASE}/${product.imagePaths[0]}`
-    : (product.imagePath
-        ? `${API_BASE}/${product.imagePath}`
+  const isFullUrl = (src) => src && (src.startsWith('http://') || src.startsWith('https://'));
+
+  const rawImg = (product.imagePaths && product.imagePaths.length > 0)
+    ? product.imagePaths[0]
+    : product.imagePath;
+
+  const imgSrc = isFullUrl(rawImg)
+    ? rawImg
+    : (rawImg
+        ? `${API_BASE}/${rawImg}`
         : "https://via.placeholder.com/600x400?text=No+Image");
 
   const handleCardClick = () => {
