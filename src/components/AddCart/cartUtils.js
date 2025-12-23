@@ -253,7 +253,7 @@ export async function apiBranchUpdateStatus(orderId, branchName, nextStatus) {
 
 // Customer: Cancel Order
 export async function apiCustomerCancelOrder(userId, orderId) {
-    const path = `/api/orders/customer/${userId}/cancel/${orderId}`;
+    const path = `/api/orders/user/${userId}/cancel/${orderId}`;
     try {
       const res = await api.put(path);
       return res.data;
