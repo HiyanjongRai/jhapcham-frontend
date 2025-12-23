@@ -4,14 +4,28 @@ import { API_BASE } from "../config/config";
 import { useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import UpdateAccount from "../Profile/UpdateAccount.jsx";
+import ConfirmModal from "../Common/ConfirmModal.jsx";
+import Toast from "../Toast/Toast.jsx";
 
-// Icons (Simple SVGs)
-const UserIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
-const ProductIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>;
-const ReportIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>;
-const ClipboardIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>;
-const LogoutIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
-const SettingsIcon = () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+import { 
+  Users, 
+  Boxes, 
+  AlertTriangle, 
+  FileText, 
+  Settings, 
+  LogOut, 
+  Shield, 
+  CheckCircle2, 
+  XCircle, 
+  ExternalLink,
+  Eye,
+  EyeOff,
+  ChevronRight,
+  TrendingUp,
+  Store,
+  Calendar,
+  LayoutDashboard
+} from "lucide-react";
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("applications"); // Default to applications for visibility
@@ -26,10 +40,24 @@ const AdminDashboard = () => {
     // Loading and Error States
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
+
+    const showToast = (message, type = 'info') => {
+        setToast({ message, type, visible: true });
+    };
     
     // Seller Detail Modal
     const [selectedSeller, setSelectedSeller] = useState(null);
     const [showSellerModal, setShowSellerModal] = useState(false);
+
+    // Custom Confirm Modal State
+    const [confirmConfig, setConfirmConfig] = useState({
+        isOpen: false,
+        title: "",
+        message: "",
+        onConfirm: () => {},
+        type: "warning"
+    });
     
     const navigate = useNavigate();
 
@@ -68,24 +96,40 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleBlockUser = async (userId) => {
-        if(!window.confirm("Are you sure you want to block this user?")) return;
-        try {
-            await axios.put(`${API_BASE}/api/admin/users/${userId}/block`);
-            fetchData();
-        } catch (err) {
-            alert("Failed to block user");
-        }
+    const handleBlockUser = (userId) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Block User",
+            message: "Are you sure you want to block this user? They will not be able to log in or use the platform.",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    await axios.put(`${API_BASE}/api/admin/users/${userId}/block`);
+                    showToast("User blocked successfully", "success");
+                    fetchData();
+                } catch (err) {
+                    showToast("Failed to block user", "error");
+                }
+            }
+        });
     };
 
-    const handleUnblockUser = async (userId) => {
-        if(!window.confirm("Are you sure you want to unblock this user?")) return;
-        try {
-            await axios.put(`${API_BASE}/api/admin/users/${userId}/unblock`);
-            fetchData();
-        } catch (err) {
-            alert("Failed to unblock user");
-        }
+    const handleUnblockUser = (userId) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Unblock User",
+            message: "Allow this user to access their account again?",
+            type: "success",
+            onConfirm: async () => {
+                try {
+                    await axios.put(`${API_BASE}/api/admin/users/${userId}/unblock`);
+                    showToast("User unblocked successfully", "success");
+                    fetchData();
+                } catch (err) {
+                    showToast("Failed to unblock user", "error");
+                }
+            }
+        });
     };
 
     const handleViewSeller = async (userId) => {
@@ -94,7 +138,7 @@ const AdminDashboard = () => {
             setSelectedSeller(res.data);
             setShowSellerModal(true);
         } catch (err) {
-            alert("Failed to fetch seller details");
+            showToast("Failed to fetch seller details", "error");
         }
     };
 
@@ -102,50 +146,74 @@ const AdminDashboard = () => {
         const newVisible = currentStatus !== "ACTIVE";
         try {
             await axios.put(`${API_BASE}/api/admin/products/${productId}/visibility?visible=${newVisible}`);
+            showToast(`Product visibility updated`, "success");
             fetchData();
         } catch (err) {
-            alert("Failed to update product status");
+            showToast("Failed to update product status", "error");
         }
     };
 
     const handleResolveReport = async (reportId) => {
          try {
-            await axios.put(`${API_BASE}/api/admin/reports/${reportId}/resolve`);
+            await axios.post(`${API_BASE}/api/admin/reports/${reportId}/resolve`);
+            showToast("Report resolved", "success");
             fetchData();
         } catch (err) {
-            alert("Failed to resolve report");
+            showToast("Failed to resolve report", "error");
         }
     };
     
-    const handleApproveApp = async (appId) => {
-        if(!window.confirm("Approve this seller application?")) return;
-        try {
-            await axios.post(`${API_BASE}/api/admin/sellers/applications/${appId}/approve`, {
-                note: "Approved by admin"
-            });
-            fetchData();
-        } catch (err) {
-            console.error("Approve error:", err);
-            alert("Failed to approve application: " + (err.response?.data?.message || err.message));
-        }
+    const handleApproveApp = (appId) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Approve Seller",
+            message: "Approve this seller application? They will gain access to the seller dashboard.",
+            type: "success",
+            onConfirm: async () => {
+                try {
+                    await axios.post(`${API_BASE}/api/admin/sellers/applications/${appId}/approve`, {
+                        note: "Approved by admin"
+                    });
+                    showToast("Application approved!", "success");
+                    fetchData();
+                } catch (err) {
+                    showToast("Failed to approve application", "error");
+                }
+            }
+        });
     };
 
-    const handleRejectApp = async (appId) => {
-        if(!window.confirm("Reject this seller application?")) return;
-        try {
-            await axios.post(`${API_BASE}/api/admin/sellers/applications/${appId}/reject`, {
-                note: "Rejected by admin"
-            });
-            fetchData();
-        } catch (err) {
-            console.error("Reject error:", err);
-            alert("Failed to reject application: " + (err.response?.data?.message || err.message));
-        }
+    const handleRejectApp = (appId) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Reject Seller",
+            message: "Reject this seller application? Please ensure you have reviewed their documents.",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    await axios.post(`${API_BASE}/api/admin/sellers/applications/${appId}/reject`, {
+                        note: "Rejected by admin"
+                    });
+                    showToast("Application rejected", "info");
+                    fetchData();
+                } catch (err) {
+                    showToast("Failed to reject application", "error");
+                }
+            }
+        });
     };
     
     const handleLogout = () => {
-        localStorage.clear();
-        navigate("/login");
+        setConfirmConfig({
+            isOpen: true,
+            title: "Sign Out",
+            message: "Are you sure you want to sign out from the Admin Panel?",
+            type: "danger",
+            onConfirm: () => {
+                localStorage.clear();
+                navigate("/login");
+            }
+        });
     };
 
     const renderTabs = () => (
@@ -154,35 +222,39 @@ const AdminDashboard = () => {
                 className={`ad-nav-item ${activeTab === 'applications' ? 'active' : ''}`}
                 onClick={() => setActiveTab('applications')}
             >
-                <ClipboardIcon /> Pending Sellers
-                <span className="ad-badge-count">{applications.length || 0}</span>
+                <FileText size={18} /> Pending Sellers
+                {applications.length > 0 && <span className="ad-badge-count">{applications.length}</span>}
             </button>
             <button 
                 className={`ad-nav-item ${activeTab === 'users' ? 'active' : ''}`}
                 onClick={() => setActiveTab('users')}
             >
-                <UserIcon /> Users & Sellers
-                <span className="ad-badge-count">{users.length}</span>
+                <Users size={18} /> Users & Sellers
+                {users.length > 0 && <span className="ad-badge-count">{users.length}</span>}
             </button>
             <button 
                 className={`ad-nav-item ${activeTab === 'products' ? 'active' : ''}`}
                 onClick={() => setActiveTab('products')}
             >
-                <ProductIcon /> Products
-                <span className="ad-badge-count">{products.length}</span>
+                <Boxes size={18} /> Products
+                {products.length > 0 && <span className="ad-badge-count">{products.length}</span>}
             </button>
             <button 
                 className={`ad-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
                 onClick={() => setActiveTab('reports')}
             >
-                <ReportIcon /> Reports
-                <span className="ad-badge-count">{reports.length}</span>
+                <AlertTriangle size={18} /> Reports
+                {reports.length > 0 && (
+                    <span className={`ad-badge-count ${reports.filter(r => r.status !== 'RESOLVED').length > 0 ? 'warning' : ''}`}>
+                        {reports.length}
+                    </span>
+                )}
             </button>
             <button 
                 className={`ad-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
                 onClick={() => setActiveTab('settings')}
             >
-                <SettingsIcon /> Settings
+                <Settings size={18} /> Settings
             </button>
         </nav>
     );
@@ -227,17 +299,17 @@ const AdminDashboard = () => {
                             <td>
                                 <div className="ad-action-buttons">
                                     {user.role === 'SELLER' && (
-                                        <button className="ad-btn ad-btn-secondary" onClick={() => handleViewSeller(user.id)}>
-                                            Details
+                                        <button className="ad-action-btn action-view" title="Seller Details" onClick={() => handleViewSeller(user.id)}>
+                                            <ExternalLink size={16} />
                                         </button>
                                     )}
                                     {user.status === 'ACTIVE' ? (
-                                        <button className="ad-btn ad-btn-reject" onClick={() => handleBlockUser(user.id)}>
-                                            Block
+                                        <button className="ad-action-btn action-block" title="Block User" onClick={() => handleBlockUser(user.id)}>
+                                            <Shield size={16} />
                                         </button>
                                     ) : (
-                                        <button className="ad-btn ad-btn-approve" onClick={() => handleUnblockUser(user.id)}>
-                                            Unblock
+                                        <button className="ad-action-btn action-unblock" title="Unblock User" onClick={() => handleUnblockUser(user.id)}>
+                                            <CheckCircle2 size={16} />
                                         </button>
                                     )}
                                 </div>
@@ -279,10 +351,11 @@ const AdminDashboard = () => {
                             </td>
                             <td>
                                 <button 
-                                    className={`ad-btn ${p.status === 'ACTIVE' ? 'ad-btn-reject' : 'ad-btn-approve'}`}
+                                    className={`ad-action-btn ${p.status === 'ACTIVE' ? 'action-block' : 'action-unblock'}`}
                                     onClick={() => handleToggleProduct(p.id, p.status)}
+                                    title={p.status === 'ACTIVE' ? 'Hide Product' : 'Show Product'}
                                 >
-                                    {p.status === 'ACTIVE' ? 'Hide' : 'Show'}
+                                    {p.status === 'ACTIVE' ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </td>
                         </tr>
@@ -339,8 +412,8 @@ const AdminDashboard = () => {
                             </td>
                             <td>
                                 {r.status !== 'RESOLVED' && (
-                                    <button className="ad-btn ad-btn-approve" onClick={() => handleResolveReport(r.id)}>
-                                        Resolve
+                                    <button className="ad-action-btn action-unblock" title="Resolve Report" onClick={() => handleResolveReport(r.id)}>
+                                        <CheckCircle2 size={16} />
                                     </button>
                                 )}
                             </td>
@@ -365,33 +438,33 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody>
                     {applications.map(app => (
-                        <tr key={app.applicationId}>
-                            <td className="ad-id">#{app.applicationId}</td>
+                        <tr key={app.id}>
+                            <td className="ad-id">#{app.id}</td>
                             <td>
                                 <div className="ad-user-name">{app.storeName}</div>
                                 <div className="ad-user-email">{app.address}</div>
                             </td>
                             <td>
                                 <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
-                                    {app.taxCertificateUrl && (
-                                        <a href={`${API_BASE}${app.taxCertificateUrl}`} target="_blank" rel="noopener noreferrer" className="ad-link">Tax Cert</a>
+                                    {app.taxCertificatePath && (
+                                        <a href={`${API_BASE}${app.taxCertificatePath}`} target="_blank" rel="noopener noreferrer" className="ad-link">Tax Cert</a>
                                     )}
-                                    {app.businessLicenseUrl && (
-                                        <a href={`${API_BASE}${app.businessLicenseUrl}`} target="_blank" rel="noopener noreferrer" className="ad-link">License</a>
+                                    {app.businessLicensePath && (
+                                        <a href={`${API_BASE}${app.businessLicensePath}`} target="_blank" rel="noopener noreferrer" className="ad-link">License</a>
                                     )}
-                                    {app.idDocumentUrl && (
-                                        <a href={`${API_BASE}${app.idDocumentUrl}`} target="_blank" rel="noopener noreferrer" className="ad-link">ID Doc</a>
+                                    {app.idDocumentPath && (
+                                        <a href={`${API_BASE}${app.idDocumentPath}`} target="_blank" rel="noopener noreferrer" className="ad-link">ID Doc</a>
                                     )}
                                 </div>
                             </td>
                             <td>{app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : 'N/A'}</td>
                             <td>
                                 <div className="ad-action-buttons">
-                                    <button className="ad-btn ad-btn-approve" onClick={() => handleApproveApp(app.applicationId)}>
-                                        Approve
+                                    <button className="ad-action-btn action-approve" title="Approve" onClick={() => handleApproveApp(app.id)}>
+                                        <CheckCircle2 size={18} />
                                     </button>
-                                    <button className="ad-btn ad-btn-reject" onClick={() => handleRejectApp(app.applicationId)}>
-                                        Reject
+                                    <button className="ad-action-btn action-reject" title="Reject" onClick={() => handleRejectApp(app.id)}>
+                                        <XCircle size={18} />
                                     </button>
                                 </div>
                             </td>
@@ -416,7 +489,7 @@ const AdminDashboard = () => {
                 {renderTabs()}
                 <div className="ad-logout">
                     <button className="ad-logout-btn" onClick={handleLogout}>
-                        <LogoutIcon /> Logout
+                        <LogOut size={18} /> <span>Sign Out</span>
                     </button>
                 </div>
             </aside>
@@ -498,6 +571,23 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            <ConfirmModal 
+                isOpen={confirmConfig.isOpen}
+                onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmConfig.onConfirm}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                type={confirmConfig.type}
+            />
+
+            {toast.visible && (
+                <Toast 
+                    message={toast.message} 
+                    type={toast.type} 
+                    onClose={() => setToast(prev => ({ ...prev, visible: false }))} 
+                />
             )}
         </div>
     );

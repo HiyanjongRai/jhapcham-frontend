@@ -140,25 +140,7 @@ function Home() {
         </div>
       </section>
 
-      {/* 2. Top Categories Bar (Mobile Style / Quick Links) */}
-      <section className="amz-cat-row-section">
-        <div className="amz-container">
-          <div className="amz-cat-row">
-            {TOP_CATEGORIES.map((cat, idx) => (
-              <div 
-                key={idx} 
-                className="amz-cat-item" 
-                onClick={() => cat.val === 'all' ? navigate('/products') : navigate(`/products?category=${cat.val}`)}
-              >
-                <div className="amz-cat-icon">
-                  <cat.icon size={24} />
-                </div>
-                <span>{cat.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* 3. Flash Sale / Deal of the Day */}
       <section className="amz-section bg-white">
@@ -181,10 +163,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Banner Strip */}
-      <div className="amz-banner-strip">
-         <img src="https://images.unsplash.com/photo-1557821552-17105176677c?q=80&w=2000&auto=format&fit=crop" alt="Sale Banner" />
-      </div>
+
 
       {/* 4. Best Sellers in Electronics (Horizontal Scroll) */}
       <section className="amz-section bg-gray">

@@ -39,7 +39,7 @@ export function saveGuestCart(items) {
 }
 
 // Helper to update global count and notify Navbar
-function updateGlobalCartCount(count) {
+export function updateGlobalCartCount(count) {
   localStorage.setItem("cartCount", count);
   window.dispatchEvent(new Event("cart-updated"));
 }
@@ -135,7 +135,12 @@ export async function apiGetCart(userId) {
   const path = `/api/cart/${userId}`;
   try {
     const res = await api.get(path);
-    return res.data;
+    const cartData = res.data;
+    if (cartData && Array.isArray(cartData.items)) {
+        const totalCount = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
+        updateGlobalCartCount(totalCount);
+    }
+    return cartData;
   } catch (err) {
     throw handleApiError(err, path);
   }

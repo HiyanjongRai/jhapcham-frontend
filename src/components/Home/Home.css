@@ -250,18 +250,14 @@
 }
 
 .amz-card-mini {
-  min-width: 240px;
-  max-width: 240px;
+  width: 260px; /* Standardize width to match cards better */
   flex-shrink: 0;
-  background: white;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  overflow: hidden;
+  display: flex;
 }
 
-.amz-card-mini .product-card {
-  box-shadow: none !important; /* Override default card shadow */
-  border: none !important;
+.amz-card-mini .pc-card {
+  box-shadow: none !important; 
+  border: 1px solid #eee !important;
 }
 
 .no-items {
@@ -299,14 +295,12 @@
 }
 
 .amz-grid-item-sm {
-  background: white;
-  padding: 10px;
-  border-radius: 8px;
-  transition: transform 0.2s;
+  display: flex;
+  flex-direction: column;
 }
+
 .amz-grid-item-sm:hover {
   transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 /* --- Promise Section --- */

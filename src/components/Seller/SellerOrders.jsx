@@ -13,9 +13,13 @@ import {
   MapPin,
   ChevronDown,
   ChevronUp,
-  Edit2
+  Edit2,
+  MessageSquare // Added icon
 } from "lucide-react";
 import { apiGetSellerOrders, apiGetOrder } from "../AddCart/cartUtils";
+
+import Toast from "../Toast/Toast"; // Import Toast
+import MessageModal from "../Message/MessageModal"; // Import MessageModal
 
 export default function SellerOrders() {
   const sellerId = getCurrentUserId();
@@ -23,25 +27,32 @@ export default function SellerOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [orderBranches, setOrderBranches] = useState({});
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("NEW");
   const [expandedOrders, setExpandedOrders] = useState({});
-  const [orderDetails, setOrderDetails] = useState({}); // Cache for detailed order info
+  const [orderDetails, setOrderDetails] = useState({}); 
   const [selectedStages, setSelectedStages] = useState({});
+  const [msgModal, setMsgModal] = useState({ isOpen: false, recipientId: null, recipientName: '', type: 'store' });
+
+
+  // Toast State
+  const [toast, setToast] = useState({ message: '', type: 'info', isVisible: false });
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type, isVisible: true });
+  };
   
   const branches = ["KATHMANDU", "POKHARA", "UDAYAPUR"];
 
   // Load seller orders
   const loadOrders = useCallback(async () => {
+    // ... (same as before)
     setLoading(true);
     try {
-      console.log("Fetching orders for seller:", sellerId);
       const data = await apiGetSellerOrders(sellerId);
-      console.log("Seller orders fetched:", data);
-      
-      // The backend now returns OrderListItemDTO which is a summary
       setOrders(data || []);
     } catch (err) {
       console.error("Error loading orders:", err);
+      showToast("Failed to load orders", "error");
     } finally {
       setLoading(false);
     }
@@ -50,44 +61,39 @@ export default function SellerOrders() {
   const updateStatus = async (orderId, nextStatus) => {
     try {
       const branch = orderBranches[orderId];
-      // Normalize status
       const statusUpper = nextStatus.toUpperCase();
 
       if (statusUpper === 'CANCELED') {
         const url = `${API_BASE}/api/orders/seller/${sellerId}/cancel/${orderId}`;
         await axios.put(url);
-        alert("Order canceled successfully");
+        showToast("Order canceled successfully", "success");
       } 
       else if (statusUpper === 'PROCESSING') {
         const url = `${API_BASE}/api/orders/seller/${sellerId}/process/${orderId}`;
         await axios.put(url);
-        alert("Order moved to PROCESSING");
+        showToast("Order moved to PROCESSING", "success");
       }
       else if (statusUpper === 'SHIPPED' || statusUpper === 'SHIPPED_TO_BRANCH') {
-         // Map SHIPPED to seller assigning branch
          if (!branch) {
-             alert("Please select a branch to ship to.");
+             showToast("Please select a branch to ship to.", "warning");
              return;
          }
          const url = `${API_BASE}/api/orders/seller/${sellerId}/assign/${orderId}`;
          await axios.put(url, { branch: branch }); 
-         alert("Order shipped to branch");
+         showToast("Order shipped to branch", "success");
       }
       else if (statusUpper === 'OUT_FOR_DELIVERY' || statusUpper === 'DELIVERED') {
-          // Verify branch logic - usually branch staff does this, but for dev we allow seller/admin to toggle
           if (!branch) {
-             // Try to find existing assigned branch from order details if possible, or force select
-             alert("Please confirm the branch (select from dropdown) for this update.");
+             showToast("Please confirm the branch (select from dropdown) for this update.", "warning");
              return;
           }
-          // Construct URL with query parameters
           const params = new URLSearchParams({ branch: branch, nextStatus: statusUpper });
           const url = `${API_BASE}/api/orders/branch/${orderId}/status?${params.toString()}`;
           await axios.put(url);
-          alert("Order status updated");
+          showToast(`Order status updated to ${statusUpper}`, "success");
       } 
       else {
-          alert(`Unsupported status transition to ${statusUpper}. Backend only supports: Cancel, Ship to Branch, and Branch updates.`);
+          showToast(`Unsupported status transition to ${statusUpper}.`, "error");
           return;
       }
 
@@ -95,7 +101,7 @@ export default function SellerOrders() {
     } catch (err) {
       console.error(err.response || err);
       const msg = err.response?.data?.message || "Failed to update order";
-      alert(msg);
+      showToast(msg, "error");
     }
   };
 
@@ -116,12 +122,15 @@ export default function SellerOrders() {
   }, [orders]);
 
   const filteredOrders = useMemo(() => {
-    if (statusFilter === "ALL") return orders.filter(o => o.status !== "DELIVERED");
-    return orders.filter(o => {
-        if (statusFilter === "PENDING") return o.status === "NEW" || o.status === "PENDING";
-        if (statusFilter === "SHIPPED") return o.status === "SHIPPED" || o.status === "SHIPPED_TO_BRANCH";
-        return o.status === statusFilter;
-    });
+    // New logic: "NEW" acts as the default "Inbox"
+    if (statusFilter === "NEW") return orders.filter(o => o.status === "NEW" || o.status === "PENDING");
+    if (statusFilter === "PROCESSING") return orders.filter(o => o.status === "PROCESSING");
+    if (statusFilter === "SHIPPED") return orders.filter(o => o.status === "SHIPPED" || o.status === "SHIPPED_TO_BRANCH" || o.status === "OUT_FOR_DELIVERY");
+    if (statusFilter === "DELIVERED") return orders.filter(o => o.status === "DELIVERED");
+    if (statusFilter === "CANCELED") return orders.filter(o => o.status === "CANCELED");
+    
+    // Fallback/Legacy "ALL" view if needed, but we are removing the tab
+    return orders;
   }, [orders, statusFilter]);
 
   useEffect(() => {
@@ -136,7 +145,7 @@ export default function SellerOrders() {
         setOrderDetails(prev => ({ ...prev, [orderId]: detail }));
       } catch (e) {
         console.error("Failed to fetch order details", e);
-        alert("Could not load order details");
+        showToast("Could not load order details", "error");
         return; 
       }
     }
@@ -147,55 +156,74 @@ export default function SellerOrders() {
     }));
   };
 
-  if (loading) {
-    return (
-      <div className="so-container">
-        <div className="so-empty">Loading orders...</div>
-      </div>
-    );
-  }
+  // Initialize statusFilter to NEW
+  useEffect(() => {
+      setStatusFilter("NEW");
+  }, []);
+
+  // ... (loading check)
 
   return (
     <div className="so-container">
       <div className="so-header">
-        <h1 className="so-title">Order Management</h1>
-        <button onClick={loadOrders} style={{ padding: '0.4rem 0.8rem', marginLeft: 'auto', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', background: '#fff' }}>
-          Refresh List
-        </button>
-        <p className="so-subtitle">Manage and track all your customer orders</p>
+        <div className="so-header-top">
+          <div>
+            <h1 className="so-title">Order Management</h1>
+            <p className="so-subtitle">Manage and track all your customer orders</p>
+          </div>
+          <button className="so-refresh-btn" onClick={loadOrders}>
+            <Package size={16} /> Refresh List
+          </button>
+        </div>
       </div>
 
+      {/* Stats Grid code ... */}
       <div className="so-stats">
-        <div className="so-stat-card">
-          <div className="so-stat-label">Total Orders</div>
-          <div className="so-stat-value">{stats.total}</div>
+        <div className="so-stat-card total">
+          <div className="so-stat-icon"><Package size={24} /></div>
+          <div className="so-stat-content">
+            <div className="so-stat-label">Total Orders</div>
+            <div className="so-stat-value">{stats.total}</div>
+          </div>
         </div>
-        <div className="so-stat-card">
-          <div className="so-stat-label">Pending</div>
-          <div className="so-stat-value">{stats.pending}</div>
+        <div className="so-stat-card pending">
+          <div className="so-stat-icon"><Truck size={24} /></div>
+          <div className="so-stat-content">
+            <div className="so-stat-label">New Orders</div>
+            <div className="so-stat-value">{stats.pending}</div>
+          </div>
         </div>
-        <div className="so-stat-card">
-          <div className="so-stat-label">Processing</div>
-          <div className="so-stat-value">{stats.processing}</div>
+        <div className="so-stat-card processing">
+          <div className="so-stat-icon"><Edit2 size={24} /></div>
+          <div className="so-stat-content">
+            <div className="so-stat-label">Processing</div>
+            <div className="so-stat-value">{stats.processing}</div>
+          </div>
         </div>
-        <div className="so-stat-card">
-          <div className="so-stat-label">Shipped</div>
-          <div className="so-stat-value">{stats.shipped}</div>
+        <div className="so-stat-card shipped">
+          <div className="so-stat-icon"><Truck size={24} /></div>
+          <div className="so-stat-content">
+            <div className="so-stat-label">Shipped</div>
+            <div className="so-stat-value">{stats.shipped}</div>
+          </div>
         </div>
-        <div className="so-stat-card">
-          <div className="so-stat-label">Delivered</div>
-          <div className="so-stat-value">{stats.delivered}</div>
+        <div className="so-stat-card delivered">
+          <div className="so-stat-icon"><CheckCircle size={24} /></div>
+          <div className="so-stat-content">
+            <div className="so-stat-label">Delivered</div>
+            <div className="so-stat-value">{stats.delivered}</div>
+          </div>
         </div>
       </div>
 
       <div className="so-filters">
-        {["ALL", "PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELED"].map(status => (
+        {["NEW", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELED"].map(status => (
           <button
             key={status}
             className={`so-filter-btn ${statusFilter === status ? "active" : ""}`}
             onClick={() => setStatusFilter(status)}
           >
-            {status === "ALL" ? "All Orders" : status}
+            {status === "NEW" ? "New Orders" : status}
           </button>
         ))}
       </div>
@@ -210,8 +238,25 @@ export default function SellerOrders() {
               <div key={currentId} className="so-order-card">
                 <div className="so-order-header">
                   <div>
-                    <h3 className="so-order-id">Order #{String(currentId).padStart(4, "0")}</h3>
-                    <div style={{fontSize: '0.8rem', color: '#666'}}>Customer: {order.customer?.fullName || order.customerName || "Guest"}</div>
+                    <h3 className="so-order-id">
+                        {order.productNames || `Order #${String(currentId).padStart(4, "0")}`}
+                    </h3>
+                    <div style={{fontSize: '0.8rem', color: '#666', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                        <span style={{fontWeight:'600'}}>#{String(currentId).padStart(4, "0")}</span>
+                        • Customer: {order.customerName || "Guest"}
+                        <button 
+                          className="so-action-btn secondary" 
+                          style={{ padding: '2px 6px', fontSize: '0.75rem', height: '24px' }}
+                          onClick={() => setMsgModal({
+                            isOpen: true,
+                            recipientId: order.customerId,
+                            recipientName: order.customerName || "Customer",
+                            type: 'store'
+                          })}
+                        >
+                          <MessageSquare size={12} /> Message
+                        </button>
+                    </div>
                   </div>
                   <div className="so-order-meta">
                     <span className={`so-badge so-badge-${(order.status || 'PENDING').toLowerCase()}`}>
@@ -232,204 +277,269 @@ export default function SellerOrders() {
                 </div>
 
                 <div className="so-order-body">
-                  {/* Customer Info Section - Only visible if expanded or if we have detail */}
-                  {expandedOrders[currentId] && orderDetails[currentId] ? (
-                     <div className="so-customer-section">
-                        {/* Customer Image */}
-                        <img 
-                           src={
-                             orderDetails[currentId].customer?.profileImagePath
-                               ? (orderDetails[currentId].customer.profileImagePath.startsWith('http') 
-                                   ? orderDetails[currentId].customer.profileImagePath 
-                                   : `${API_BASE}/${orderDetails[currentId].customer.profileImagePath}`)
-                               : "https://via.placeholder.com/60"
-                           }
-                           alt="Customer"
-                           style={{
-                             width: '60px', height: '60px', 
-                             borderRadius: '50%', objectFit: 'cover', 
-                             border: '2px solid #eee', marginRight: '1rem'
-                           }}
-                        />
-                        <div className="so-customer-info">
-                          <h4>
-                            {orderDetails[currentId].customer?.fullName || orderDetails[currentId].customer?.username || "No name"}
-                            <span style={{fontSize:'0.8em', fontWeight:'normal', marginLeft:'10px'}}>
-                                ({orderDetails[currentId].customer?.contactNumber || "N/A"})
-                            </span>
-                          </h4>
-                          <p>📧 {orderDetails[currentId].customerEmail || orderDetails[currentId].customer?.email || "Not provided"}</p>
-                          <p>📍 {orderDetails[currentId].deliveryAddress?.fullAddress || "No address provided"}</p>
-                          {/* Shipping Zone is not on Order entity currently, seemingly lost or not saved */}
-                        </div>
-                     </div>
-                  ) : (
-                     /* collapsed view, minimal info */
-                     <div style={{padding: '0 1rem', color: '#888', fontStyle: 'italic', fontSize: '0.9rem'}}>
-                        {order.items?.length || order.totalItems || 0} items • Click to view details
-                     </div>
-                  )}
+                  {/* For DELIVERED orders, we show EVERYTHING directly as a receipt/history view */}
+                  {order.status === 'DELIVERED' ? (
+                    <div className="so-delivered-view">
+                       {/* Customer Section (Always shown for Delivered) */}
+                       {orderDetails[currentId] ? (
+                          <div className="so-delivered-details">
+                            <div className="so-customer-info-box">
+                              <img 
+                                 src={
+                                   orderDetails[currentId].customerProfileImagePath
+                                     ? (orderDetails[currentId].customerProfileImagePath.startsWith('http') 
+                                         ? orderDetails[currentId].customerProfileImagePath 
+                                         : `${API_BASE}/${orderDetails[currentId].customerProfileImagePath}`)
+                                     : "https://via.placeholder.com/60"
+                                 }
+                                 alt="Customer"
+                                 className="so-customer-avatar-sm"
+                              />
+                              <div className="so-customer-text">
+                                <h4 className="so-delivered-customer-name">
+                                  {orderDetails[currentId].customerName || "Guest"}
+                                  <span className="so-delivered-phone">({orderDetails[currentId].customerPhone || "N/A"})</span>
+                                </h4>
+                                <div className="so-delivered-address">
+                                  <MapPin size={14} />
+                                  <span>{orderDetails[currentId].shippingAddress || "No address provided"}</span>
+                                </div>
+                              </div>
+                            </div>
 
-                  <div className="so-actions">
-                    <select
-                      className="so-branch-select"
-                      value={orderBranches[currentId] || ""}
-                      onChange={(e) =>
-                        setOrderBranches((prev) => ({
-                          ...prev,
-                          [currentId]: e.target.value,
-                        }))
-                      }
-                      style={{ marginRight: '0.5rem' }}
-                    >
-                      <option value="">Select Branch</option>
-                      {branches.map((b) => (
-                        <option key={b} value={b}>{b}</option>
-                      ))}
-                    </select>
+                            <div className="so-price-breakdown">
+                               <div className="so-price-row">
+                                  <span>Subtotal</span>
+                                  <span>${(orderDetails[currentId].itemsTotal || 0).toFixed(2)}</span>
+                               </div>
+                               <div className="so-price-row highlight">
+                                  <span>Shipping Fee</span>
+                                  <span>+ ${(orderDetails[currentId].shippingFee || 0).toFixed(2)}</span>
+                               </div>
+                               <div className="so-price-row total">
+                                  <span>Total Received</span>
+                                  <span>${(orderDetails[currentId].grandTotal || 0).toFixed(2)}</span>
+                               </div>
+                            </div>
+                          </div>
+                       ) : (
+                          <div className="so-load-details-prompt">
+                             <button className="so-action-btn secondary" onClick={() => toggleOrderItems(currentId)}>
+                                <ChevronDown size={14} /> Load Order Receipt
+                             </button>
+                          </div>
+                       )}
 
-                    <select
-                      className="so-branch-select"
-                      value={selectedStages[currentId] || ""}
-                      onChange={(e) =>
-                        setSelectedStages((prev) => ({
-                          ...prev,
-                          [currentId]: e.target.value,
-                        }))
-                      }
-                      style={{ marginRight: '0.5rem', minWidth: '160px' }}
-                    >
-                      <option value="">Select Action</option>
-                      <option value="PROCESSING">Process Order</option>
-                      <option value="SHIPPED">Ship Order (To Branch)</option>
-                      <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
-                      <option value="DELIVERED">Mark Delivered</option>
-                      <option value="CANCELED">Cancel Order</option>
-                    </select>
-
-                    <button 
-                      onClick={() => {
-                        const stage = selectedStages[currentId];
-                        if (!stage) {
-                          alert("Please select an action/stage first");
-                          return;
-                        }
-                        updateStatus(currentId, stage);
-                      }} 
-                      className="so-action-btn primary"
-                      disabled={!selectedStages[currentId]}
-                    >
-                      <CheckCircle size={16} /> Update Status
-                    </button>
-                  </div>
-
-                  <div>
-                    <div 
-                      className="so-items-toggle"
-                      onClick={() => toggleOrderItems(currentId)}
-                    >
-                      {expandedOrders[currentId] ? 'Hide' : 'Show'} Order Details
-                      {expandedOrders[currentId] ? <ChevronUp size={16} style={{display: 'inline', marginLeft: '0.5rem'}} /> : <ChevronDown size={16} style={{display: 'inline', marginLeft: '0.5rem'}} />}
+                       {/* Items Table (Always shown for Delivered if loaded) */}
+                       {orderDetails[currentId] && (
+                          <div className="so-items-summary">
+                             <table className="so-items-table">
+                                <thead>
+                                  <tr>
+                                    <th>Product</th>
+                                    <th>Qty</th>
+                                    <th>Total</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {orderDetails[currentId].items.map((item) => (
+                                    <tr key={item.id || Math.random()}>
+                                      <td>
+                                        <div style={{ fontWeight: '500', fontSize: '0.9rem' }}>{item.product?.name || item.name}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                           {item.selectedColor} {item.selectedStorage}
+                                        </div>
+                                      </td>
+                                      <td>{item.quantity}</td>
+                                      <td>${(item.unitPrice * item.quantity).toFixed(2)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                             </table>
+                          </div>
+                       )}
                     </div>
+                  ) : (
+                    <>
+                      {/* Standard View (Collapsible) for other statuses */}
+                      {expandedOrders[currentId] && orderDetails[currentId] ? (
+                         <div className="so-customer-section">
+                            <img 
+                               src={
+                                 orderDetails[currentId].customerProfileImagePath
+                                   ? (orderDetails[currentId].customerProfileImagePath.startsWith('http') 
+                                       ? orderDetails[currentId].customerProfileImagePath 
+                                       : `${API_BASE}/${orderDetails[currentId].customerProfileImagePath}`)
+                                   : "https://via.placeholder.com/60"
+                               }
+                               alt="Customer"
+                               style={{
+                                 width: '60px', height: '60px', 
+                                 borderRadius: '50%', objectFit: 'cover', 
+                                 border: '2px solid #eee', marginRight: '1rem'
+                               }}
+                            />
+                            <div className="so-customer-info">
+                              <h4>
+                                {orderDetails[currentId].customerName || "Guest"}
+                                <span style={{fontSize:'0.8em', fontWeight:'normal', marginLeft:'10px'}}>
+                                    ({orderDetails[currentId].customerPhone || "N/A"})
+                                </span>
+                              </h4>
+                              <p>📧 {orderDetails[currentId].customerEmail || "N/A"}</p>
+                              <p>📍 {orderDetails[currentId].shippingAddress || "N/A"}</p>
+                              {order.assignedBranch && (
+                                  <p style={{marginTop: '4px', color: '#2563eb'}}>Currently Assigned To: <strong>{order.assignedBranch}</strong></p>
+                              )}
+                            </div>
+                         </div>
+                      ) : (
+                         <div style={{padding: '0 1rem', color: '#888', fontStyle: 'italic', fontSize: '0.9rem'}}>
+                            {order.items?.length || order.totalItems || 0} items • Click to view details
+                         </div>
+                      )}
 
-                    {expandedOrders[currentId] && orderDetails[currentId] && (
-                      <table className="so-items-table">
-                        <thead>
-                          <tr>
-                            <th>Image</th>
-                            <th>Product</th>
-                            <th>Qty</th>
-                            <th>Total</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderDetails[currentId].items.map((item) => {
-                             const productName = item.product?.name || item.name || "Unknown";
-                             const productImage = item.product?.imagePath || item.imagePath; // Product entity has imagePath
-                             const itemTotal = item.unitPrice * item.quantity;
-                             const productId = item.product?.id || item.productId;
+                      {order.status !== 'CANCELED' && (
+                        <div className="so-actions">
+                          <select
+                            className="so-branch-select"
+                            value={orderBranches[currentId] || ""}
+                            onChange={(e) =>
+                              setOrderBranches((prev) => ({
+                                ...prev,
+                                [currentId]: e.target.value,
+                              }))
+                            }
+                            style={{ marginRight: '0.5rem' }}
+                          >
+                            <option value="">Select Branch</option>
+                            {branches.map((b) => (
+                              <option key={b} value={b}>{b}</option>
+                            ))}
+                          </select>
 
-                            return (
-                              <tr key={item.id || Math.random()}>
-                                <td>
-                                  <img
-                                    src={buildImageUrl(productImage)}
-                                    alt={productName}
-                                    className="so-item-img"
-                                  />
-                                </td>
-                                <td>
-                                  <div style={{ fontWeight: '500' }}>{productName}</div>
-                                  <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '2px' }}>
-                                    {item.selectedColor && (
-                                      <span style={{ marginRight: '8px' }}>
-                                        Color: {item.selectedColor}
-                                      </span>
-                                    )}
-                                    {item.selectedStorage && (
-                                      <span>
-                                        Storage: {item.selectedStorage}
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
-                                <td>{item.quantity}</td>
-                                <td>${(itemTotal || 0).toFixed(2)}</td>
-                                <td>
-                                  {productId && (
-                                    <button
-                                      className="so-action-btn"
-                                      onClick={() => navigate('/seller/products', { state: { editProductId: productId } })}
-                                      title="Edit this product"
-                                      style={{
-                                        padding: '0.5rem 0.75rem',
-                                        fontSize: '0.8rem',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '0.375rem',
-                                        background: '#000',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s'
-                                      }}
-                                    >
-                                      <Edit2 size={14} />
-                                    </button>
-                                  )}
-                                </td>
+                          <select
+                            className="so-branch-select"
+                            value={selectedStages[currentId] || ""}
+                            onChange={(e) =>
+                              setSelectedStages((prev) => ({
+                                ...prev,
+                                [currentId]: e.target.value,
+                              }))
+                            }
+                            style={{ marginRight: '0.5rem', minWidth: '160px' }}
+                          >
+                            <option value="">Select Action</option>
+                            <option value="PROCESSING">Process Order</option>
+                            <option value="SHIPPED">Ship Order (To Branch)</option>
+                            <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                            <option value="DELIVERED">Mark Delivered</option>
+                            <option value="CANCELED">Cancel Order</option>
+                          </select>
+
+                          <button 
+                            onClick={() => {
+                              const stage = selectedStages[currentId];
+                              if (!stage) {
+                                showToast("Please select an action/stage first", "info");
+                                return;
+                              }
+                              updateStatus(currentId, stage);
+                            }} 
+                            className="so-action-btn primary"
+                            disabled={!selectedStages[currentId]}
+                          >
+                            <CheckCircle size={16} /> Update Status
+                          </button>
+                        </div>
+                      )}
+
+                      <div>
+                        <div 
+                          className="so-items-toggle"
+                          onClick={() => toggleOrderItems(currentId)}
+                        >
+                          {expandedOrders[currentId] ? 'Hide' : 'Show'} Order Details
+                          {expandedOrders[currentId] ? <ChevronUp size={16} style={{display: 'inline', marginLeft: '0.5rem'}} /> : <ChevronDown size={16} style={{display: 'inline', marginLeft: '0.5rem'}} />}
+                        </div>
+
+                        {expandedOrders[currentId] && orderDetails[currentId] && (
+                          <table className="so-items-table">
+                            <thead>
+                              <tr>
+                                <th>Image</th>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                                <th>Actions</th>
                               </tr>
-                            );
-                          })}
-                        </tbody>
-                        <tfoot>
-                          <tr>
-                            <td colSpan="3" style={{textAlign: 'right'}}>Subtotal</td>
-                            <td>${(orderDetails[currentId].itemsTotal || 0).toFixed(2)}</td>
-                            <td></td>
-                          </tr>
-                          <tr>
-                            <td colSpan="3" style={{textAlign: 'right'}}>Shipping</td>
-                            <td>${(orderDetails[currentId].shippingFee || 0).toFixed(2)}</td>
-                            <td></td>
-                          </tr>
-                          <tr>
-                            <td colSpan="3" style={{textAlign: 'right'}}><strong>Grand Total</strong></td>
-                            <td><strong>${(orderDetails[currentId].grandTotal || 0).toFixed(2)}</strong></td>
-                            <td></td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    )}
-                  </div>
+                            </thead>
+                            <tbody>
+                              {orderDetails[currentId].items.map((item) => (
+                                <tr key={item.id || Math.random()}>
+                                  <td>
+                                    <img
+                                      src={buildImageUrl(item.product?.imagePath || item.imagePath)}
+                                      alt={item.product?.name || item.name}
+                                      className="so-item-img"
+                                    />
+                                  </td>
+                                  <td>
+                                    <div style={{ fontWeight: '500' }}>{item.product?.name || item.name}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                                      {item.selectedColor} {item.selectedStorage}
+                                    </div>
+                                  </td>
+                                  <td>{item.quantity}</td>
+                                  <td>${(item.unitPrice * item.quantity).toFixed(2)}</td>
+                                  <td>
+                                    {(item.product?.id || item.productId) && (
+                                      <button
+                                        className="so-action-btn"
+                                        onClick={() => navigate('/seller/products', { state: { editProductId: item.product?.id || item.productId } })}
+                                        style={{ background: '#000', color: '#fff', borderRadius: '6px', border: 'none', padding: '0.4rem' }}
+                                      >
+                                        <Edit2 size={14} />
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot>
+                              <tr>
+                                <td colSpan="3" style={{textAlign: 'right'}}><strong>Grand Total</strong></td>
+                                <td colSpan="2"><strong>${(orderDetails[currentId].grandTotal || 0).toFixed(2)}</strong></td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       )}
+      {/* Toast Notification */}
+      {toast.isVisible && (
+        <Toast 
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, isVisible: false })}
+        />
+      )}
+
+      {/* Message Modal */}
+      <MessageModal
+        isOpen={msgModal.isOpen}
+        onClose={() => setMsgModal({ ...msgModal, isOpen: false })}
+        type={msgModal.type}
+        recipientId={msgModal.recipientId}
+        recipientName={msgModal.recipientName}
+      />
     </div>
   );
 }

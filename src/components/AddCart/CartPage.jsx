@@ -5,7 +5,8 @@ import {
   saveGuestCart,
   apiGetCart,
   apiUpdateQuantity,
-  apiRemoveItem
+  apiRemoveItem,
+  updateGlobalCartCount
 } from "./cartUtils";
 import { API_BASE } from "../config/config";
 import "./CartPage.css";
@@ -103,6 +104,9 @@ function CartPage() {
       setItems(updated);
       setTotal(recalcTotal(updated));
       saveGuestCart(updated);
+      // Sync navbar count
+      const totalCount = updated.reduce((sum, item) => sum + item.quantity, 0);
+      updateGlobalCartCount(totalCount);
     }
   };
 
@@ -148,6 +152,9 @@ function CartPage() {
       setItems(updated);
       setTotal(recalcTotal(updated));
       saveGuestCart(updated);
+      // Sync navbar count
+      const totalCount = updated.reduce((sum, item) => sum + item.quantity, 0);
+      updateGlobalCartCount(totalCount);
     }
   };
 

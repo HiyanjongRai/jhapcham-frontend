@@ -69,13 +69,6 @@ function CheckoutPage() {
 
       const data = await apiPreviewOrder(payload);
       setPreviewData(data);
-      if (data.items) {
-        setItems(data.items.map(i => ({
-          ...i,
-          productName: i.name,
-          productId: i.productId
-        })));
-      }
     } catch (e) {
       console.warn("Preview calculation failed", e);
     }
@@ -102,7 +95,7 @@ function CheckoutPage() {
 
   const loadUser = async () => {
     try {
-      const res = await api.get(`/api/users/profile/${userId}`);
+      const res = await api.get(`/api/users/${userId}`);
       const u = res.data;
 
       setFormData(prev => ({
@@ -353,7 +346,7 @@ function CheckoutPage() {
         <div className="summary-box">
           <h3>Order Summary</h3>
 
-          {items.map((item) => (
+          {(previewData?.items || items).map((item) => (
             <div className="summary-item" key={item.productId}>
               <img
                 src={

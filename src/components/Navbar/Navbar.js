@@ -1,14 +1,18 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faUser,
-  faCartArrowDown,
-  faList,
-  faSearch
-} from "@fortawesome/free-solid-svg-icons";
-import { MessageCircle } from "lucide-react";
+import { 
+  ShoppingBag, 
+  User, 
+  Search, 
+  Menu, 
+  X, 
+  MessageCircle,
+  ChevronDown,
+  LogOut,
+  Store
+} from "lucide-react";
+import ConfirmModal from "../Common/ConfirmModal.jsx";
 import { API_BASE } from "../config/config";
 import { apiGetCart, loadGuestCart } from "../AddCart/cartUtils";
 
@@ -21,15 +25,16 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [underlineStyle, setUnderlineStyle] = useState({});
   const [cartCount, setCartCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
-  const linksRef = useRef([]);
+  const [profileImage, setProfileImage] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
 
   const encodedId = localStorage.getItem("userId");
   const role = localStorage.getItem("userRole");
   const isLoggedIn = !!encodedId;
+  const isSeller = role === "SELLER";
 
   // Load cart count when navbar loads
   useEffect(() => {
@@ -102,149 +107,172 @@ const Navbar = () => {
     };
   }, [encodedId]);
 
+  // Load profile image
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!encodedId) return;
+      try {
+        const userId = atob(encodedId);
+        const res = await fetch(`${API_BASE}/api/users/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.profileImagePath) {
+            setProfileImage(data.profileImagePath.startsWith('http') 
+              ? data.profileImagePath 
+              : `${API_BASE}/uploads/${data.profileImagePath}`);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load profile for nav", e);
+      }
+    };
+    loadProfile();
+    window.addEventListener('profile-updated', loadProfile);
+    return () => window.removeEventListener('profile-updated', loadProfile);
+  }, [encodedId]);
+
   const toggleMobileMenu = () => setMobileOpen(!mobileOpen);
 
-  const handleMouseEnter = (index) => {
-    const link = linksRef.current[index];
-    if (!link) return;
-    setUnderlineStyle({
-      width: `${link.offsetWidth}px`,
-      left: `${link.offsetLeft}px`,
-      opacity: 1,
-    });
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
   };
 
-  const handleMouseLeave = () =>
-    setUnderlineStyle((prev) => ({ ...prev, opacity: 0 }));
-
-  const handleLogout = () => {
+  const performLogout = () => {
     localStorage.clear();
     navigate("/login");
+    setShowLogoutConfirm(false);
   };
 
   return (
     <>
       <header className="nav">
-        {/* LEFT SIDE */}
-        <div className="nav-left">
-          <div className="nav-logo" onClick={() => navigate("/")}>
-            JHAPCHAM
+        {/* LEFT SIDE: Logo & Links */}
+        <div className="nav-container">
+          <div className="nav-left">
+            <div className="nav-logo" onClick={() => navigate("/")}>
+              JHAPCHAM
+            </div>
+
+            <nav className="nav-desktop-links">
+              {navLinks.map((link) => (
+                <button
+                  key={link.labelKey}
+                  className="nav-link"
+                  onClick={() => navigate(link.path)}
+                >
+                  {link.label}
+                </button>
+              ))}
+            </nav>
           </div>
 
-          <nav className="nav-links" onMouseLeave={handleMouseLeave}>
-            {navLinks.map((link, index) => (
-              <button
-                key={link.labelKey}
-                ref={(el) => (linksRef.current[index] = el)}
-                className="nav-link"
-                onMouseEnter={() => handleMouseEnter(index)}
-                onClick={() => navigate(link.path)}
-              >
-                {link.label}
-              </button>
-            ))}
-            <span className="nav-underline" style={underlineStyle}></span>
-          </nav>
-        </div>
-
-        {/* CENTER SEARCH BAR */}
-        <div className="nav-center">
-            <form className="nav-search" onSubmit={(e) => {
+          {/* CENTER: Search Bar */}
+          <div className="nav-center">
+            <form className="nav-search-container" onSubmit={(e) => {
                 e.preventDefault();
-                // Simple form handler logic repeated here or extracted
                 const val = e.target.querySelector('input').value;
                 if(val.trim()) navigate(`/products?search=${encodeURIComponent(val)}`);
             }}>
-                <input type="text" placeholder="Search for products, brands and more..." />
-                <button type="submit">
-                    <FontAwesomeIcon icon={faSearch} />
-                </button>
+                <Search className="search-icon" size={18} />
+                <input type="text" placeholder="Search for products, brands..." />
+                <button type="submit" className="search-submit-btn">Search</button>
             </form>
+          </div>
+
+          {/* RIGHT SIDE: Actions */}
+          <div className="nav-right">
+            {!isLoggedIn ? (
+              <>
+                {!isSeller && (
+                  <button className="nav-icon-btn" onClick={() => navigate("/cart")}>
+                    <ShoppingBag size={22} />
+                    {cartCount > 0 && <span className="nav-badge">{cartCount}</span>}
+                  </button>
+                )}
+
+                <div className="nav-auth-btns">
+                  <button className="nav-btn-text" onClick={() => navigate("/login")}>Login</button>
+                  <button className="nav-btn-primary" onClick={() => navigate("/signup")}>Sign Up</button>
+                </div>
+                
+                <button className="nav-seller-link" onClick={() => navigate("/seller/register")}>
+                  <Store size={18} />
+                  <span>Become Seller</span>
+                </button>
+              </>
+            ) : (
+              <div className="nav-logged-in">
+                {!isSeller && (
+                  <button className="nav-icon-btn" onClick={() => navigate("/cart")}>
+                    <ShoppingBag size={22} />
+                    {cartCount > 0 && <span className="nav-badge">{cartCount}</span>}
+                  </button>
+                )}
+
+                <button className="nav-icon-btn" onClick={() => navigate("/messages")}>
+                  <MessageCircle size={22} />
+                  {messageCount > 0 && <span className="nav-badge">{messageCount}</span>}
+                </button>
+
+                <div className="nav-user-profile" onClick={() => navigate(`/${role.toLowerCase()}/dashboard`)}>
+                   <div className="nav-avatar" style={{ overflow: 'hidden' }}>
+                      {profileImage ? (
+                        <img src={profileImage} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <User size={18} />
+                      )}
+                   </div>
+                   <span className="nav-role-tag">{role}</span>
+                   <ChevronDown size={14} />
+                </div>
+
+                <button className="nav-logout-btn" onClick={handleLogout} title="Logout">
+                   <LogOut size={20} />
+                </button>
+              </div>
+            )}
+            
+            <button className="nav-mobile-btn" onClick={toggleMobileMenu}>
+              {mobileOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="nav-right">
-          {/* NOT LOGGED IN */}
-          {!isLoggedIn && (
-            <>
-              <button className="icon-btn cart-btn" onClick={() => navigate("/cart")}>
-                <FontAwesomeIcon icon={faCartArrowDown} />
-                {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
-              </button>
-
-              <button className="seller-btn" onClick={() => navigate("/seller/register")}>
-                Become Seller
-              </button>
-
-              <button className="logout-btn" onClick={() => navigate("/signup")}>
-                Sign Up
-              </button>
-            </>
-          )}
-
-          {/* CUSTOMER */}
-          {isLoggedIn && role === "CUSTOMER" && (
-            <>
-              <button className="icon-btn cart-btn" onClick={() => navigate("/cart")}>
-                <FontAwesomeIcon icon={faCartArrowDown} />
-                {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
-              </button>
-
-              <button 
-                className="icon-btn cart-btn" 
-                onClick={() => navigate("/messages")}
-                title="Messages"
-              >
-                <MessageCircle size={20} />
-                {messageCount > 0 && <span className="cart-count">{messageCount}</span>}
-              </button>
-
-              <button className="nav-link" onClick={() => navigate("/customer/dashboard")}>
-                Dashboard
-              </button>
-              
-              <button className="logout-btn" onClick={handleLogout}>
-                Logout
-              </button>
-            </>
-          )}
-
-          {/* SELLER */}
-          {isLoggedIn && role === "SELLER" && (
-            <>
-              <button 
-                className="icon-btn cart-btn" 
-                onClick={() => navigate("/messages")}
-                title="Messages"
-              >
-                <MessageCircle size={20} />
-                {messageCount > 0 && <span className="cart-count">{messageCount}</span>}
-              </button>
-
-              <button className="nav-link" onClick={() => navigate("/seller/dashboard")}>
-                Dashboard
-              </button>
-              
-              <button className="logout-btn" onClick={handleLogout}>
-                Logout
-              </button>
-            </>
-          )}
-
-          {/* ADMIN */}
-          {isLoggedIn && role === "ADMIN" && (
-            <>
-              <button className="nav-link" onClick={() => navigate("/admin/dashboard")}>
-                Dashboard
-              </button>
-              
-              <button className="logout-btn" onClick={handleLogout}>
-                Logout
-              </button>
-            </>
-          )}
-        </div>
+        {/* MOBILE MENU */}
+        {mobileOpen && (
+          <div className="nav-mobile-dropdown">
+            <nav className="nav-mobile-links">
+              {navLinks.map((link) => (
+                <button key={link.labelKey} onClick={() => { navigate(link.path); setMobileOpen(false); }}>
+                  {link.label}
+                </button>
+              ))}
+              <hr />
+              {!isLoggedIn ? (
+                <>
+                  <button onClick={() => { navigate("/login"); setMobileOpen(false); }}>Login</button>
+                  <button onClick={() => { navigate("/signup"); setMobileOpen(false); }}>Sign Up</button>
+                  <button className="mobile-seller-cta" onClick={() => { navigate("/seller/register"); setMobileOpen(false); }}>Become Seller</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => { navigate(`/${role.toLowerCase()}/dashboard`); setMobileOpen(false); }}>Dashboard</button>
+                  <button className="mobile-logout" onClick={handleLogout}>Logout</button>
+                </>
+              )}
+            </nav>
+          </div>
+        )}
       </header>
+      <ConfirmModal 
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={performLogout}
+        title="Sign Out"
+        message="Are you sure you want to sign out from Jhapcham?"
+        confirmText="Sign Out"
+        type="danger"
+      />
     </>
   );
 };

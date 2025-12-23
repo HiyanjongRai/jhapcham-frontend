@@ -15,15 +15,15 @@ import {
 } from "lucide-react";
 import {
   getCurrentUserId,
-  loadGuestCart,
-  saveGuestCart,
   apiAddToCart,
+  addToGuestCart,
 } from "../AddCart/cartUtils";
 import api from "../../api/axios";
 import { apiAddToWishlist, apiRemoveFromWishlist, apiCheckWishlist } from "../WishlistPage/wishlistUtils";
 import MessageModal from "../Message/MessageModal";
 import ReportModal from "../Report/ReportModal";
 import ErrorToast from "../ErrorToast/ErrorToast";
+import Toast from "../Toast/Toast";
 import "./ProductDetailModern.css";
 
  
@@ -37,8 +37,15 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [message, setMessage] = useState("");
+  const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
   const [error, setError] = useState(null);
+
+  const userRole = localStorage.getItem("userRole");
+  const isSeller = userRole === "SELLER";
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type, visible: true });
+  };
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedStorage, setSelectedStorage] = useState(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -175,13 +182,12 @@ export default function ProductDetailPage() {
         if (liked) {
             await apiRemoveFromWishlist(userId, id);
             setLiked(false);
-            setMessage("Removed from wishlist");
+            showToast("Removed from wishlist", "success");
         } else {
             await apiAddToWishlist(userId, id);
             setLiked(true);
-            setMessage("Added to wishlist");
+            showToast("Added to wishlist", "success");
         }
-        setTimeout(() => setMessage(""), 2000);
     } catch (err) {
         console.error(err);
     }
@@ -194,41 +200,12 @@ export default function ProductDetailPage() {
 
     try {
       if (userId) {
-        // Logged in: Use API
         await apiAddToCart(userId, product.id, quantity, selectedColor, selectedStorage);
       } else {
-        // Guest: Local Logic
-        const item = {
-          userId: null,
-          productId: product.id,
-          name: product.name,
-          imagePath: product.imagePath,
-          quantity,
-          unitPrice: product.price,
-          lineTotal: product.price * quantity,
-          color: selectedColor,
-          storage: selectedStorage,
-        };
-
-        const cart = loadGuestCart();
-        const idx = cart.findIndex(
-          (c) =>
-            c.productId === item.productId &&
-            c.color === item.color &&
-            c.storage === item.storage
-        );
-
-        if (idx >= 0) {
-          cart[idx].quantity += quantity;
-          cart[idx].lineTotal = cart[idx].unitPrice * cart[idx].quantity;
-        } else {
-          cart.push(item);
-        }
-        saveGuestCart(cart);
+        addToGuestCart(product, quantity, selectedColor, selectedStorage);
       }
 
-      setMessage("Item added to cart");
-      setTimeout(() => setMessage(""), 2500);
+      showToast("Item added to cart", "success");
     } catch (err) {
       console.error("Add to cart error:", err);
       
@@ -260,15 +237,6 @@ export default function ProductDetailPage() {
       <ErrorToast error={error} onClose={() => setError(null)} />
 
       <div className="pd-container">
-        {message && (
-          <div style={{
-            position: 'fixed', top: '20px', right: '20px', 
-            background: '#000', color: '#fff', padding: '1rem 2rem', 
-            borderRadius: '8px', zIndex: 1000, animation: 'fadeIn 0.3s'
-          }}>
-            {message}
-          </div>
-        )}
 
       {/* Breadcrumb */}
       <div className="pd-breadcrumb">
@@ -417,51 +385,57 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <div className="pd-actions">
-            <div className="pd-qty-wrapper">
-              <button className="pd-qty-btn" onClick={decreaseQty} disabled={product.stock === 0}><Minus size={18} /></button>
-              <span className="pd-qty-val">{quantity}</span>
-              <button className="pd-qty-btn" onClick={increaseQty} disabled={product.stock === 0}><Plus size={18} /></button>
+            <div className="pd-actions">
+              {!isSeller && (
+                <>
+                  <div className="pd-qty-wrapper">
+                    <button className="pd-qty-btn" onClick={decreaseQty} disabled={product.stock === 0}><Minus size={18} /></button>
+                    <span className="pd-qty-val">{quantity}</span>
+                    <button className="pd-qty-btn" onClick={increaseQty} disabled={product.stock === 0}><Plus size={18} /></button>
+                  </div>
+
+                  <button 
+                    className="pd-add-btn" 
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0 || adding}
+                  >
+                    <ShoppingCart size={20} />
+                    {product.stock === 0 ? "OUT OF STOCK" : adding ? "ADDING..." : "ADD TO CART"}
+                  </button>
+                </>
+              )}
+
+              <button 
+                className="pd-message-btn" 
+                onClick={() => setShowMessageModal(true)}
+                title="Ask Seller"
+              >
+                <MessageCircle size={24} />
+              </button>
+
+               <button 
+                className="pd-message-btn" 
+                onClick={() => setShowReportModal(true)}
+                title="Report Product"
+                style={{ color: '#ef4444', borderColor: '#ef4444' }}
+              >
+                <Flag size={24} />
+              </button>
+
+              {!isSeller && (
+                <button 
+                  className="pd-wish-btn" 
+                  onClick={toggleWishlist}
+                  style={{ 
+                      color: liked ? '#dc2626' : 'inherit',
+                      borderColor: liked ? '#dc2626' : '#e5e7eb',
+                      background: liked ? '#fef2f2' : 'white'
+                  }}
+                >
+                  <Heart size={24} fill={liked ? "#dc2626" : "none"} />
+                </button>
+              )}
             </div>
-
-            <button 
-              className="pd-add-btn" 
-              onClick={handleAddToCart}
-              disabled={product.stock === 0 || adding}
-            >
-              <ShoppingCart size={20} />
-              {product.stock === 0 ? "OUT OF STOCK" : adding ? "ADDING..." : "ADD TO CART"}
-            </button>
-
-            <button 
-              className="pd-message-btn" 
-              onClick={() => setShowMessageModal(true)}
-              title="Ask Seller"
-            >
-              <MessageCircle size={24} />
-            </button>
-
-             <button 
-              className="pd-message-btn" // Reusing styling for now, or add pd-report-btn
-              onClick={() => setShowReportModal(true)}
-              title="Report Product"
-              style={{ color: '#ef4444', borderColor: '#ef4444' }}
-            >
-              <Flag size={24} />
-            </button>
-
-            <button 
-              className="pd-wish-btn" 
-              onClick={toggleWishlist}
-              style={{ 
-                  color: liked ? '#dc2626' : 'inherit',
-                  borderColor: liked ? '#dc2626' : '#e5e7eb',
-                  background: liked ? '#fef2f2' : 'white'
-              }}
-            >
-              <Heart size={24} fill={liked ? "#dc2626" : "none"} />
-            </button>
-          </div>
 
           {/* Seller Card */}
           <div className="pd-seller-card" onClick={() => navigate(`/seller/${product.sellerId}`)}>
@@ -576,6 +550,14 @@ export default function ProductDetailPage() {
         reportedEntityId={product.id}
         entityName={product.name}
       />
+      
+      {toast.visible && (
+        <Toast 
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, visible: false })}
+        />
+      )}
       </div>
     </>
   );
