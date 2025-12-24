@@ -27,6 +27,7 @@ import NewArrivalsPage from "./components/Collections/NewArrivalsPage.jsx";
 import BrandsPage from "./components/Collections/BrandsPage.jsx";
 
 import SellerProfilePage from "./components/Seller/SellerProfilePage.jsx";
+import SellerLayout from "./components/Seller/SellerLayout";
 
 // Error Pages
 import { 
@@ -65,11 +66,18 @@ function App() {
         {/* Customer */}
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
 
-        {/* Seller Dashboard Routes */}
-        <Route path="/seller/orders" element={<SellerOrders />} />
-        <Route path="/seller/dashboard" element={<SellerDashboard />} />
+        {/* Seller Area (Grouped under Layout) */}
+        <Route path="/seller" element={<SellerLayout />}>
+          <Route path="dashboard" element={<SellerDashboard />} />
+          <Route path="orders" element={<SellerOrders />} />
+          <Route path="add-product" element={<AddProduct />} />
+          <Route path="products" element={<ProductManagement />} />
+          <Route path="settings" element={<UpdateAccount />} />
+        </Route>
+
         <Route path="/seller/register" element={<SellerRegister />} />
         <Route path="/seller-application" element={<SellerApplication />} />
+        <Route path="/seller/:id" element={<SellerProfilePage />} />
 
         {/* Product Details */}
         <Route path="/products/:id" element={<ProductDetailPage />} />
@@ -85,16 +93,11 @@ function App() {
         <Route path="/update-account" element={<UpdateAccount />} />
 
         {/* Notifications */}
-        <Route path="/notification-list" element={<NotificationList />} />
+        <Route path="/notifications" element={<NotificationList />} />
         <Route path="/review" element={<ReviewForm />} />
 
         {/* Wishlist */}
         <Route path="/wishlist" element={<WishlistPage />} />
-
-        {/* Seller Product Management */}
-        <Route path="/seller/add-product" element={<AddProduct />} />
-        <Route path="/seller/products" element={<ProductManagement />} />
-        <Route path="/seller/settings" element={<UpdateAccount />} />
 
         {/* Messages */}
         <Route path="/messages" element={<MessagesPage />} />
@@ -103,9 +106,6 @@ function App() {
         <Route path="/on-sale" element={<OnSalePage />} />
         <Route path="/new-arrivals" element={<NewArrivalsPage />} />
         <Route path="/brands" element={<BrandsPage />} />
-
-        {/* NEW STATIC SELLER PROFILE PAGE */}
-        <Route path="/seller/:id" element={<SellerProfilePage />} />
 
         {/* Error Pages */}
         <Route path="/403" element={<ForbiddenPage />} />

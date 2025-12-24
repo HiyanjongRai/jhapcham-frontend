@@ -16,10 +16,10 @@ const Toast = ({ message, type = 'info', onClose, duration = 3000 }) => {
   if (!message) return null;
 
   const bgColors = {
-    success: '#10b981', // Emerald 500
-    error: '#ef4444',   // Red 500
-    info: '#3b82f6',    // Blue 500
-    warning: '#f59e0b'  // Amber 500
+    success: '#10b981',
+    error: '#ef4444',  
+    info: '#3b82f6',   
+    warning: '#f59e0b'
   };
 
   const icons = {

@@ -144,6 +144,17 @@ function ProductCard({ product }) {
         )}
         
         <img src={imgSrc} className="pc-img" alt={name} loading="lazy" />
+        
+        {/* Seller Logo Branding */}
+        {(product.logoImagePath || product.profileImagePath) && (
+          <div className="pc-seller-badge" title={`Sold by ${product.sellerFullName}`}>
+            <img 
+              src={`${API_BASE}/${product.logoImagePath || product.profileImagePath}`} 
+              alt="Seller" 
+              className="pc-seller-thumb"
+            />
+          </div>
+        )}
       </div>
 
       <div className="pc-body">

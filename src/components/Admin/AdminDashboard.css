@@ -163,6 +163,40 @@
   gap: 0.75rem;
 }
 
+.ad-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.ad-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-light);
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  width: 300px;
+  transition: all 0.2s;
+}
+
+.ad-search-bar:focus-within {
+  background: #ffffff;
+  border-color: var(--primary-black);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.ad-search-bar input {
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
 /* Table Design */
 .ad-table-container {
   background: #ffffff;
@@ -355,6 +389,37 @@
 .ad-link:hover { text-decoration: underline; }
 
 /* Responsive */
+/* Product Mini Image */
+.ad-prod-mini-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border-light);
+}
+
+/* Dispute Status Select */
+.ad-status-select {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: #fdfdfd;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.ad-status-select:hover { border-color: var(--primary-black); }
+
+/* Additional Badges */
+.badge-new { background: #e6fffa; color: #234e52; }
+.badge-under_investigation { background: #fffaf0; color: #9c4221; }
+.badge-resolved_refunded { background: #ebf8ff; color: #2a4365; }
+.badge-closed_rejected { background: #fff5f5; color: #c53030; }
+.badge-resolved { background: #f0fff4; color: #22543d; }
+
 @media (max-width: 1024px) {
   .ad-sidebar { width: 240px; }
   .ad-main { margin-left: 240px; padding: 2rem; }

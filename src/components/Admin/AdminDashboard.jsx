@@ -24,15 +24,20 @@ import {
   TrendingUp,
   Store,
   Calendar,
-  LayoutDashboard
+  LayoutDashboard,
+  MessageSquare,
+  Search
 } from "lucide-react";
+import MessageModal from "../Message/MessageModal.jsx";
+import ResolutionModal from "./ResolutionModal.jsx";
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("applications"); // Default to applications for visibility
-    const [stats, setStats] = useState({ users: 0, products: 0, reports: 0, applications: 0 });
+    const [stats, setStats] = useState({ users: 0, sellers: 0, products: 0, reports: 0, applications: 0 });
     
     // Data States
     const [users, setUsers] = useState([]);
+    const [sellers, setSellers] = useState([]);
     const [products, setProducts] = useState([]);
     const [reports, setReports] = useState([]);
     const [applications, setApplications] = useState([]);
@@ -41,6 +46,11 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
+
+    // Search and Messaging State
+    const [searchTerm, setSearchTerm] = useState("");
+    const [messageConfig, setMessageConfig] = useState({ isOpen: false, receiverId: null, receiverName: "" });
+    const [resolutionConfig, setResolutionConfig] = useState({ isOpen: false, reportId: null, status: null });
 
     const showToast = (message, type = 'info') => {
         setToast({ message, type, visible: true });
@@ -72,8 +82,15 @@ const AdminDashboard = () => {
         try {
             if (activeTab === "users") {
                 const res = await axios.get(`${API_BASE}/api/admin/users`);
-                setUsers(res.data);
-                setStats(prev => ({ ...prev, users: res.data.length }));
+                const allUsers = res.data;
+                const customersOnly = allUsers.filter(u => u.role === 'CUSTOMER');
+                const sellersOnly = allUsers.filter(u => u.role === 'SELLER');
+                setUsers(customersOnly);
+                setStats(prev => ({ ...prev, users: customersOnly.length }));
+            } else if (activeTab === "sellers") {
+                const res = await axios.get(`${API_BASE}/api/admin/sellers`);
+                setSellers(res.data);
+                setStats(prev => ({ ...prev, sellers: res.data.length }));
             } else if (activeTab === "products") {
                 const res = await axios.get(`${API_BASE}/api/admin/products`);
                 setProducts(res.data);
@@ -153,14 +170,26 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleResolveReport = async (reportId) => {
+    const handleResolveReport = async (reportId, status, note) => {
          try {
-            await axios.post(`${API_BASE}/api/admin/reports/${reportId}/resolve`);
-            showToast("Report resolved", "success");
+            await axios.post(`${API_BASE}/api/admin/reports/${reportId}/resolve`, {
+                status,
+                note
+            });
+            showToast(`Report status updated to ${status}`, "success");
             fetchData();
         } catch (err) {
-            showToast("Failed to resolve report", "error");
+            showToast("Failed to update report status", "error");
         }
+    };
+
+    const handleSendMessage = (user, reportData = null) => {
+        setMessageConfig({
+            isOpen: true,
+            receiverId: user.id,
+            receiverName: user.fullName || user.username,
+            reportContext: reportData 
+        });
     };
     
     const handleApproveApp = (appId) => {
@@ -225,36 +254,35 @@ const AdminDashboard = () => {
                 <FileText size={18} /> Pending Sellers
                 {applications.length > 0 && <span className="ad-badge-count">{applications.length}</span>}
             </button>
-            <button 
+             <button 
                 className={`ad-nav-item ${activeTab === 'users' ? 'active' : ''}`}
                 onClick={() => setActiveTab('users')}
             >
-                <Users size={18} /> Users & Sellers
-                {users.length > 0 && <span className="ad-badge-count">{users.length}</span>}
+                <Users size={18} /> Customers
+            </button>
+            <button 
+                className={`ad-nav-item ${activeTab === 'sellers' ? 'active' : ''}`}
+                onClick={() => setActiveTab('sellers')}
+            >
+                <Store size={18} /> Merchants
             </button>
             <button 
                 className={`ad-nav-item ${activeTab === 'products' ? 'active' : ''}`}
                 onClick={() => setActiveTab('products')}
             >
-                <Boxes size={18} /> Products
-                {products.length > 0 && <span className="ad-badge-count">{products.length}</span>}
+                <Boxes size={18} /> Catalog
             </button>
             <button 
                 className={`ad-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
                 onClick={() => setActiveTab('reports')}
             >
-                <AlertTriangle size={18} /> Reports
-                {reports.length > 0 && (
-                    <span className={`ad-badge-count ${reports.filter(r => r.status !== 'RESOLVED').length > 0 ? 'warning' : ''}`}>
-                        {reports.length}
-                    </span>
-                )}
+                <AlertTriangle size={18} /> Disputes
             </button>
             <button 
                 className={`ad-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
                 onClick={() => setActiveTab('settings')}
             >
-                <Settings size={18} /> Settings
+                <Settings size={18} /> Configuration
             </button>
         </nav>
     );
@@ -272,7 +300,10 @@ const AdminDashboard = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {users.map(user => (
+                    {users.filter(u => 
+                        (u.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+                        (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map(user => (
                         <tr key={user.id}>
                             <td className="ad-id">#{user.id}</td>
                             <td>
@@ -321,6 +352,71 @@ const AdminDashboard = () => {
         </div>
     );
 
+    const renderSellers = () => (
+        <div className="ad-table-container">
+            <table className="ad-table">
+                <thead>
+                    <tr>
+                        <th>Store / Seller</th>
+                        <th>Status</th>
+                        <th>Products</th>
+                        <th>Orders</th>
+                        <th>Revenue</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {sellers.filter(s => 
+                        (s.storeName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
+                        (s.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (s.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map(seller => (
+                        <tr key={seller.id}>
+                            <td>
+                                <div className="ad-user-cell">
+                                    <div className="ad-user-avatar purple" style={{ background: '#7c3aed' }}>
+                                        <Store size={20} />
+                                    </div>
+                                    <div>
+                                        <div className="ad-user-name">{seller.storeName}</div>
+                                        <div className="ad-user-email">{seller.fullName} • {seller.email}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span className={`ad-badge badge-${seller.status?.toLowerCase()}`}>
+                                    {seller.status}
+                                </span>
+                            </td>
+                            <td>{seller.totalProducts}</td>
+                            <td>{seller.totalOrders} ({seller.totalDelivered} deliv.)</td>
+                            <td><strong>Rs. {seller.totalIncome?.toLocaleString()}</strong></td>
+                            <td>
+                                <div className="ad-action-buttons">
+                                    <button className="ad-action-btn" title="View Details" onClick={() => handleViewSeller(seller.id)}>
+                                        <Eye size={16} />
+                                    </button>
+                                    <button className="ad-action-btn" title="Message Seller" onClick={() => handleSendMessage(seller)}>
+                                        <MessageSquare size={16} />
+                                    </button>
+                                    {seller.status === 'ACTIVE' ? (
+                                        <button className="ad-action-btn action-block" onClick={() => handleBlockUser(seller.id)}>
+                                            <Shield size={16} />
+                                        </button>
+                                    ) : (
+                                        <button className="ad-action-btn action-unblock" onClick={() => handleUnblockUser(seller.id)}>
+                                            <CheckCircle2 size={16} />
+                                        </button>
+                                    )}
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
     const renderProducts = () => (
         <div className="ad-table-container">
             <table className="ad-table">
@@ -339,8 +435,21 @@ const AdminDashboard = () => {
                         <tr key={p.id}>
                             <td className="ad-id">#{p.id}</td>
                             <td>
-                                <div className="ad-user-name">{p.name}</div>
-                                <div className="ad-user-email">{p.category}</div>
+                                <div className="ad-user-cell">
+                                     {p.imagePaths && p.imagePaths.length > 0 ? (
+                                        <img 
+                                            src={`${API_BASE}/${p.imagePaths[0]}`} 
+                                            alt={p.name} 
+                                            className="ad-prod-mini-img"
+                                        />
+                                     ) : (
+                                         <div className="ad-user-avatar"><Boxes size={18} /></div>
+                                     )}
+                                     <div>
+                                        <div className="ad-user-name">{p.name}</div>
+                                        <div className="ad-user-email">{p.category}</div>
+                                     </div>
+                                </div>
                             </td>
                             <td>{p.sellerFullName}</td>
                             <td>Rs. {p.price}</td>
@@ -403,19 +512,80 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
                             </td>
-                            <td>{r.reason}</td>
-                             <td>{r.reporterName}</td>
+                            <td>
+                                {r.reason && r.reason.includes(': ') ? (
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1e293b' }}>
+                                            {r.reason.split(': ')[0]}
+                                        </div>
+                                        <div style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '4px' }}>
+                                            {r.reason.split(': ').slice(1).join(': ')}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    r.reason
+                                )}
+                            </td>
                              <td>
-                                <span className={`ad-badge badge-${r.status === 'RESOLVED' ? 'active' : 'pending'}`}>
-                                    {r.status}
+                                <div className="ad-user-name">{r.reporterName}</div>
+                                <div className="ad-user-email">ID: {r.reporterId}</div>
+                             </td>
+                            <td>
+                                <span className={`ad-badge badge-${r.status?.toLowerCase().replace('(', '').replace(')', '').replace(/ /g, '_')}`}>
+                                    {r.status?.replace(/_/g, ' ')}
                                 </span>
                             </td>
                             <td>
-                                {r.status !== 'RESOLVED' && (
-                                    <button className="ad-action-btn action-unblock" title="Resolve Report" onClick={() => handleResolveReport(r.id)}>
-                                        <CheckCircle2 size={16} />
-                                    </button>
-                                )}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {!['RESOLVED', 'RESOLVED_REFUNDED', 'CLOSED_REJECTED'].includes(r.status) ? (
+                                        <select 
+                                            className="ad-status-select"
+                                            onChange={(e) => {
+                                                if (e.target.value) {
+                                                    setResolutionConfig({
+                                                        isOpen: true,
+                                                        reportId: r.id,
+                                                        status: e.target.value,
+                                                        reason: r.reason
+                                                    });
+                                                    // Optional: reset select value
+                                                    e.target.value = "";
+                                                }
+                                            }}
+                                            value=""
+                                        >
+                                            <option value="" disabled>Update Status</option>
+                                            <option value="UNDER_INVESTIGATION">Under Investigation</option>
+                                            <option value="RESOLVED_REFUNDED">Resolved (Refunded)</option>
+                                            <option value="CLOSED_REJECTED">Closed (Rejected)</option>
+                                            <option value="RESOLVED">Mark Resolved</option>
+                                        </select>
+                                    ) : (
+                                        <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600, padding: '8px 12px' }}>
+                                            Finalized
+                                        </div>
+                                    )}
+
+                                    {r.sellerUserId && (
+                                        <button 
+                                            className="ad-action-btn" 
+                                            title="Message Seller" 
+                                            onClick={() => handleSendMessage({ 
+                                                id: r.sellerUserId, 
+                                                fullName: r.type === 'PRODUCT' ? `Merchant of ${r.reportedEntityName}` : r.reportedEntityName 
+                                            }, {
+                                                reason: r.reason,
+                                                reporter: r.reporterName,
+                                                targetName: r.reportedEntityName,
+                                                targetId: r.reportedEntityId,
+                                                targetImage: r.reportedEntityImage
+                                            })}
+                                            style={{ border: '1px solid #e2e8f0' }}
+                                        >
+                                            <MessageSquare size={16} />
+                                        </button>
+                                    )}
+                                </div>
                             </td>
                         </tr>
                     ))}
@@ -501,7 +671,18 @@ const AdminDashboard = () => {
                         </h1>
                         <p className="ad-subtitle">Manage your application {activeTab}</p>
                     </div>
-                    <div className="ad-header-date">{new Date().toLocaleDateString()}</div>
+                    <div className="ad-header-controls">
+                        <div className="ad-search-bar">
+                            <Search size={18} />
+                            <input 
+                                type="text" 
+                                placeholder="Search..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="ad-header-date">{new Date().toLocaleDateString()}</div>
+                    </div>
                 </div>
                 
                 {/* Loading State */}
@@ -529,6 +710,7 @@ const AdminDashboard = () => {
                 {!loading && !error && (
                     <>
                         {activeTab === 'users' && renderUsers()}
+                        {activeTab === 'sellers' && renderSellers()}
                         {activeTab === 'products' && renderProducts()}
                         {activeTab === 'reports' && renderReports()}
                         {activeTab === 'applications' && renderApplications()}
@@ -572,6 +754,27 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             )}
+
+            <MessageModal
+                isOpen={messageConfig.isOpen}
+                onClose={() => setMessageConfig(prev => ({ ...prev, isOpen: false }))}
+                type="admin"
+                recipientId={messageConfig.receiverId}
+                recipientName={messageConfig.receiverName}
+                reportContext={messageConfig.reportContext}
+            />
+
+            <ResolutionModal 
+                isOpen={resolutionConfig.isOpen}
+                onClose={() => setResolutionConfig(prev => ({ ...prev, isOpen: false }))}
+                reportId={resolutionConfig.reportId}
+                status={resolutionConfig.status}
+                reason={resolutionConfig.reason}
+                onConfirm={(note) => {
+                    handleResolveReport(resolutionConfig.reportId, resolutionConfig.status, note);
+                    setResolutionConfig(prev => ({ ...prev, isOpen: false }));
+                }}
+            />
 
             <ConfirmModal 
                 isOpen={confirmConfig.isOpen}

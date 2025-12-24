@@ -10,11 +10,13 @@ import {
   MessageCircle,
   ChevronDown,
   LogOut,
-  Store
+  Store,
+  Bell
 } from "lucide-react";
 import ConfirmModal from "../Common/ConfirmModal.jsx";
 import { API_BASE } from "../config/config";
 import { apiGetCart, loadGuestCart } from "../AddCart/cartUtils";
+import axios from "../../api/axios";
 
 const navLinks = [
   { label: "Shop", labelKey: "Shop", path: "/" },
@@ -27,6 +29,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [profileImage, setProfileImage] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
@@ -80,12 +83,13 @@ const Navbar = () => {
       if (!encodedId) return;
 
       try {
-        const userId = atob(encodedId);
-        const response = await fetch(`${API_BASE}/api/messages/receiver/${userId}`);
+        const response = await fetch(`${API_BASE}/api/messages/unread-count`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         if (response.ok) {
-          const messages = await response.json();
-          // Count only UNREAD messages (where isRead is false or undefined)
-          const unreadCount = messages.filter(msg => !msg.isRead).length;
+          const unreadCount = await response.json();
           setMessageCount(unreadCount);
         }
       } catch (error) {
@@ -107,6 +111,30 @@ const Navbar = () => {
     };
   }, [encodedId]);
 
+  // Load notification count
+  useEffect(() => {
+    const loadNotificationCount = async () => {
+      if (!encodedId) return;
+      const username = localStorage.getItem("userEmail"); // Assuming email is stored as userEmail
+      if (!username) return;
+
+      try {
+        const response = await axios.get(`${API_BASE}/api/notifications/unread-count?username=${username}`);
+        setNotificationCount(response.data);
+      } catch (error) {
+        console.error("Failed to load notification count:", error);
+      }
+    };
+
+    loadNotificationCount();
+    const interval = setInterval(loadNotificationCount, 30000);
+    window.addEventListener('notifications-updated', loadNotificationCount);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notifications-updated', loadNotificationCount);
+    };
+  }, [encodedId]);
+
   // Load profile image
   useEffect(() => {
     const loadProfile = async () => {
@@ -116,6 +144,9 @@ const Navbar = () => {
         const res = await fetch(`${API_BASE}/api/users/${userId}`);
         if (res.ok) {
           const data = await res.json();
+          if (data.email) {
+            localStorage.setItem("userEmail", data.email);
+          }
           if (data.profileImagePath) {
             setProfileImage(data.profileImagePath.startsWith('http') 
               ? data.profileImagePath 
@@ -212,6 +243,11 @@ const Navbar = () => {
                 <button className="nav-icon-btn" onClick={() => navigate("/messages")}>
                   <MessageCircle size={22} />
                   {messageCount > 0 && <span className="nav-badge">{messageCount}</span>}
+                </button>
+
+                <button className="nav-icon-btn" onClick={() => navigate("/notifications")} title="Notifications">
+                  <Bell size={22} />
+                  {notificationCount > 0 && <span className="nav-badge">{notificationCount}</span>}
                 </button>
 
                 <div className="nav-user-profile" onClick={() => navigate(`/${role.toLowerCase()}/dashboard`)}>

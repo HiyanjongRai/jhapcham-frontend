@@ -70,6 +70,9 @@ const LoginPage = () => {
       if (token) {
           localStorage.setItem("token", token);
       }
+      if (data.email) {
+          localStorage.setItem("userEmail", data.email);
+      }
 
       await mergeGuestCartIntoUser(userId);
 

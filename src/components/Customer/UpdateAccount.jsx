@@ -2,14 +2,22 @@ import React, { useEffect, useState } from "react";
 import { getCurrentUserId } from "../AddCart/cartUtils";
 import { API_BASE } from "../config/config";
 import "./UpdateAccount.css";
+import Toast from "../Toast/Toast";
 
 export default function UpdateAccount() {
   const [profile, setProfile] = useState({
     fullName: "",
-    email: "", // Read-only
+    email: "", 
     contactNumber: "",
   });
   
+
+const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+
+const showToast = (message, type) => {
+  setToast({ show: true, message, type });
+};
+
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -26,10 +34,6 @@ export default function UpdateAccount() {
   // Load user profile
   async function loadProfile() {
     try {
-      // Assuming GET /api/users/{userId} or similar exists to fetch data. 
-      // If not, we might need to rely on what was previously working or use the new controller if it had a GET.
-      // The user only provided PUT for CustomerController. 
-      // Let's stick to the existing fetch endpoint for reading, assuming it still works.
       const res = await fetch(`${API_BASE}/api/users/${userId}`);
       if (!res.ok) throw new Error("Failed to load profile");
       const data = await res.json();
@@ -64,81 +68,93 @@ export default function UpdateAccount() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      // 1. Update Profile (Text Data)
-      const updateBody = {
-        fullName: profile.fullName,
-        contactNumber: profile.contactNumber,
-        email: profile.email
-      };
+  try {
+    const updateBody = {
+      fullName: profile.fullName,
+      contactNumber: profile.contactNumber,
+      email: profile.email
+    };
 
-      if (changePasswordMode && passwords.newPassword) {
-         if (passwords.newPassword !== passwords.confirmPassword) {
-             alert("Passwords do not match!");
-             setLoading(false);
-             return;
-         }
-         updateBody.password = passwords.newPassword;
+    if (changePasswordMode && passwords.newPassword) {
+      if (passwords.newPassword !== passwords.confirmPassword) {
+        showToast("New password and confirmation do not match", "error");
+        setLoading(false);
+        return;
       }
-
-      // Updated endpoint: PUT /api/users/{userId}
-      const res = await fetch(`${API_BASE}/api/users/${userId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateBody),
-      });
-
-      if (!res.ok) {
-         throw new Error("Failed to update profile info");
-      }
-      
-      let updatedUser = await res.json();
-
-      // 2. Upload Image (if selected)
-      if (selectedFile) {
-        const formData = new FormData();
-        formData.append("file", selectedFile);
-        
-        const imgRes = await fetch(`${API_BASE}/api/users/${userId}/profile-image`, {
-             method: "POST",
-             body: formData
-        });
-        
-        if (imgRes.ok) {
-             updatedUser = await imgRes.json();
-        }
-      }
-
-      alert("Profile updated successfully!");
-      // Update local state with response
-      setProfile(prev => ({
-          ...prev,
-          fullName: updatedUser.fullName,
-          contactNumber: updatedUser.contactNumber
-      }));
-      if (updatedUser.profileImagePath) {
-           // Use the API endpoint to fetch the image, with a timestamp to bust cache
-           setPreviewImage(`${API_BASE}/uploads/${updatedUser.profileImagePath}?t=${Date.now()}`);
-      }
-      setSelectedFile(null); // Clear file selection
-      
-      // Reset password fields
-      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      setChangePasswordMode(false);
-        
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "Error updating profile");
-    } finally {
-      setLoading(false);
+      updateBody.password = passwords.newPassword;
     }
-  };
+
+    const res = await fetch(`${API_BASE}/api/users/${userId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updateBody),
+    });
+
+    // 1. Parse the data ONCE
+    const resultData = await res.json();
+
+    // 2. Check if the response was actually successful
+    if (!res.ok) {
+      showToast(resultData.message || "Failed to update profile", "error");
+      setLoading(false);
+      return; // Stop here if server said no
+    }
+    
+    // 3. If we are here, it was successful
+    let updatedUser = resultData;
+
+    // ... Proceed with image upload logic ...
+    if (selectedFile) {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      
+      const imgRes = await fetch(`${API_BASE}/api/users/${userId}/profile-image`, {
+           method: "POST",
+           body: formData
+      });
+      
+      if (imgRes.ok) {
+           updatedUser = await imgRes.json();
+      }
+    }
+
+    showToast("Profile updated successfully!", "success");
+    
+    // Update local profile state with the new data from server
+    setProfile({
+        fullName: updatedUser.fullName,
+        email: updatedUser.email,
+        contactNumber: updatedUser.contactNumber
+    });
+
+    if (updatedUser.profileImagePath) {
+         setPreviewImage(`${API_BASE}/uploads/${updatedUser.profileImagePath}?t=${Date.now()}`);
+    }
+    
+    setSelectedFile(null); 
+    setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    setChangePasswordMode(false);
+      
+  } catch (err) {
+    console.error(err);
+    showToast("A network error occurred", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="ua-wrapper">
+      {toast.show && (
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ ...toast, show: false })} 
+      />
+    )}
       <div className="ua-card">
         <h2 className="ua-title">Update Profile</h2>
         

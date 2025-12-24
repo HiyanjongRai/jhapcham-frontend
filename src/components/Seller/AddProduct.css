@@ -1,9 +1,7 @@
-/* Container */
 .add-container {
-  padding: 30px;
+  padding: 0;
   width: 100%;
-  max-width: 900px;
-  margin: auto;
+  max-width: 1000px;
 }
 
 .add-container h1 {

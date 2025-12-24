@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getCurrentUserId } from "../../utils/authUtils"; // Corrected path
 import { API_BASE } from "../config/config";
 import api from "../../api/axios";
+import Toast from "../Toast/Toast";
 import "./UpdateAccount.css";
 
 export default function UpdateAccount({ onUpdateSuccess }) {
@@ -23,6 +24,11 @@ export default function UpdateAccount({ onUpdateSuccess }) {
   const [previewImage, setPreviewImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [changePasswordMode, setChangePasswordMode] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+
+  const showToast = (message, type) => {
+    setToast({ show: true, message, type });
+  };
 
   const userId = getCurrentUserId();
 
@@ -70,7 +76,9 @@ export default function UpdateAccount({ onUpdateSuccess }) {
 
       if (changePasswordMode && passwords.newPassword) {
         if (passwords.newPassword !== passwords.confirmPassword) {
-          throw new Error("New passwords do not match!");
+          showToast("New passwords do not match!", "error");
+          setLoading(false);
+          return;
         }
         formData.append("currentPassword", passwords.currentPassword);
         formData.append("newPassword", passwords.newPassword);
@@ -86,7 +94,7 @@ export default function UpdateAccount({ onUpdateSuccess }) {
         headers: { "Content-Type": "multipart/form-data" }
       });
 
-      alert("Profile updated successfully!");
+      showToast("Profile updated successfully!", "success");
       
       const updatedUser = res.data;
       setProfile(prev => ({
@@ -107,7 +115,7 @@ export default function UpdateAccount({ onUpdateSuccess }) {
         
     } catch (err) {
       console.error("Update error:", err);
-      alert(err.response?.data?.message || err.message || "Error updating profile");
+      showToast(err.response?.data?.message || err.message || "Error updating profile", "error");
     } finally {
       setLoading(false);
     }
@@ -115,6 +123,13 @@ export default function UpdateAccount({ onUpdateSuccess }) {
 
   return (
     <div className="ua-card">
+      {toast.show && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ ...toast, show: false })} 
+        />
+      )}
       <div className="ua-header">
         <h2 className="ua-title">Account Settings</h2>
         <p className="ua-subtitle">Update your personal information and profile picture.</p>

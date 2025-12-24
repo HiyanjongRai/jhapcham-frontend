@@ -1,12 +1,9 @@
 /* SellerProducts.css - Black & White Edition */
 .sp-container {
-  padding: 40px;
+  padding: 0;
   max-width: 1400px;
-  margin: 0 auto;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Outfit', 'Inter', sans-serif;
   color: #111;
-  background-color: #fff;
-  min-height: 100vh;
 }
 
 .sp-header {

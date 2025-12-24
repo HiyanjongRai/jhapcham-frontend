@@ -6,21 +6,25 @@ import MessageModal from "../Message/MessageModal";
 import ReportModal from "../Report/ReportModal";
 import FollowService from "./followService";
 import "./SellerProfilePage.css";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faStar,
-  faCheckCircle,
-  faPlus,
-  faBox,
-  faChartLine,
-  faCommentDots,
-  faTruck,
-  faUndo,
-  faMapMarkerAlt,
-  faCalendarAlt,
-  faStore,
-  faFlag
-} from "@fortawesome/free-solid-svg-icons";
+import { 
+  Star, 
+  CheckCircle, 
+  Plus, 
+  UserPlus, 
+  MessageSquare, 
+  Flag, 
+  Package, 
+  TrendingUp, 
+  MessageCircle, 
+  Truck, 
+  RotateCcw, 
+  MapPin, 
+  Calendar,
+  Store,
+  ChevronRight,
+  ShieldCheck,
+  Check
+} from "lucide-react";
 
 export default function SellerProfilePage() {
   const { id } = useParams(); // Seller ID
@@ -37,6 +41,8 @@ export default function SellerProfilePage() {
   useEffect(() => {
     loadSellerProfile();
     checkFollowStatus();
+    // Scroll to top on load
+    window.scrollTo(0, 0);
   }, [id]);
 
   // Fetch seller profile
@@ -57,6 +63,7 @@ export default function SellerProfilePage() {
 
   // Check if user is already following
   const checkFollowStatus = async () => {
+    if (!customerId) return;
     try {
       const isFollowing = await FollowService.isFollowing(customerId, id);
       setIsFollowing(isFollowing);
@@ -67,18 +74,21 @@ export default function SellerProfilePage() {
 
   // Toggle Follow / Unfollow
   const toggleFollow = async () => {
+    if (!customerId) {
+      navigate('/login');
+      return;
+    }
+    
     try {
       if (isFollowing) {
         // UNFOLLOW
         await FollowService.unfollowSeller(customerId, id);
         setIsFollowing(false);
-        // Optimize: Update local count immediately to reflect change without re-fetching
-         setSeller(prev => ({...prev, followerCount: (prev.followerCount || 0) - 1}));
+        setSeller(prev => ({...prev, followerCount: (prev.followerCount || 0) - 1}));
       } else {
         // FOLLOW
         await FollowService.followSeller(customerId, id);
         setIsFollowing(true);
-        // Optimize: Update local count immediately
         setSeller(prev => ({...prev, followerCount: (prev.followerCount || 0) + 1}));
       }
     } catch (err) {
@@ -86,25 +96,25 @@ export default function SellerProfilePage() {
     }
   };
 
-  if (loading) return <div className="spp-loading">Loading...</div>;
-  if (!seller) return <div className="spp-loading">Seller Not Found</div>;
+  if (loading) return <div className="spp-loading">Loading store profile...</div>;
+  if (!seller) return <div className="spp-loading">Store Not Found</div>;
 
   const products = seller.products || [];
 
   return (
     <div className="spp-wrapper">
-      {/* HEADER */}
+      {/* PREMIUM HEADER */}
       <div className="spp-header">
         <div className="spp-header-content">
           <div className="spp-logo-box">
-            {seller.logoImagePath ? (
+            {(seller.logoImagePath || seller.profileImagePath) ? (
               <img
-                src={`${API_BASE}/${seller.logoImagePath}`}
-                alt="Logo"
+                src={`${API_BASE}/${seller.logoImagePath || seller.profileImagePath}`}
+                alt={seller.storeName}
                 className="spp-store-logo"
               />
             ) : (
-              <FontAwesomeIcon icon={faStore} className="spp-store-icon" />
+              <Store size={64} className="spp-store-icon" />
             )}
           </div>
 
@@ -113,179 +123,189 @@ export default function SellerProfilePage() {
 
             <div className="spp-header-meta">
               <div className="spp-rating-row">
-                {[...Array(5)].map((_, i) => (
-                  <FontAwesomeIcon
-                    key={i}
-                    icon={faStar}
-                    className={i < 4 ? "star-full" : "star-empty"}
-                  />
-                ))}
-                <span className="spp-rating-text">4.8 (3450 reviews)</span>
+                <div style={{ display: 'flex' }}>
+                   {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={16}
+                      fill={i < 4 ? "#facc15" : "transparent"}
+                      className={i < 4 ? "star-full" : "star-empty"}
+                    />
+                  ))}
+                </div>
+                <span className="spp-rating-text">4.8 (3,450 Reviews)</span>
               </div>
 
-              <div className="spp-rating-row" style={{ marginLeft: "1.5rem" }}>
-                <FontAwesomeIcon icon={faPlus} className="spp-icon-mr" style={{ color: '#FFD700' }} />
+              <div className="spp-rating-row">
+                <UserPlus size={16} />
                 <span className="spp-rating-text">{seller.followerCount || 0} Followers</span>
               </div>
 
               {seller.isVerified && (
                 <div className="spp-verified-badge">
-                  <FontAwesomeIcon icon={faCheckCircle} /> Verified Seller
+                  <ShieldCheck size={18} />
+                  Verified Store
                 </div>
               )}
             </div>
           </div>
 
-          {/* FOLLOW / UNFOLLOW BUTTON */}
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div className="spp-header-actions">
             <button
-              className="spp-follow-btn"
+              className={`spp-action-btn spp-follow-btn ${isFollowing ? 'following' : ''}`}
               onClick={toggleFollow}
-              style={{ opacity: isFollowing ? 0.7 : 1 }}
             >
-              <FontAwesomeIcon icon={faPlus} />
-              {isFollowing ? " Following" : " Follow Seller"}
+              {isFollowing ? <Check size={20} /> : <Plus size={20} />}
+              {isFollowing ? "Following" : "Follow Store"}
             </button>
 
             <button
-              className="spp-follow-btn"
+              className="spp-action-btn spp-message-btn"
               onClick={() => setShowMessageModal(true)}
-              style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
             >
-              <FontAwesomeIcon icon={faCommentDots} />
-              {" Message Store"}
+              <MessageSquare size={20} />
+              Message
             </button>
 
              <button
-              className="spp-follow-btn"
+              className="spp-action-btn spp-report-btn"
               onClick={() => setShowReportModal(true)}
-              style={{ background: '#ef4444' }}
+              title="Report Store"
             >
-              <FontAwesomeIcon icon={faFlag} />
-              {" Report"}
+              <Flag size={20} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* MAIN LAYOUT */}
+      {/* MAIN CONTENT AREA */}
       <div className="spp-main-layout">
-        {/* LEFT */}
+        {/* LEFT COLUMN: About & Stats */}
         <div className="spp-left-col">
           <div className="spp-card">
             <div className="spp-card-header">
               <h3>
-                <FontAwesomeIcon icon={faStore} className="spp-icon-mr" /> About the
-                Seller
+                <Store size={22} className="spp-icon-accent" /> Store Overview
               </h3>
-              {seller.isVerified && (
-                <span className="spp-badge-black">
-                  <FontAwesomeIcon icon={faCheckCircle} /> Verified
-                </span>
-              )}
             </div>
 
             <div className="spp-card-body">
-              <h4 className="spp-subtitle">Store Description</h4>
-              <p className="spp-text">{seller.description}</p>
+              <div className="spp-subtitle">Store Description</div>
+              <p className="spp-text">{seller.description || "No description provided."}</p>
 
-              <h4 className="spp-subtitle mt-4">About the Seller</h4>
-              <p className="spp-text">{seller.about}</p>
+              {seller.about && (
+                <>
+                  <div className="spp-subtitle" style={{ marginTop: '32px' }}>Personal Journey</div>
+                  <p className="spp-text">{seller.about}</p>
+                </>
+              )}
 
-              <div className="spp-info-row mt-6">
-                <div className="spp-info-col">
-                  <label>Business Address</label>
-                  <div className="spp-val">
-                    <FontAwesomeIcon icon={faMapMarkerAlt} /> {seller.address}
+              <div className="spp-info-grid">
+                <div className="spp-info-item">
+                  <label>Service Area</label>
+                  <div className="spp-info-val">
+                    <MapPin size={18} className="spp-text-muted" /> {seller.address || "Global"}
                   </div>
                 </div>
 
-                <div className="spp-info-col">
-                  <label>Member Since</label>
-                  <div className="spp-val">
-                    <FontAwesomeIcon icon={faCalendarAlt} />{" "}
-                    {seller.joinedDate ? seller.joinedDate.split("T")[0] : "N/A"}
+                <div className="spp-info-item">
+                  <label>Partnership Since</label>
+                  <div className="spp-info-val">
+                    <Calendar size={18} className="spp-text-muted" />{" "}
+                    {seller.joinedDate ? new Date(seller.joinedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "N/A"}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* STATS */}
-          <div className="spp-card mt-6">
-            <h3 className="spp-card-title">Performance Statistics</h3>
-
+          <div className="spp-stats-container">
             <div className="spp-stats-grid">
-              <div className="spp-stat-box">
-                <FontAwesomeIcon icon={faBox} className="spp-stat-icon" />
+              <div className="spp-stat-card">
+                <div className="spp-stat-header">
+                  <div className="spp-stat-icon-wrap"><Package size={20} /></div>
+                  <div className="spp-stat-label">Catalog Size</div>
+                </div>
                 <div className="spp-stat-val">{products.length}</div>
-                <div className="spp-stat-label">Total Products</div>
+                <div className="spp-stat-label">Active Products</div>
               </div>
 
-              <div className="spp-stat-box">
-                <FontAwesomeIcon icon={faChartLine} className="spp-stat-icon" />
-                <div className="spp-stat-val">21500</div>
-                <div className="spp-stat-label">Total Sales</div>
+              <div className="spp-stat-card">
+                <div className="spp-stat-header">
+                  <div className="spp-stat-icon-wrap"><TrendingUp size={20} /></div>
+                  <div className="spp-stat-label">Total Sales</div>
+                </div>
+                <div className="spp-stat-val">2.5k+</div>
+                <div className="spp-stat-label">Deliveries completed</div>
               </div>
 
-              <div className="spp-stat-box">
-                <FontAwesomeIcon icon={faCommentDots} className="spp-stat-icon" />
+              <div className="spp-stat-card">
+                <div className="spp-stat-header">
+                  <div className="spp-stat-icon-wrap"><MessageCircle size={20} /></div>
+                  <div className="spp-stat-label">Avg. Response</div>
+                </div>
                 <div className="spp-stat-val">98%</div>
-                <div className="spp-stat-label">Response Rate</div>
+                <div className="spp-stat-label">Within 2 hours</div>
               </div>
 
-              <div className="spp-stat-box">
-                <FontAwesomeIcon icon={faTruck} className="spp-stat-icon" />
-                <div className="spp-stat-val">2.1 days</div>
-                <div className="spp-stat-label">Avg Delivery</div>
-              </div>
-
-              <div className="spp-stat-box">
-                <FontAwesomeIcon icon={faUndo} className="spp-stat-icon" />
-                <div className="spp-stat-val">1.5%</div>
-                <div className="spp-stat-label">Return Rate</div>
+              <div className="spp-stat-card">
+                <div className="spp-stat-header">
+                  <div className="spp-stat-icon-wrap"><Truck size={20} /></div>
+                  <div className="spp-stat-label">Logistics Score</div>
+                </div>
+                <div className="spp-stat-val">4.9</div>
+                <div className="spp-stat-label">Delivery satisfaction</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT COLUMN: Sidebar Bits */}
         <div className="spp-right-col">
-          <div className="spp-card">
-            <h3 className="spp-card-title">Quick Stats</h3>
-            <div className="spp-quick-stat-row">
-              <span>Response Rate</span>
-              <span>98%</span>
+          <div className="spp-widget">
+            <h3 className="spp-widget-title">Quick Performance</h3>
+            <div className="spp-quick-row">
+              <span className="spp-quick-label">On-time Shipping</span>
+              <span className="spp-quick-val">99%</span>
             </div>
-            <div className="spp-quick-stat-row">
-              <span>Avg Delivery</span>
-              <span>2.1 days</span>
+            <div className="spp-quick-row">
+              <span className="spp-quick-label">Return Rate</span>
+              <span className="spp-quick-val">0.8%</span>
             </div>
-            <div className="spp-quick-stat-row no-border">
-              <span>Return Rate</span>
-              <span>1.5%</span>
-            </div>
-          </div>
-
-          <div className="spp-card mt-4">
-            <h3 className="spp-card-title">Seller Badges</h3>
-            <div className="spp-badges-row">
-              <span className="spp-badge-dark">Top Seller</span>
-              <span className="spp-badge-dark">Trusted</span>
-              <span className="spp-badge-dark">Fast Shipper</span>
+            <div className="spp-quick-row">
+              <span className="spp-quick-label">Cancellation Rate</span>
+              <span className="spp-quick-val">0.2%</span>
             </div>
           </div>
 
-          <div className="spp-card mt-4">
-            <h3 className="spp-card-title">Contact Information</h3>
-            <p>{seller.address}</p>
-            <p className="mt-3">{seller.joinedDate?.split("T")[0]}</p>
+          <div className="spp-widget">
+            <h3 className="spp-widget-title">Recognitions</h3>
+            <div className="spp-badge-list">
+              <span className="spp-status-badge">Elite Merchant</span>
+              <span className="spp-status-badge">Trusted Brand</span>
+              <span className="spp-status-badge">Express Shipper</span>
+              <span className="spp-status-badge">Carbon Neutral</span>
+            </div>
+          </div>
+
+          <div className="spp-card" style={{ padding: '24px' }}>
+             <h3 className="spp-subtitle">Transparency Score</h3>
+             <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '16px', textAlign: 'center' }}>
+                <ShieldCheck size={40} color="#10b981" />
+                <div style={{ fontSize: '1.25rem', fontWeight: '800', marginTop: '10px' }}>Excellent</div>
+                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Verified Business Entity</div>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* PRODUCTS */}
-      <div className="spp-section-title">Featured Products</div>
+      {/* PRODUCTS SECTION */}
+      <div className="spp-section-header">
+        <h2 className="spp-section-title">Latest & Trending</h2>
+        <div style={{ color: '#6366f1', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          View All Collection <ChevronRight size={20} />
+        </div>
+      </div>
 
       <div className="spp-products-grid">
         {products.map((p) => (
@@ -306,26 +326,30 @@ export default function SellerProfilePage() {
 
               <div className="spp-prod-rating">
                 {[...Array(5)].map((_, i) => (
-                  <FontAwesomeIcon
+                  <Star
                     key={i}
-                    icon={faStar}
+                    size={14}
+                    fill={i < 4 ? "#facc15" : "transparent"}
                     className={i < 4 ? "star-full" : "star-empty"}
                   />
                 ))}
-                <span className="ml-1">4.5</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '700', marginLeft: '6px' }}>4.8</span>
               </div>
 
-              <div className="spp-prod-price">₹{p.price}</div>
+              <div className="spp-prod-price">{p.price.toLocaleString()}</div>
             </div>
           </div>
         ))}
 
         {products.length === 0 && (
-          <div className="spp-no-products">No products found</div>
+          <div className="spp-no-products">
+            <Package size={48} className="spp-text-muted" style={{ marginBottom: '16px' }} />
+            <p>This store hasn't listed any products yet.</p>
+          </div>
         )}
       </div>
 
-      {/* Message Modal */}
+      {/* MODALS */}
       <MessageModal
         isOpen={showMessageModal}
         onClose={() => setShowMessageModal(false)}
@@ -338,7 +362,7 @@ export default function SellerProfilePage() {
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
         type="SELLER"
-        reportedEntityId={seller.userId} // Reporting the User ID of seller
+        reportedEntityId={seller.userId}
         entityName={seller.storeName}
       />
     </div>

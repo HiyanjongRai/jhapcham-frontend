@@ -440,7 +440,15 @@ export default function ProductDetailPage() {
           {/* Seller Card */}
           <div className="pd-seller-card" onClick={() => navigate(`/seller/${product.sellerId}`)}>
             <div className="pd-seller-avatar">
-              <Store size={24} color="#1a1a1a" />
+              {product.logoImagePath || product.profileImagePath ? (
+                <img 
+                  src={`${API_BASE}/${product.logoImagePath || product.profileImagePath}`} 
+                  alt={product.sellerStoreName} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <Store size={24} color="#1a1a1a" />
+              )}
             </div>
             <div className="sellerProfile">
 

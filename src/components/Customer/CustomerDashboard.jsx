@@ -52,6 +52,9 @@ export default function CustomerDashboard() {
     try {
       const profileRes = await api.get(`/api/users/${userId}`);
       setUserProfile(profileRes.data);
+      if (profileRes.data.email) {
+          localStorage.setItem("userEmail", profileRes.data.email);
+      }
     } catch (err) {
       console.error("Error fetching profile:", err);
     }

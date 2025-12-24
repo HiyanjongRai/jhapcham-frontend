@@ -169,51 +169,31 @@ export default function SellerOrders() {
         <div className="so-header-top">
           <div>
             <h1 className="so-title">Order Management</h1>
-            <p className="so-subtitle">Manage and track all your customer orders</p>
+            <p className="so-subtitle">Monitor and process your merchant sales</p>
           </div>
           <button className="so-refresh-btn" onClick={loadOrders}>
-            <Package size={16} /> Refresh List
+            <Package size={18} strokeWidth={2.5} /> 
+            <span>Refresh Workspace</span>
           </button>
         </div>
       </div>
 
-      {/* Stats Grid code ... */}
       <div className="so-stats">
-        <div className="so-stat-card total">
-          <div className="so-stat-icon"><Package size={24} /></div>
-          <div className="so-stat-content">
-            <div className="so-stat-label">Total Orders</div>
-            <div className="so-stat-value">{stats.total}</div>
+        {[
+          { key: 'total', label: 'Total Orders', value: stats.total, icon: <Package size={24} />, color: 'total' },
+          { key: 'pending', label: 'New Orders', value: stats.pending, icon: <Truck size={24} />, color: 'pending' },
+          { key: 'processing', label: 'In Process', value: stats.processing, icon: <Edit2 size={24} />, color: 'processing' },
+          { key: 'shipped', label: 'Outbound', value: stats.shipped, icon: <Truck size={24} />, color: 'shipped' },
+          { key: 'delivered', label: 'Completed', value: stats.delivered, icon: <CheckCircle size={24} />, color: 'delivered' },
+        ].map((s) => (
+          <div key={s.key} className={`so-stat-card ${s.color}`}>
+            <div className="so-stat-icon">{s.icon}</div>
+            <div className="so-stat-content">
+              <div className="so-stat-label">{s.label}</div>
+              <div className="so-stat-value">{s.value}</div>
+            </div>
           </div>
-        </div>
-        <div className="so-stat-card pending">
-          <div className="so-stat-icon"><Truck size={24} /></div>
-          <div className="so-stat-content">
-            <div className="so-stat-label">New Orders</div>
-            <div className="so-stat-value">{stats.pending}</div>
-          </div>
-        </div>
-        <div className="so-stat-card processing">
-          <div className="so-stat-icon"><Edit2 size={24} /></div>
-          <div className="so-stat-content">
-            <div className="so-stat-label">Processing</div>
-            <div className="so-stat-value">{stats.processing}</div>
-          </div>
-        </div>
-        <div className="so-stat-card shipped">
-          <div className="so-stat-icon"><Truck size={24} /></div>
-          <div className="so-stat-content">
-            <div className="so-stat-label">Shipped</div>
-            <div className="so-stat-value">{stats.shipped}</div>
-          </div>
-        </div>
-        <div className="so-stat-card delivered">
-          <div className="so-stat-icon"><CheckCircle size={24} /></div>
-          <div className="so-stat-content">
-            <div className="so-stat-label">Delivered</div>
-            <div className="so-stat-value">{stats.delivered}</div>
-          </div>
-        </div>
+        ))}
       </div>
 
       <div className="so-filters">
@@ -223,17 +203,26 @@ export default function SellerOrders() {
             className={`so-filter-btn ${statusFilter === status ? "active" : ""}`}
             onClick={() => setStatusFilter(status)}
           >
-            {status === "NEW" ? "New Orders" : status}
+            {status === "NEW" ? "Incoming" : status}
           </button>
         ))}
       </div>
 
-      {filteredOrders.length === 0 ? (
-        <div className="so-empty">No orders found.</div>
+      {loading ? (
+        <div className="so-empty">
+          <div className="so-spinner" role="status"></div>
+          <p style={{ marginTop: '1.5rem', fontWeight: 600, color: '#475569' }}>Synchronizing your workspace...</p>
+        </div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="so-empty">
+          <Package size={48} style={{ marginBottom: '1rem', opacity: 0.2 }} />
+          <h3>No Orders Found</h3>
+          <p>You haven't received any orders in this category yet.</p>
+        </div>
       ) : (
         <div className="so-orders-list">
           {filteredOrders.map((order) => {
-            const currentId = order.id || order.orderId; // Fallback
+            const currentId = order.id || order.orderId;
             return (
               <div key={currentId} className="so-order-card">
                 <div className="so-order-header">
@@ -241,12 +230,15 @@ export default function SellerOrders() {
                     <h3 className="so-order-id">
                         {order.productNames || `Order #${String(currentId).padStart(4, "0")}`}
                     </h3>
-                    <div style={{fontSize: '0.8rem', color: '#666', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                        <span style={{fontWeight:'600'}}>#{String(currentId).padStart(4, "0")}</span>
-                        • Customer: {order.customerName || "Guest"}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{fontWeight:'700', color: '#6366f1'}}>#{String(currentId).padStart(4, "0")}</span>
+                        <span style={{ color: '#94a3b8' }}>•</span>
+                        <span style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>
+                          {order.customerName || "Anonymous Customer"}
+                        </span>
                         <button 
                           className="so-action-btn secondary" 
-                          style={{ padding: '2px 6px', fontSize: '0.75rem', height: '24px' }}
+                          style={{ padding: '4px 10px', fontSize: '0.75rem', height: '28px', borderRadius: '8px' }}
                           onClick={() => setMsgModal({
                             isOpen: true,
                             recipientId: order.customerId,
@@ -254,33 +246,26 @@ export default function SellerOrders() {
                             type: 'store'
                           })}
                         >
-                          <MessageSquare size={12} /> Message
+                          <MessageSquare size={13} /> Chat
                         </button>
                     </div>
                   </div>
                   <div className="so-order-meta">
+                    <span style={{fontSize: '0.9rem', fontWeight: '600', color: '#0f172a', background: '#f1f5f9', padding: '6px 12px', borderRadius: '8px'}}>
+                      ${(order.totalPrice || order.grandTotal || 0).toFixed(2)}
+                    </span>
                     <span className={`so-badge so-badge-${(order.status || 'PENDING').toLowerCase()}`}>
                       {order.status}
                     </span>
-                    <span style={{fontSize: '0.875rem', color: '#6b7280'}}>
-                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ""}
+                    <span style={{fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500}}>
+                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ""}
                     </span>
-                    <span style={{fontSize: '0.875rem', fontWeight: '600', color: '#111827'}}>
-                      ${(order.totalPrice || order.grandTotal || 0).toFixed(2)}
-                    </span>
-                     {order.paymentMethod && (
-                         <span className="so-badge" style={{background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db'}}>
-                          {order.paymentMethod}
-                        </span>
-                     )}
                   </div>
                 </div>
 
                 <div className="so-order-body">
-                  {/* For DELIVERED orders, we show EVERYTHING directly as a receipt/history view */}
                   {order.status === 'DELIVERED' ? (
                     <div className="so-delivered-view">
-                       {/* Customer Section (Always shown for Delivered) */}
                        {orderDetails[currentId] ? (
                           <div className="so-delivered-details">
                             <div className="so-customer-info-box">
@@ -296,152 +281,151 @@ export default function SellerOrders() {
                                  className="so-customer-avatar-sm"
                               />
                               <div className="so-customer-text">
-                                <h4 className="so-delivered-customer-name">
+                                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>
                                   {orderDetails[currentId].customerName || "Guest"}
-                                  <span className="so-delivered-phone">({orderDetails[currentId].customerPhone || "N/A"})</span>
+                                  <span style={{ color: '#94a3b8', marginLeft: '8px', fontWeight: 500, fontSize: '0.9rem' }}>
+                                    ({orderDetails[currentId].customerPhone || "N/A"})
+                                  </span>
                                 </h4>
                                 <div className="so-delivered-address">
-                                  <MapPin size={14} />
+                                  <MapPin size={14} style={{ color: '#6366f1' }} />
                                   <span>{orderDetails[currentId].shippingAddress || "No address provided"}</span>
                                 </div>
                               </div>
                             </div>
 
                             <div className="so-price-breakdown">
-                               <div className="so-price-row">
-                                  <span>Subtotal</span>
-                                  <span>${(orderDetails[currentId].itemsTotal || 0).toFixed(2)}</span>
+                               <div className="so-price-row" style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+                                  <span style={{ color: '#64748b' }}>Subtotal</span>
+                                  <span style={{ fontWeight: 600 }}>${(orderDetails[currentId].itemsTotal || 0).toFixed(2)}</span>
                                </div>
-                               <div className="so-price-row highlight">
-                                  <span>Shipping Fee</span>
-                                  <span>+ ${(orderDetails[currentId].shippingFee || 0).toFixed(2)}</span>
+                               <div className="so-price-row" style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', color: '#6366f1' }}>
+                                  <span style={{ fontWeight: 600 }}>Logistics</span>
+                                  <span style={{ fontWeight: 700 }}>+ ${(orderDetails[currentId].shippingFee || 0).toFixed(2)}</span>
                                </div>
                                <div className="so-price-row total">
-                                  <span>Total Received</span>
+                                  <span>Revenue</span>
                                   <span>${(orderDetails[currentId].grandTotal || 0).toFixed(2)}</span>
                                </div>
                             </div>
                           </div>
                        ) : (
-                          <div className="so-load-details-prompt">
+                          <div style={{ textAlign: 'center', padding: '1rem' }}>
                              <button className="so-action-btn secondary" onClick={() => toggleOrderItems(currentId)}>
-                                <ChevronDown size={14} /> Load Order Receipt
+                                <ChevronDown size={14} /> View Order Summary
                              </button>
                           </div>
                        )}
 
-                       {/* Items Table (Always shown for Delivered if loaded) */}
                        {orderDetails[currentId] && (
-                          <div className="so-items-summary">
-                             <table className="so-items-table">
-                                <thead>
-                                  <tr>
-                                    <th>Product</th>
-                                    <th>Qty</th>
-                                    <th>Total</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {orderDetails[currentId].items.map((item) => (
-                                    <tr key={item.id || Math.random()}>
-                                      <td>
-                                        <div style={{ fontWeight: '500', fontSize: '0.9rem' }}>{item.product?.name || item.name}</div>
-                                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                           {item.selectedColor} {item.selectedStorage}
-                                        </div>
-                                      </td>
-                                      <td>{item.quantity}</td>
-                                      <td>${(item.unitPrice * item.quantity).toFixed(2)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                             </table>
-                          </div>
+                          <table className="so-items-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                             <thead>
+                                <tr>
+                                  <th style={{ textAlign: 'left' }}>Product Details</th>
+                                  <th style={{ textAlign: 'center' }}>Qty</th>
+                                  <th style={{ textAlign: 'right' }}>Amount</th>
+                                </tr>
+                             </thead>
+                             <tbody>
+                               {orderDetails[currentId].items.map((item) => (
+                                 <tr key={item.id || Math.random()}>
+                                   <td style={{ padding: '1rem' }}>
+                                     <div style={{ fontWeight: '700', color: '#1e293b' }}>{item.product?.name || item.name}</div>
+                                     <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                                        {item.selectedColor} | {item.selectedStorage}
+                                     </div>
+                                   </td>
+                                   <td style={{ textAlign: 'center', fontWeight: '600' }}>{item.quantity}</td>
+                                   <td style={{ textAlign: 'right', fontWeight: '700' }}>${(item.unitPrice * item.quantity).toFixed(2)}</td>
+                                 </tr>
+                               ))}
+                             </tbody>
+                          </table>
                        )}
                     </div>
                   ) : (
                     <>
-                      {/* Standard View (Collapsible) for other statuses */}
                       {expandedOrders[currentId] && orderDetails[currentId] ? (
-                         <div className="so-customer-section">
+                         <div className="so-customer-section" style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', padding: '1.5rem', borderRadius: '16px', marginTop: '1rem' }}>
                             <img 
                                src={
                                  orderDetails[currentId].customerProfileImagePath
                                    ? (orderDetails[currentId].customerProfileImagePath.startsWith('http') 
                                        ? orderDetails[currentId].customerProfileImagePath 
                                        : `${API_BASE}/${orderDetails[currentId].customerProfileImagePath}`)
-                                   : "https://via.placeholder.com/60"
+                                   : "https://via.placeholder.com/64"
                                }
                                alt="Customer"
                                style={{
-                                 width: '60px', height: '60px', 
-                                 borderRadius: '50%', objectFit: 'cover', 
-                                 border: '2px solid #eee', marginRight: '1rem'
+                                 width: '64px', height: '64px', 
+                                 borderRadius: '16px', objectFit: 'cover', 
+                                 boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', marginRight: '1.5rem'
                                }}
                             />
                             <div className="so-customer-info">
-                              <h4>
+                              <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>
                                 {orderDetails[currentId].customerName || "Guest"}
-                                <span style={{fontSize:'0.8em', fontWeight:'normal', marginLeft:'10px'}}>
+                                <span style={{fontSize:'0.85rem', fontWeight:500, color: '#94a3b8', marginLeft:'12px'}}>
                                     ({orderDetails[currentId].customerPhone || "N/A"})
                                 </span>
                               </h4>
-                              <p>📧 {orderDetails[currentId].customerEmail || "N/A"}</p>
-                              <p>📍 {orderDetails[currentId].shippingAddress || "N/A"}</p>
-                              {order.assignedBranch && (
-                                  <p style={{marginTop: '4px', color: '#2563eb'}}>Currently Assigned To: <strong>{order.assignedBranch}</strong></p>
-                              )}
+                              <p style={{ margin: '4px 0', color: '#64748b', fontSize: '0.9rem' }}>
+                                <span style={{ marginRight: '8px' }}>📧</span> {orderDetails[currentId].customerEmail || "N/A"}
+                              </p>
+                              <p style={{ margin: '4px 0', color: '#64748b', fontSize: '0.9rem' }}>
+                                <MapPin size={14} style={{ marginRight: '4px', verticalAlign: 'middle', color: '#6366f1' }} /> {orderDetails[currentId].shippingAddress || "N/A"}
+                              </p>
                             </div>
                          </div>
                       ) : (
-                         <div style={{padding: '0 1rem', color: '#888', fontStyle: 'italic', fontSize: '0.9rem'}}>
-                            {order.items?.length || order.totalItems || 0} items • Click to view details
+                         <div style={{padding: '1rem 0', color: '#94a3b8', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer'}} onClick={() => toggleOrderItems(currentId)}>
+                            + {order.items?.length || order.totalItems || 0} items identified in this shipment. Click to expand.
                          </div>
                       )}
 
                       {order.status !== 'CANCELED' && (
                         <div className="so-actions">
-                          <select
-                            className="so-branch-select"
-                            value={orderBranches[currentId] || ""}
-                            onChange={(e) =>
-                              setOrderBranches((prev) => ({
-                                ...prev,
-                                [currentId]: e.target.value,
-                              }))
-                            }
-                            style={{ marginRight: '0.5rem' }}
-                          >
-                            <option value="">Select Branch</option>
-                            {branches.map((b) => (
-                              <option key={b} value={b}>{b}</option>
-                            ))}
-                          </select>
+                          <div style={{ display: 'flex', gap: '0.75rem', flex: 1 }}>
+                            <select
+                              className="so-branch-select"
+                              value={orderBranches[currentId] || ""}
+                              onChange={(e) =>
+                                setOrderBranches((prev) => ({
+                                  ...prev,
+                                  [currentId]: e.target.value,
+                                }))
+                              }
+                            >
+                              <option value="">Logistics Hub</option>
+                              {branches.map((b) => (
+                                <option key={b} value={b}>{b}</option>
+                              ))}
+                            </select>
 
-                          <select
-                            className="so-branch-select"
-                            value={selectedStages[currentId] || ""}
-                            onChange={(e) =>
-                              setSelectedStages((prev) => ({
-                                ...prev,
-                                [currentId]: e.target.value,
-                              }))
-                            }
-                            style={{ marginRight: '0.5rem', minWidth: '160px' }}
-                          >
-                            <option value="">Select Action</option>
-                            <option value="PROCESSING">Process Order</option>
-                            <option value="SHIPPED">Ship Order (To Branch)</option>
-                            <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
-                            <option value="DELIVERED">Mark Delivered</option>
-                            <option value="CANCELED">Cancel Order</option>
-                          </select>
+                            <select
+                              className="so-branch-select"
+                              value={selectedStages[currentId] || ""}
+                              onChange={(e) =>
+                                setSelectedStages((prev) => ({
+                                  ...prev,
+                                  [currentId]: e.target.value,
+                                }))
+                              }
+                            >
+                              <option value="">Standard Action</option>
+                              <option value="PROCESSING">Confirm & Process</option>
+                              <option value="SHIPPED">Dispatch to Hub</option>
+                              <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                              <option value="DELIVERED">Complete Delivery</option>
+                              <option value="CANCELED">Reject Order</option>
+                            </select>
+                          </div>
 
                           <button 
                             onClick={() => {
                               const stage = selectedStages[currentId];
                               if (!stage) {
-                                showToast("Please select an action/stage first", "info");
+                                showToast("Please define an action sequence.", "info");
                                 return;
                               }
                               updateStatus(currentId, stage);
@@ -449,70 +433,74 @@ export default function SellerOrders() {
                             className="so-action-btn primary"
                             disabled={!selectedStages[currentId]}
                           >
-                            <CheckCircle size={16} /> Update Status
+                            Execute Update
                           </button>
                         </div>
                       )}
 
-                      <div>
+                      <div style={{ marginTop: '0.5rem' }}>
                         <div 
                           className="so-items-toggle"
+                          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
                           onClick={() => toggleOrderItems(currentId)}
                         >
-                          {expandedOrders[currentId] ? 'Hide' : 'Show'} Order Details
-                          {expandedOrders[currentId] ? <ChevronUp size={16} style={{display: 'inline', marginLeft: '0.5rem'}} /> : <ChevronDown size={16} style={{display: 'inline', marginLeft: '0.5rem'}} />}
+                          <span style={{ fontSize: '0.85rem' }}>{expandedOrders[currentId] ? 'Compact View' : 'Audit Full Details'}</span>
+                          {expandedOrders[currentId] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         </div>
 
                         {expandedOrders[currentId] && orderDetails[currentId] && (
-                          <table className="so-items-table">
-                            <thead>
-                              <tr>
-                                <th>Image</th>
-                                <th>Product</th>
-                                <th>Qty</th>
-                                <th>Total</th>
-                                <th>Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {orderDetails[currentId].items.map((item) => (
-                                <tr key={item.id || Math.random()}>
-                                  <td>
-                                    <img
-                                      src={buildImageUrl(item.product?.imagePath || item.imagePath)}
-                                      alt={item.product?.name || item.name}
-                                      className="so-item-img"
-                                    />
-                                  </td>
-                                  <td>
-                                    <div style={{ fontWeight: '500' }}>{item.product?.name || item.name}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                                      {item.selectedColor} {item.selectedStorage}
-                                    </div>
-                                  </td>
-                                  <td>{item.quantity}</td>
-                                  <td>${(item.unitPrice * item.quantity).toFixed(2)}</td>
-                                  <td>
-                                    {(item.product?.id || item.productId) && (
+                          <div style={{ marginTop: '1rem' }}>
+                            <table className="so-items-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                              <thead>
+                                <tr>
+                                  <th style={{ width: '60px' }}>Item</th>
+                                  <th>Description</th>
+                                  <th style={{ textAlign: 'center' }}>Qty</th>
+                                  <th style={{ textAlign: 'right' }}>Total</th>
+                                  <th style={{ width: '60px' }}></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {orderDetails[currentId].items.map((item) => (
+                                  <tr key={item.id || Math.random()}>
+                                    <td>
+                                      <img
+                                        src={buildImageUrl(item.product?.imagePath || item.imagePath)}
+                                        alt={item.product?.name || item.name}
+                                        className="so-item-img"
+                                        style={{ border: '1px solid #f1f5f9' }}
+                                      />
+                                    </td>
+                                    <td>
+                                      <div style={{ fontWeight: '700', color: '#1e293b' }}>{item.product?.name || item.name}</div>
+                                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                                        {item.selectedColor} • {item.selectedStorage}
+                                      </div>
+                                    </td>
+                                    <td style={{ textAlign: 'center', fontWeight: '600' }}>{item.quantity}</td>
+                                    <td style={{ textAlign: 'right', fontWeight: '700' }}>${(item.unitPrice * item.quantity).toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right' }}>
                                       <button
                                         className="so-action-btn"
                                         onClick={() => navigate('/seller/products', { state: { editProductId: item.product?.id || item.productId } })}
-                                        style={{ background: '#000', color: '#fff', borderRadius: '6px', border: 'none', padding: '0.4rem' }}
+                                        style={{ background: '#f1f5f9', color: '#475569', borderRadius: '10px', border: 'none', padding: '0.5rem', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                       >
-                                        <Edit2 size={14} />
+                                        <Edit2 size={12} />
                                       </button>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                            <tfoot>
-                              <tr>
-                                <td colSpan="3" style={{textAlign: 'right'}}><strong>Grand Total</strong></td>
-                                <td colSpan="2"><strong>${(orderDetails[currentId].grandTotal || 0).toFixed(2)}</strong></td>
-                              </tr>
-                            </tfoot>
-                          </table>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '1.25rem 1rem', background: '#f8fafc', borderRadius: '0 0 16px 16px', border: '1px solid #f1f5f9', borderTop: 'none' }}>
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Settlement Value</div>
+                                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>
+                                    ${(orderDetails[currentId].grandTotal || 0).toFixed(2)}
+                                  </div>
+                                </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </>

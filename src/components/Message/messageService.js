@@ -72,3 +72,27 @@ export const sendStoreMessage = async (senderId, receiverId, content) => {
 export const sendReply = async (senderId, receiverId, content) => {
   return sendMessage(receiverId, content, null);
 };
+
+// Get unread message count
+export const getUnreadCount = async () => {
+  try {
+    const response = await api.get("/api/messages/unread-count");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching unread count:", error);
+    return 0;
+  }
+};
+
+// Mark conversation as read
+export const markAsRead = async (senderId) => {
+  try {
+    await api.post(`/api/messages/mark-read/${senderId}`);
+    // Dispatch event to update unread count in Navbar
+    window.dispatchEvent(new CustomEvent('messages-updated'));
+    return true;
+  } catch (error) {
+    console.error("Error marking as read:", error);
+    return false;
+  }
+};

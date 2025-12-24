@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, Send, ArrowLeft, User, ChevronRight } from "lucide-react";
 import { getCurrentUserId } from "../AddCart/cartUtils";
-import { getInbox, getSentMessages, getConversation, sendMessage } from "./messageService";
+import { getInbox, getSentMessages, getConversation, sendMessage, markAsRead } from "./messageService";
 import { API_BASE } from "../config/config";
 import "./MessagesPage.css";
 
@@ -56,7 +56,7 @@ export default function MessagesPage() {
             userImage: otherUserProfile,
             lastMessage: lastMessagePreview,
             lastMessageTime: msg.createdAt,
-            unread: !isSender && !msg.read, // Use 'read' field from DTO
+            unread: !isSender && (msg.isRead === false || msg.read === false), 
           };
         }
       });
@@ -86,7 +86,8 @@ export default function MessagesPage() {
       setConversationMessages(sorted);
       setSelectedConversation({ userId: otherUserId, userName: otherUserName });
       
-      // Mark read logic would go here if backend supported it
+      // Mark as read when opening conversation
+      await markAsRead(otherUserId);
     } catch (error) {
       console.error("Failed to load conversation:", error);
     }
@@ -126,7 +127,7 @@ export default function MessagesPage() {
 
   return (
     <div className="messages-page">
-      <div className="messages-container">
+      <div className={`messages-container ${selectedConversation ? "viewing-conversation" : ""}`}>
         {/* Conversation List */}
         {!selectedConversation ? (
           <div className="messages-list">
@@ -151,7 +152,12 @@ export default function MessagesPage() {
                   >
                     <div className="conversation-avatar">
                       {conv.userImage ? (
-                          <img src={`${API_BASE}/api/users/${conv.userId}/profile-image`} alt="" style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}}/>
+                          <img 
+                            src={`${API_BASE}/${conv.userImage}`} 
+                            alt="" 
+                            style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}}
+                            onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/40?text=User"; }}
+                          />
                       ) : <User size={24} />}
                     </div>
                     <div className="conversation-details">
@@ -172,7 +178,15 @@ export default function MessagesPage() {
                 <ArrowLeft size={20} />
               </button>
               <div className="conversation-avatar">
-                <User size={24} />
+                {conversations.find(c => c.userId === selectedConversation.userId)?.userImage ? (
+                  <img 
+                    src={`${API_BASE}/${conversations.find(c => c.userId === selectedConversation.userId).userImage}`} 
+                    alt="" 
+                    style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}}
+                  />
+                ) : (
+                  <User size={24} />
+                )}
               </div>
               <h2>{selectedConversation.userName}</h2>
             </div>
@@ -180,12 +194,11 @@ export default function MessagesPage() {
             <div className="conversation-messages">
               {conversationMessages.map((msg, index) => (
                 <div
-                  key={index}
+                  key={msg.id || index}
                   className={`message-bubble ${
                     msg.senderId === parseInt(currentUserId) ? "message-sent" : "message-received"
                   }`}
                 >
-                  {/* Show product info if it's a product enquiry */}
                   {msg.productId && (
                     <div 
                       className="message-product-tag clickable"
@@ -197,12 +210,12 @@ export default function MessagesPage() {
                     >
                       {msg.productImage && (
                         <img 
-                          src={`${API_BASE}/api/products/images/${msg.productImage}`} 
+                          src={msg.productImage.startsWith('http') ? msg.productImage : `${API_BASE}/${msg.productImage}`} 
                           alt={msg.productName} 
                           className="msg-product-thumb"
                           onError={(e) => {
                             e.target.onerror = null; 
-                            e.target.src = "https://via.placeholder.com/40?text=Img";
+                            e.target.src = "https://via.placeholder.com/40?text=No+Img";
                           }}
                         />
                       )}
