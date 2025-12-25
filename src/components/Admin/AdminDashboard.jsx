@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import MessageModal from "../Message/MessageModal.jsx";
 import ResolutionModal from "./ResolutionModal.jsx";
+import CreateCampaign from "./CreateCampaign.jsx";
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("applications"); // Default to applications for visibility
@@ -279,6 +280,12 @@ const AdminDashboard = () => {
                 <AlertTriangle size={18} /> Disputes
             </button>
             <button 
+                className={`ad-nav-item ${activeTab === 'campaigns' ? 'active' : ''}`}
+                onClick={() => setActiveTab('campaigns')}
+            >
+                <Calendar size={18} /> Campaigns
+            </button>
+            <button 
                 className={`ad-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
                 onClick={() => setActiveTab('settings')}
             >
@@ -452,7 +459,16 @@ const AdminDashboard = () => {
                                 </div>
                             </td>
                             <td>{p.sellerFullName}</td>
-                            <td>Rs. {p.price}</td>
+                            <td>
+                                {p.onSale ? (
+                                    <>
+                                        <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '0.8rem' }}>Rs. {p.price}</span>
+                                        <div style={{ color: '#dc2626', fontWeight: 'bold' }}>Rs. {p.salePrice}</div>
+                                    </>
+                                ) : (
+                                    <span>Rs. {p.price}</span>
+                                )}
+                            </td>
                             <td>
                                 <span className={`ad-badge badge-${p.status === 'ACTIVE' ? 'active' : 'blocked'}`}>
                                     {p.status}
@@ -714,6 +730,7 @@ const AdminDashboard = () => {
                         {activeTab === 'products' && renderProducts()}
                         {activeTab === 'reports' && renderReports()}
                         {activeTab === 'applications' && renderApplications()}
+                        {activeTab === 'campaigns' && <CreateCampaign showToast={showToast} />}
                         {activeTab === 'settings' && (
                             <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
                                 <UpdateAccount />

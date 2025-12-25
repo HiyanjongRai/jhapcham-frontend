@@ -362,11 +362,16 @@ export default function SellerOrders() {
                                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', marginRight: '1.5rem'
                                }}
                             />
-                            <div className="so-customer-info">
+                              <div className="so-customer-info">
                               <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>
                                 {orderDetails[currentId].customerName || "Guest"}
                                 <span style={{fontSize:'0.85rem', fontWeight:500, color: '#94a3b8', marginLeft:'12px'}}>
                                     ({orderDetails[currentId].customerPhone || "N/A"})
+                                    {orderDetails[currentId].customerAlternativePhone && (
+                                      <span style={{ marginLeft: '8px', color: '#64748b' }}>
+                                        / Alt: {orderDetails[currentId].customerAlternativePhone}
+                                      </span>
+                                    )}
                                 </span>
                               </h4>
                               <p style={{ margin: '4px 0', color: '#64748b', fontSize: '0.9rem' }}>
@@ -375,6 +380,28 @@ export default function SellerOrders() {
                               <p style={{ margin: '4px 0', color: '#64748b', fontSize: '0.9rem' }}>
                                 <MapPin size={14} style={{ marginRight: '4px', verticalAlign: 'middle', color: '#6366f1' }} /> {orderDetails[currentId].shippingAddress || "N/A"}
                               </p>
+
+                              {/* NEW: Delivery Preference & Order Note */}
+                              {(orderDetails[currentId].deliveryTimePreference && orderDetails[currentId].deliveryTimePreference !== "Any Time") && (
+                                <p style={{ margin: '4px 0', color: '#4f46e5', fontSize: '0.9rem', fontWeight: 500 }}>
+                                  <span style={{ marginRight: '8px' }}>⏰</span> 
+                                  Prefers: {orderDetails[currentId].deliveryTimePreference}
+                                </p>
+                              )}
+                              
+                              {orderDetails[currentId].orderNote && (
+                                <div style={{ 
+                                  marginTop: '12px', 
+                                  padding: '10px 14px', 
+                                  background: '#fffbeb', 
+                                  border: '1px solid #fcd34d', 
+                                  borderRadius: '8px',
+                                  fontSize: '0.9rem',
+                                  color: '#92400e'
+                                }}>
+                                  <strong>📝 Note:</strong> {orderDetails[currentId].orderNote}
+                                </div>
+                              )}
                             </div>
                          </div>
                       ) : (

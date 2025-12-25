@@ -1,25 +1,26 @@
-/* Professional E-Commerce Product Card - Revamped */
+/* Professional E-Commerce Product Card - Ultra Premium Refinement */
 
 :root {
   --pc-bg: #ffffff;
   --pc-border: #f1f5f9;
   --pc-text-main: #0f172a;
-  --pc-text-muted: #64748b;
-  --pc-accent: #1e293b;
-  --pc-radius: 16px;
-  --pc-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --pc-shadow-hover: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --pc-text-secondary: #475569;
+  --pc-text-muted: #94a3b8;
+  --pc-accent: #0f172a; /* Deep black/blue */
+  --pc-radius: 20px;
+  --pc-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Very subtle initial shadow */
+  --pc-shadow-hover: 0 20px 40px -5px rgba(0,0,0,0.1); /* Dramtic float on hover */
 }
 
 .pc-card {
   height: 100%;
   background: var(--pc-bg);
-  border: 1px solid var(--pc-border);
+  border: 1px solid transparent; /* No visible border initially for cleaner look */
   border-radius: var(--pc-radius);
-  padding: 12px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
   cursor: pointer;
   position: relative;
   box-shadow: var(--pc-shadow);
@@ -27,122 +28,128 @@
 }
 
 .pc-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-8px);
   box-shadow: var(--pc-shadow-hover);
-  border-color: #e2e8f0;
+  border-color: transparent; /* Keep border transparent */
 }
 
 /* Image Area */
 .pc-img-box {
   width: 100%;
-  aspect-ratio: 1 / 1; /* Standardize image box to square */
+  aspect-ratio: 1 / 1.05; /* Slightly taller than square */
   background: #f8fafc;
-  border-radius: 12px;
+  border-radius: 16px;
   position: relative;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
 .pc-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  object-fit: cover; /* Ensure image fills nicely */
+  transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 .pc-card:hover .pc-img {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
-/* Floating Actions */
+/* Floating Actions - Minimalist */
 .pc-wish-floating {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 36px;
-  height: 36px;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(241, 245, 249, 0.8);
+  background: white;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 10;
   transition: all 0.3s ease;
-  color: var(--pc-text-muted);
+  color: var(--pc-text-main);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  opacity: 0; /* Hidden by default */
+  transform: translateY(-10px);
+}
+
+.pc-card:hover .pc-wish-floating {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .pc-wish-floating:hover {
-  background: white;
-  transform: scale(1.1);
-  color: #ef4444;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+  background: #0f172a;
+  color: white;
+  transform: scale(1.1) translateY(0);
 }
 
 .pc-wish-active {
-  background: white !important;
+  background: #fee2e2 !important;
   color: #ef4444 !important;
-  border-color: #fee2e2 !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 
-/* Badges */
+/* Badges - Clean & Pill shaped */
 .pc-badges {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 16px;
+  left: 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   z-index: 10;
 }
 
 .pc-sale-badge {
-  background: #ef4444;
+  background: #0f172a;
   color: white;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 20px;
-  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 100px;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
 .pc-new-badge {
-  background: #10b981;
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 20px;
-  text-transform: uppercase;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 100px;
   letter-spacing: 0.5px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 /* Card Body */
 .pc-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex-grow: 1; /* Stretch to fill space */
+  gap: 6px;
+  flex-grow: 1;
 }
 
 .pc-category {
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--pc-text-muted);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
 }
 
 .pc-title {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--pc-text-main);
   line-height: 1.4;
@@ -152,136 +159,112 @@
   -webkit-box-orient: vertical;
   line-clamp: 2;
   overflow: hidden;
-  height: 2.8rem; /* Fixed height for title to align rows */
+  min-height: 3rem; 
 }
 
-.pc-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: auto;
-}
-
+/* Rating */
 .pc-rating {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f8fafc;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--pc-text-main);
-}
-
-.pc-rating svg {
-  color: #fbbf24;
-}
-
-.pc-views {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
-  color: var(--pc-text-muted);
-  font-weight: 500;
-}
-
-/* Pricing */
-.pc-price-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pc-text-secondary);
   margin-top: 4px;
 }
 
+.pc-rating svg {
+  color: #f59e0b; /* Amber 500 */
+}
+
+/* Pricing - Big & Bold */
+.pc-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 12px;
+}
+
 .pc-price-new {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--pc-text-main);
 }
 
 .pc-price-old {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   text-decoration: line-through;
   color: var(--pc-text-muted);
   font-weight: 500;
 }
 
-/* Add to Cart Footer */
+/* Footer & Button */
 .pc-footer {
-  margin-top: 12px;
+  margin-top: 20px;
 }
 
 .pc-btn-add {
   width: 100%;
-  padding: 10px 0;
-  background: var(--pc-accent);
+  padding: 14px 0;
+  background: var(--pc-text-main);
   color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  text-transform: uppercase;
   letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pc-btn-add::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.1);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.pc-btn-add:hover:not(:disabled)::after {
+  opacity: 1;
 }
 
 .pc-btn-add:hover:not(:disabled) {
-  background: #000;
-  transform: scale(1.02);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
 .pc-btn-add:disabled {
   background: #e2e8f0;
   color: #94a3b8;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
-.pc-btn-add svg {
-  transition: transform 0.3s ease;
-}
-
-.pc-btn-add:hover:not(:disabled) svg {
-  transform: translateX(4px);
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .pc-card {
-    padding: 10px;
-  }
-  
-  .pc-title {
-    font-size: 0.85rem;
-  }
-  
-  .pc-price-new {
-    font-size: 1rem;
-  }
-}
-
+/* Seller Logo */
 .pc-seller-badge {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  bottom: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   background: white;
-  border: 1px solid #f1f5f9;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1px solid #f8fafc;
 }
 
 .pc-seller-thumb {
@@ -289,3 +272,18 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .pc-card { padding: 12px; }
+  .pc-title { font-size: 0.95rem; }
+  .pc-price-new { font-size: 1.1rem; }
+}
+
+.pc-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--pc-shadow-hover);
+  border-color: #e2e8f0;
+}
+
+

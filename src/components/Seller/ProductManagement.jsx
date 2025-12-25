@@ -48,7 +48,7 @@ function mapDtoToProduct(dto) {
     price: dto.price || 0,
     onSale: dto.onSale || false,
     discountPrice: dto.discountPrice || null,
-    salePrice: dto.discountPrice || dto.price || 0,
+    salePrice: dto.salePrice || dto.price || 0,
     salePercentage: dto.salePercentage || null,
     stock: dto.stockQuantity || 0,
     status: dto.status || "ACTIVE",

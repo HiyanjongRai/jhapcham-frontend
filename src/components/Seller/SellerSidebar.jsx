@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   Truck,
   Users,
+  Calendar,
   Settings,
   Flag,
   Share2,
@@ -39,6 +40,7 @@ export default function SellerSidebar({ storeInfo }) {
         { icon: <ShoppingBag size={18} />, label: "Orders", path: "/seller/orders" },
         { icon: <Truck size={18} />, label: "Shipment", path: "/seller/shipment" },
         { icon: <Users size={18} />, label: "Customers", path: "/seller/customers" },
+        { icon: <Calendar size={18} />, label: "Campaigns", path: "/seller/dashboard", tab: "campaigns" },
       ]
     },
     {

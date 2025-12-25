@@ -13,6 +13,7 @@ import { apiGetSellerOrders } from "../AddCart/cartUtils";
 import { API_BASE } from "../config/config";
 import UpdateAccount from "../Profile/UpdateAccount.jsx";
 import SellerSettings from "./SellerSettings.jsx";
+import SellerCampaigns from "./SellerCampaigns.jsx";
 
 export default function SellerDashboard() {
   const navigate = useNavigate();
@@ -329,6 +330,12 @@ export default function SellerDashboard() {
                       <p className="empty-text">No reports found.</p>
                   )}
               </div>
+          </div>
+      )}
+
+      {activeTab === 'campaigns' && (
+          <div className="dashboard-fade-in">
+              <SellerCampaigns />
           </div>
       )}
     </div>

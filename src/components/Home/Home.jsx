@@ -147,7 +147,25 @@ function Home() {
         </div>
       </section>
 
-
+      {/* 2. Categories Row */}
+      <section className="amz-cat-row-section">
+        <div className="amz-container">
+          <div className="amz-cat-row">
+            {TOP_CATEGORIES.map((cat, i) => (
+              <div 
+                className="amz-cat-item" 
+                key={i} 
+                onClick={() => navigate(cat.val === 'all' ? '/products' : `/products?category=${cat.val}`)}
+              >
+                <div className="amz-cat-icon">
+                  <cat.icon size={28} strokeWidth={1.5} />
+                </div>
+                <span>{cat.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* 3. Flash Sale / Deal of the Day */}
       <section className="amz-section bg-white">
