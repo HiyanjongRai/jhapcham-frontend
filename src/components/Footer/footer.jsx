@@ -1,87 +1,101 @@
-import React from "react";
-import "./Footer.css";
+import React from 'react';
+import { 
+  Facebook, 
+  Twitter, 
+  Instagram, 
+  Youtube, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  ArrowRight
+} from 'lucide-react';
+import './Footer.css';
 
-function Footer() {
-  const year = new Date().getFullYear();
-
+const Footer = () => {
   return (
     <footer className="footer">
-      {/* Top Section */}
       <div className="footer-top">
-        <div className="footer-col footer-brand">
-          <h3 className="footer-logo">Jhapcham</h3>
-          <p className="footer-about">
-            Jhapcham is your everyday shopping partner in Nepal. Discover
-            mobiles, gadgets, fashion and daily essentials with fast delivery
-            and trusted support.
-          </p>
-          <p className="footer-contact">
-            Need help? <br />
-            <span>📞 +977-9800000000</span> <br />
-            <span>✉ support@jhapcham.com</span>
-          </p>
-        </div>
+        <div className="footer-container">
+          <div className="footer-grid">
+            {/* Brand Section */}
+            <div className="footer-brand">
+              <h2 className="footer-logo">JHAPCHAM</h2>
+              <p className="footer-desc">
+                Your one-stop destination for premium electronics, fashion, and home decor. 
+                Experience seamless shopping with ultra-fast delivery.
+              </p>
+              <div className="footer-socials">
+                <a href="#" className="social-link"><Facebook size={20} /></a>
+                <a href="#" className="social-link"><Twitter size={20} /></a>
+                <a href="#" className="social-link"><Instagram size={20} /></a>
+                <a href="#" className="social-link"><Youtube size={20} /></a>
+              </div>
+            </div>
 
-        <div className="footer-col">
-          <h4 className="footer-heading">Quick Links</h4>
-          <ul className="footer-links">
-            <li><a href="/">Home</a></li>
-            <li><a href="/shop">Shop</a></li>
-            <li><a href="/about">About us</a></li>
-            <li><a href="/contact">Contact</a></li>
-          </ul>
-        </div>
+            {/* Links Sections */}
+            <div className="footer-links">
+              <h3>Quick Links</h3>
+              <ul>
+                <li><a href="/products">Shop All</a></li>
+                <li><a href="/new-arrivals">New Arrivals</a></li>
+                <li><a href="/offers">Exclusive Offers</a></li>
+                <li><a href="/sellers">Top Sellers</a></li>
+              </ul>
+            </div>
 
-        <div className="footer-col">
-          <h4 className="footer-heading">Customer Service</h4>
-          <ul className="footer-links">
-            <li><a href="/faq">FAQs</a></li>
-            <li><a href="/returns">Return policy</a></li>
-            <li><a href="/shipping">Shipping info</a></li>
-            <li><a href="/privacy">Privacy policy</a></li>
-          </ul>
-        </div>
+            <div className="footer-links">
+              <h3>Support</h3>
+              <ul>
+                <li><a href="/help">Help Center</a></li>
+                <li><a href="/shipping">Shipping Info</a></li>
+                <li><a href="/returns">Returns & Refunds</a></li>
+                <li><a href="/contact">Contact Us</a></li>
+              </ul>
+            </div>
 
-        <div className="footer-col footer-news-social">
-          <h4 className="footer-heading">Stay updated</h4>
-          <p className="footer-news-text">
-            Get deals, new arrivals and app-only offers.
-          </p>
-          <form
-            className="footer-news-form"
-            onSubmit={(e) => e.preventDefault()}
-          >
-            <input
-              type="email"
-              className="footer-input"
-              placeholder="Enter your email"
-            />
-            <button className="footer-btn" type="submit">
-              Subscribe
-            </button>
-          </form>
-
-          <h4 className="footer-heading footer-social-title">Follow us</h4>
-          <div className="footer-social">
-            <a href="https://facebook.com" aria-label="Facebook">📘</a>
-            <a href="https://instagram.com" aria-label="Instagram">📸</a>
-            <a href="https://twitter.com" aria-label="Twitter / X">🐦</a>
-            <a href="https://youtube.com" aria-label="YouTube">▶️</a>
+            {/* Newsletter Section */}
+            <div className="footer-newsletter">
+              <h3>Newsletter</h3>
+              <p>Subscribe to get special offers and once-in-a-lifetime deals.</p>
+              <form className="newsletter-form">
+                <input type="email" placeholder="Your email address" required />
+                <button type="submit">
+                  <ArrowRight size={20} />
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Section */}
+      <div className="footer-contact-bar">
+        <div className="footer-container bar-content">
+          <div className="contact-item">
+            <Phone size={18} />
+            <span>+977-9800000000</span>
+          </div>
+          <div className="contact-item">
+            <Mail size={18} />
+            <span>support@jhapcham.com</span>
+          </div>
+          <div className="contact-item">
+            <MapPin size={18} />
+            <span>Kathmandu, Nepal</span>
+          </div>
+        </div>
+      </div>
+
       <div className="footer-bottom">
-        <p>
-          © {year} <strong>Jhapcham</strong>. All rights reserved.
-        </p>
-        <p className="footer-made">
-          Made with  in Nepal
-        </p>
+        <div className="footer-container bottom-flex">
+          <p>© 2025 Jhapcham E-commerce. All rights reserved.</p>
+          <div className="footer-policies">
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+          </div>
+        </div>
       </div>
     </footer>
   );
-}
+};
 
 export default Footer;

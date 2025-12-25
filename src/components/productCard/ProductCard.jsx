@@ -119,86 +119,95 @@ function ProductCard({ product }) {
     }
   };
 
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <Star 
+          key={i} 
+          size={14} 
+          fill={i <= Math.round(rating) ? "#fbc02d" : "none"} 
+          color={i <= Math.round(rating) ? "#fbc02d" : "#64748b"} 
+        />
+      );
+    }
+    return stars;
+  };
+
+  const formatViews = (views) => {
+    if (views >= 1000) return (views / 1000).toFixed(1) + 'K';
+    return views || 0;
+  };
+
   return (
-    <div className="pc-card" onClick={handleCardClick}>
-      <div className="pc-img-box">
-        <div className="pc-badges">
-          {onSale && (
-            <div className="pc-sale-badge">
-              {saleLabel || (salePercentage ? `${Math.round(salePercentage)}% OFF` : 'SALE')}
-            </div>
-          )}
-          {stock > 0 && stock <= 5 && (
-            <div className="pc-new-badge" style={{background: '#f97316'}}>Low Stock</div>
-          )}
+    <div className="modern-pc-card" onClick={handleCardClick}>
+      {/* Wishlist Button */}
+      {!isSeller && (
+        <button
+          className={`modern-pc-wishlist ${liked ? "active" : ""}`}
+          onClick={toggleWishlist}
+          aria-label="Toggle Wishlist"
+        >
+          <Heart size={18} fill={liked ? "#ff4d4d" : "none"} color={liked ? "#ff4d4d" : "#666"} />
+        </button>
+      )}
+
+      {/* Sale/Discount Badge */}
+      {onSale && (
+        <div className="modern-pc-badge" title={saleLabel}>
+          {saleLabel || (salePercentage ? `${Math.round(salePercentage)}% OFF` : 'SALE')}
         </div>
-        
-        {!isSeller && (
-          <button
-            className={`pc-wish-floating ${liked ? "pc-wish-active" : ""}`}
-            onClick={toggleWishlist}
-            aria-label="Toggle Wishlist"
-          >
-            <Heart size={20} fill={liked ? "currentColor" : "none"} />
-          </button>
-        )}
-        
-        <img src={imgSrc} className="pc-img" alt={name} loading="lazy" />
-        
-        {/* Seller Logo Branding */}
-        {(product.logoImagePath || product.profileImagePath) && (
-          <div className="pc-seller-badge" title={`Sold by ${product.sellerFullName}`}>
-            <img 
-              src={`${API_BASE}/${product.logoImagePath || product.profileImagePath}`} 
-              alt="Seller" 
-              className="pc-seller-thumb"
-            />
-          </div>
-        )}
+      )}
+
+      {/* Product Image Area */}
+      <div className="modern-pc-img-box">
+        <img src={imgSrc} alt={name} className="modern-pc-img" loading="lazy" />
       </div>
 
-      <div className="pc-body">
-        <div className="pc-category">{brand || categoryName || "Product"}</div>
-        <h3 className="pc-title">{name}</h3>
+      {/* Product Info Section */}
+      <div className="modern-pc-body">
+        <h3 className="modern-pc-title">{name}</h3>
+        <p className="modern-pc-brand">{brand || categoryName || "Official Brand"}</p>
         
-        <div className="pc-meta">
-          <div className="pc-rating">
-            <Star size={14} fill="currentColor" />
-            <span>{safeRating.toFixed(1)}</span>
+        <div className="modern-pc-meta">
+          <div className="modern-pc-rating">
+            {renderStars(safeRating)}
+            <span className="rating-value">{safeRating.toFixed(1)}</span>
           </div>
-          <div className="pc-views">
+          <div className="modern-pc-views">
             <Eye size={14} />
-            <span>{totalViews || 0}</span>
+            <span>{formatViews(totalViews)} Views</span>
           </div>
         </div>
 
-        <div className="pc-price-row">
-          {onSale ? (
-            <>
-              <span className="pc-price-new">₹{Number(displayPrice).toLocaleString()}</span>
-              <span className="pc-price-old">₹{Number(safePrice).toLocaleString()}</span>
-            </>
-          ) : (
-            <span className="pc-price-new">₹{Number(safePrice).toLocaleString()}</span>
-          )}
-        </div>
-
-        {!isSeller && (
-          <div className="pc-footer">
+        <div className="modern-pc-footer">
+          <div className="modern-pc-price-box">
+            <div className="modern-pc-price">
+              <span className="currency">Rs </span>
+              <span className="amount">{Number(displayPrice).toLocaleString()}</span>
+            </div>
+            {onSale && safePrice > displayPrice && (
+              <span className="modern-pc-old-price">Rs {Number(safePrice).toLocaleString()}</span>
+            )}
+          </div>
+          
+          {!isSeller && (
             <button 
-              className="pc-btn-add" 
+              className="modern-pc-btn" 
               onClick={handleAddToCartClick} 
               disabled={stock === 0 || adding}
             >
-              {adding ? "Adding..." : stock === 0 ? "Out of Stock" : (
+              {adding ? (
+                "Adding..."
+              ) : (
                 <>
-                  <ShoppingBag size={18} />
+                  <ShoppingCart size={16} />
                   <span>Add to Cart</span>
                 </>
               )}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {toast.visible && (
