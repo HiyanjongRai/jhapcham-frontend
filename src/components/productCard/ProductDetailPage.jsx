@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Share2,
   MessageCircle,
-  Flag
+  Flag,
+  Check,
+  ThumbsUp
 } from "lucide-react";
 import {
   getCurrentUserId,
@@ -50,6 +52,40 @@ export default function ProductDetailPage() {
   const [selectedStorage, setSelectedStorage] = useState(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+
+  const [markedHelpful, setMarkedHelpful] = useState(new Set());
+  const [visibleReviews, setVisibleReviews] = useState(3);
+
+  const handleHelpful = async (reviewId) => {
+    if (!userId) {
+        navigate("/login");
+        return;
+    }
+
+    // Optimistic Update
+    const isMarked = markedHelpful.has(reviewId);
+    setMarkedHelpful(prev => {
+        const newSet = new Set(prev);
+        if (isMarked) newSet.delete(reviewId);
+        else newSet.add(reviewId);
+        return newSet;
+    });
+
+    try {
+        await api.post(`/api/reviews/${reviewId}/helpful`, null, {
+            params: { userId }
+        });
+    } catch (error) {
+        console.error("Failed to toggle helpful:", error);
+        // Revert
+        setMarkedHelpful(prev => {
+            const newSet = new Set(prev);
+            if (isMarked) newSet.add(reviewId);
+            else newSet.delete(reviewId);
+            return newSet;
+        });
+    }
+  };
 
   const userId = getCurrentUserId();
   const viewLogged = useRef(false);
@@ -150,8 +186,20 @@ export default function ProductDetailPage() {
 
         // Load reviews
         try {
-          const rev = await api.get(`/api/reviews/product/${id}`);
-          setReviews(Array.isArray(rev.data) ? rev.data : []);
+          // Pass userId to check which reviews are already marked helpful by this user
+          const rev = await api.get(`/api/reviews/product/${id}`, {
+              params: { userId: getCurrentUserId() }
+          });
+          const reviewData = Array.isArray(rev.data) ? rev.data : [];
+          setReviews(reviewData);
+
+          // Initialize local state of likes
+          const helpfulSet = new Set();
+          reviewData.forEach(r => {
+              if (r.isHelpful) helpfulSet.add(r.id);
+          });
+          setMarkedHelpful(helpfulSet);
+          
         } catch (revErr) {
           console.error("Failed to load reviews:", revErr);
           setReviews([]);
@@ -410,29 +458,24 @@ export default function ProductDetailPage() {
                 onClick={() => setShowMessageModal(true)}
                 title="Ask Seller"
               >
-                <MessageCircle size={24} />
+                <MessageCircle size={20} />
               </button>
 
                <button 
-                className="pd-message-btn" 
+                className="pd-message-btn pd-report-btn" 
                 onClick={() => setShowReportModal(true)}
                 title="Report Product"
-                style={{ color: '#ef4444', borderColor: '#ef4444' }}
               >
-                <Flag size={24} />
+                <Flag size={20} />
               </button>
 
               {!isSeller && (
                 <button 
-                  className="pd-wish-btn" 
+                  className={`pd-wish-btn ${liked ? 'active' : ''}`}
                   onClick={toggleWishlist}
-                  style={{ 
-                      color: liked ? '#dc2626' : 'inherit',
-                      borderColor: liked ? '#dc2626' : '#e5e7eb',
-                      background: liked ? '#fef2f2' : 'white'
-                  }}
+                  title="Add to Wishlist"
                 >
-                  <Heart size={24} fill={liked ? "#dc2626" : "none"} />
+                  <Heart size={20} fill={liked ? "currentColor" : "none"} />
                 </button>
               )}
             </div>
@@ -450,94 +493,142 @@ export default function ProductDetailPage() {
                 <Store size={24} color="#1a1a1a" />
               )}
             </div>
-            <div className="sellerProfile">
-
-            </div>
             <div className="pd-seller-info">
               <p className="seller-label">Sold by</p>
               <h3>{product.sellerStoreName}</h3>
               <p className="seller-address">{product.sellerStoreAddress}</p>
             </div>
-            <ChevronRight color="#1a1a1a" />
+            <ChevronRight size={20} color="#94a3b8" />
           </div>
         </div>
       </div>
 
       {/* Reviews Section */}
       <div className="pd-reviews-section">
-        <div className="pd-reviews-header">
           <h2 className="section-title">Customer Reviews</h2>
-          <div className="pd-rating-summary">
-            <div className="pd-rating-hero">
-                <span className="rating-number">{product.rating ? Math.round(product.rating * 10) / 10 : 0}</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          
+          <div className="pd-reviews-grid">
+            {/* Sidebar: Ratings & Breakdown */}
+            <div className="pd-reviews-sidebar">
+                <div className="pd-rating-box">
+                    <span className="rating-number">{product.rating ? Math.round(product.rating * 10) / 10 : 0}</span>
                     <div className="pd-stars">
                         {Array.from({ length: 5 }).map((_, i) => (
                         <Star
                             key={i}
-                            size={20}
+                            size={24}
                             fill={i < Math.round(product.rating) ? "#1a1a1a" : "none"}
                             color={i < Math.round(product.rating) ? "#1a1a1a" : "#d1d5db"}
                         />
                         ))}
                     </div>
-                     <p className="rating-count">{reviews.length} reviews</p>
+                    <p className="rating-total-count">Based on {reviews.length} reviews</p>
+                </div>
+
+                <div className="pd-rating-bars">
+                    {ratingDist.map(item => (
+                        <div key={item.star} className="rating-bar-row">
+                            <span className="star-label">{item.star} <Star size={12} fill="currentColor" stroke="none" /></span>
+                            <div className="rating-track">
+                                <div className="rating-fill" style={{ width: `${item.percentage}%` }}></div>
+                            </div>
+                            <span className="count-label">{item.count}</span>
+                        </div>
+                    ))}
                 </div>
             </div>
 
-            <div className="pd-rating-bars">
-                {ratingDist.map(item => (
-                    <div key={item.star} className="rating-bar-row">
-                        <span className="star-label">{item.star} <Star size={10} fill="#666" stroke="none" /></span>
-                        <div className="rating-track">
-                            <div className="rating-fill" style={{ width: `${item.percentage}%` }}></div>
-                        </div>
-                        <span className="count-label">{item.count}</span>
+            {/* Content: Reviews Feed */}
+            <div className="pd-reviews-feed">
+                {reviews.length === 0 ? (
+                    <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280', background: '#f9fafb', borderRadius: '16px' }}>
+                        <p style={{ fontSize: '1.1rem', fontWeight: '500' }}>No reviews yet</p>
+                        <p>Be the first to share your thoughts on this product.</p>
                     </div>
-                ))}
+                ) : (
+                    reviews.slice(0, visibleReviews).map(r => (
+                        <div className="pd-review-card" key={r.id}>
+                            <div className="pd-review-avatar-box">
+                                <img
+                                    src={r.userProfileImage 
+                                            ? (r.userProfileImage.startsWith('http') ? r.userProfileImage : `${API_BASE}/${r.userProfileImage}`) 
+                                            : "https://via.placeholder.com/56"}
+                                    className="pd-review-avatar"
+                                    alt={r.userName || "User"}
+                                />
+                            </div>
+                            <div className="pd-review-main">
+                                <div className="pd-review-header">
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                            <span className="pd-review-author">{r.userName || "Verified Buyer"}</span>
+                                            <span className="pd-verified-badge">
+                                                <Check size={10} strokeWidth={4} /> Verified Purchase
+                                            </span>
+                                        </div>
+                                        {r.createdAt && <span className="pd-review-date">{new Date(r.createdAt).toLocaleDateString()}</span>}
+                                    </div>
+                                    <div className="pd-stars">
+                                        {Array.from({ length: 5 }).map((_, i) => (
+                                        <Star
+                                            key={i}
+                                            size={14}
+                                            fill={i < r.rating ? "#1a1a1a" : "none"}
+                                            color={i < r.rating ? "#1a1a1a" : "#d1d5db"}
+                                        />
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <p className="pd-review-content">{r.comment}</p>
+                                
+                                {r.imagePath && (
+                                    <div style={{ marginTop: '16px' }}>
+                                        <img 
+                                            src={r.imagePath.startsWith('http') ? r.imagePath : `${API_BASE}/${r.imagePath}`} 
+                                            alt="review attachment" 
+                                            style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', cursor: 'pointer', border: '1px solid #e5e7eb' }} 
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="pd-review-footer">
+                                    {markedHelpful.has(r.id) ? (
+                                        <button 
+                                            className="pd-helpful-btn active"
+                                            onClick={() => handleHelpful(r.id)}
+                                        >
+                                            <ThumbsUp size={14} fill="currentColor" /> 
+                                            <span>{(r.helpfulCount || 0) + 1}</span>
+                                        </button>
+                                    ) : (
+                                        <span className="pd-review-helpful">
+                                            Was this review helpful?
+                                            <button 
+                                                className="pd-helpful-btn"
+                                                onClick={() => handleHelpful(r.id)}
+                                            >
+                                                <ThumbsUp size={14} /> 
+                                                <span>{r.helpfulCount || 0}</span>
+                                            </button>
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
+                
+                {reviews.length > visibleReviews && (
+                    <button 
+                        className="pd-show-more-btn"
+                        onClick={() => setVisibleReviews(prev => prev + 5)}
+                    >
+                        Show More Reviews
+                    </button>
+                )}
             </div>
           </div>
-        </div>
-
-        <div className="pd-reviews-list">
-          {reviews.map(r => (
-            <div className="pd-review-card" key={r.id}>
-              <div className="pd-review-user">
-                <img
-                  src={r.userProfileImage 
-                        ? (r.userProfileImage.startsWith('http') ? r.userProfileImage : `${API_BASE}/${r.userProfileImage}`) 
-                        : "https://via.placeholder.com/40"}
-                  className="pd-review-avatar"
-                  alt={r.userName || "User"}
-                />
-                <div>
-                  <div style={{ fontWeight: '600' }}>{r.userName || "Anonymous"}</div>
-                  <div className="pd-stars" style={{ fontSize: '0.8rem' }}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        fill={i < r.rating ? "#fbbf24" : "none"}
-                        color={i < r.rating ? "#fbbf24" : "#d1d5db"}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <p className="pd-review-content">{r.comment}</p>
-              {r.imagePath && (
-                <div style={{ marginTop: '1rem' }}>
-                    <img 
-                        src={r.imagePath.startsWith('http') ? r.imagePath : `${API_BASE}/${r.imagePath}`} 
-                        alt="review" 
-                        style={{ width: 100, height: 100, borderRadius: 8, objectFit: 'cover' }} 
-                    />
-                </div>
-              )}
-            </div>
-          ))}
-          {reviews.length === 0 && <p style={{ color: '#6b7280' }}>No reviews yet. Be the first to review!</p>}
-        </div>
       </div>
 
       {/* Message Modal */}
