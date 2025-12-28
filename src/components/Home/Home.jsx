@@ -10,7 +10,7 @@ import {
 import "./Home.css";
 import ProductCard from "../productCard/ProductCard";
 import CountdownTimer from "./CountdownTimer";
-import Footer from "../Footer/Footer";
+import Footer from "../FooterSection/Footer";
 import { API_BASE } from "../config/config";
 import api from "../../api/axios";
 
