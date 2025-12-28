@@ -14,7 +14,9 @@ import {
   ChevronDown,
   ChevronUp,
   Edit2,
-  MessageSquare // Added icon
+  MessageSquare, // Added icon
+  Copy,
+  ExternalLink
 } from "lucide-react";
 import { apiGetSellerOrders, apiGetOrder } from "../AddCart/cartUtils";
 
@@ -39,6 +41,12 @@ export default function SellerOrders() {
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type, isVisible: true });
+  };
+  
+  const handleCopy = (text) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    showToast("Copied to clipboard!", "success");
   };
   
   const branches = ["KATHMANDU", "POKHARA", "UDAYAPUR"];
@@ -106,9 +114,10 @@ export default function SellerOrders() {
   };
 
   const buildImageUrl = (imagePath) => {
-    if (!imagePath) return "https://via.placeholder.com/48";
+    if (!imagePath) return null;
     if (imagePath.startsWith("http")) return imagePath;
-    return `${API_BASE}/${imagePath}`;
+    const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
+    return `${API_BASE}/${cleanPath}`;
   };
 
   const stats = useMemo(() => {
@@ -123,13 +132,13 @@ export default function SellerOrders() {
 
   const filteredOrders = useMemo(() => {
     // New logic: "NEW" acts as the default "Inbox"
+    if (statusFilter === "ALL") return orders; // Allow seeing all
     if (statusFilter === "NEW") return orders.filter(o => o.status === "NEW" || o.status === "PENDING");
     if (statusFilter === "PROCESSING") return orders.filter(o => o.status === "PROCESSING");
     if (statusFilter === "SHIPPED") return orders.filter(o => o.status === "SHIPPED" || o.status === "SHIPPED_TO_BRANCH" || o.status === "OUT_FOR_DELIVERY");
     if (statusFilter === "DELIVERED") return orders.filter(o => o.status === "DELIVERED");
     if (statusFilter === "CANCELED") return orders.filter(o => o.status === "CANCELED");
     
-    // Fallback/Legacy "ALL" view if needed, but we are removing the tab
     return orders;
   }, [orders, statusFilter]);
 
@@ -186,7 +195,12 @@ export default function SellerOrders() {
           { key: 'shipped', label: 'Outbound', value: stats.shipped, icon: <Truck size={24} />, color: 'shipped' },
           { key: 'delivered', label: 'Completed', value: stats.delivered, icon: <CheckCircle size={24} />, color: 'delivered' },
         ].map((s) => (
-          <div key={s.key} className={`so-stat-card ${s.color}`}>
+          <div 
+             key={s.key} 
+             className={`so-stat-card ${s.color} ${statusFilter === (s.key === 'total' ? 'ALL' : s.key === 'pending' ? 'NEW' : s.key.toUpperCase()) ? 'active-filter' : ''}`}
+             onClick={() => setStatusFilter(s.key === 'total' ? 'ALL' : (s.key === 'pending' ? 'NEW' : s.key.toUpperCase()))}
+             style={{ cursor: 'pointer' }}
+          >
             <div className="so-stat-icon">{s.icon}</div>
             <div className="so-stat-content">
               <div className="so-stat-label">{s.label}</div>
@@ -226,42 +240,100 @@ export default function SellerOrders() {
             return (
               <div key={currentId} className="so-order-card">
                 <div className="so-order-header">
-                  <div>
-                    <h3 className="so-order-id">
-                        {order.productNames || `Order #${String(currentId).padStart(4, "0")}`}
-                    </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{fontWeight:'700', color: '#6366f1'}}>#{String(currentId).padStart(4, "0")}</span>
-                        <span style={{ color: '#94a3b8' }}>•</span>
-                        <span style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>
-                          {order.customerName || "Anonymous Customer"}
-                        </span>
-                        <button 
-                          className="so-action-btn secondary" 
-                          style={{ padding: '4px 10px', fontSize: '0.75rem', height: '28px', borderRadius: '8px' }}
-                          onClick={() => setMsgModal({
-                            isOpen: true,
-                            recipientId: order.customerId,
-                            recipientName: order.customerName || "Customer",
-                            type: 'store'
-                          })}
-                        >
-                          <MessageSquare size={13} /> Chat
-                        </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div style={{ position: 'relative', width: '64px', height: '64px' }}>
+                       {buildImageUrl(order.items?.[0]?.imagePath) ? (
+                         <img 
+                            src={buildImageUrl(order.items?.[0]?.imagePath)} 
+                            alt="Product" 
+                            style={{ width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover', border: '1px solid #f1f5f9' }}
+                            onError={(e) => {e.target.style.display='none'; e.target.nextSibling.style.display='flex';}}
+                         />
+                       ) : (
+                         <div style={{ width: '100%', height: '100%', borderRadius: '12px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #e2e8f0' }}>
+                            <Package size={24} color="#94a3b8" />
+                         </div>
+                       )}
+                       {/* Fallback div if img fails and is hidden */}
+                       <div style={{ display: 'none', width: '100%', height: '100%', borderRadius: '12px', background: '#f1f5f9', alignItems: 'center', justifyContent: 'center', border: '1px solid #e2e8f0', position: 'absolute', top: 0, left: 0 }}>
+                            <Package size={24} color="#94a3b8" />
+                       </div>
+
+                       {order.items?.length > 1 && (
+                         <span style={{ 
+                            position: 'absolute', bottom: -5, right: -5, 
+                            background: '#0f172a', color: 'white', 
+                            fontSize: '0.7rem', fontWeight: 'bold', 
+                            padding: '2px 6px', borderRadius: '8px', border: '2px solid white', zIndex: 10
+                         }}>
+                            +{order.items.length - 1}
+                         </span>
+                       )}
+                    </div>
+                    <div>
+                      <h3 className="so-order-id">
+                          {order.productNames || `Order #${String(currentId).padStart(4, "0")}`}
+                      </h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <span style={{fontWeight:'700', color: '#6366f1'}}>#{String(currentId).padStart(4, "0")}</span>
+                          <span style={{ color: '#94a3b8' }}>•</span>
+                          <span style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>
+                            {order.customerName || "Anonymous Customer"}
+                          </span>
+                          <button 
+                            className="so-action-btn secondary" 
+                            style={{ padding: '4px 10px', fontSize: '0.75rem', height: '28px', borderRadius: '8px' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMsgModal({
+                                isOpen: true,
+                                recipientId: order.customerId,
+                                recipientName: order.customerName || "Customer",
+                                type: 'store'
+                              });
+                            }}
+                          >
+                            <MessageSquare size={13} /> Chat
+                          </button>
+                      </div>
                     </div>
                   </div>
                   <div className="so-order-meta">
                     <span style={{fontSize: '0.9rem', fontWeight: '600', color: '#0f172a', background: '#f1f5f9', padding: '6px 12px', borderRadius: '8px'}}>
-                      ${(order.totalPrice || order.grandTotal || 0).toFixed(2)}
+                      Rs. {(order.totalPrice || order.grandTotal || 0).toFixed(2)}
                     </span>
                     <span className={`so-badge so-badge-${(order.status || 'PENDING').toLowerCase()}`}>
-                      {order.status}
+                       {(order.status || "").replace(/_/g, " ")}
                     </span>
                     <span style={{fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500}}>
                       {order.createdAt ? new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ""}
                     </span>
                   </div>
                 </div>
+
+                {/* --- Timeline Stepper (Visual) --- */}
+                {order.status !== 'CANCELED' && (
+                  <div style={{ padding: '0 2rem 1.5rem 2rem' }}>
+                    <div className="so-stepper">
+                      {["PENDING", "PROCESSING", "SHIPPED", "DELIVERED"].map((step, idx) => {
+                         const currentStatus = (order.status || "").toUpperCase();
+                         const stepIndex = ["NEW", "PENDING"].includes(currentStatus) ? 0 :
+                                           ["PROCESSING"].includes(currentStatus) ? 1 :
+                                           ["SHIPPED", "SHIPPED_TO_BRANCH", "OUT_FOR_DELIVERY"].includes(currentStatus) ? 2 :
+                                           ["DELIVERED"].includes(currentStatus) ? 3 : 0;
+                         const label = step === "PENDING" ? "Received" : step === "SHIPPED" ? "Dispatched" : step.charAt(0) + step.slice(1).toLowerCase();
+                         
+                         return (
+                           <div key={step} className={`so-step ${idx <= stepIndex ? "active" : ""}`}>
+                             <div className="so-step-line"></div>
+                             <div className="so-step-circle">{idx <= stepIndex ? <CheckCircle size={10} /> : idx + 1}</div>
+                             <span className="so-step-label">{label}</span>
+                           </div>
+                         );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div className="so-order-body">
                   {order.status === 'DELIVERED' ? (
@@ -297,16 +369,16 @@ export default function SellerOrders() {
                             <div className="so-price-breakdown">
                                <div className="so-price-row" style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
                                   <span style={{ color: '#64748b' }}>Subtotal</span>
-                                  <span style={{ fontWeight: 600 }}>${(orderDetails[currentId].itemsTotal || 0).toFixed(2)}</span>
+                                  <span style={{ fontWeight: 600 }}>Rs. {(orderDetails[currentId].itemsTotal || 0).toFixed(2)}</span>
                                </div>
                                <div className="so-price-row" style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', color: '#6366f1' }}>
                                   <span style={{ fontWeight: 600 }}>Logistics</span>
-                                  <span style={{ fontWeight: 700 }}>+ ${(orderDetails[currentId].shippingFee || 0).toFixed(2)}</span>
+                                  <span style={{ fontWeight: 700 }}>+ Rs. {(orderDetails[currentId].shippingFee || 0).toFixed(2)}</span>
                                </div>
-                               <div className="so-price-row total">
-                                  <span>Revenue</span>
-                                  <span>${(orderDetails[currentId].grandTotal || 0).toFixed(2)}</span>
-                               </div>
+                                <div className="so-price-row total" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '1rem', borderTop: '2px dashed #f1f5f9' }}>
+                                  <span style={{ fontWeight: '800' }}>Revenue</span>
+                                  <span style={{ fontWeight: '900', fontSize: '1.2rem' }}>Rs. {(orderDetails[currentId].grandTotal || 0).toFixed(2)}</span>
+                                </div>
                             </div>
                           </div>
                        ) : (
@@ -336,7 +408,7 @@ export default function SellerOrders() {
                                      </div>
                                    </td>
                                    <td style={{ textAlign: 'center', fontWeight: '600' }}>{item.quantity}</td>
-                                   <td style={{ textAlign: 'right', fontWeight: '700' }}>${(item.unitPrice * item.quantity).toFixed(2)}</td>
+                                   <td style={{ textAlign: 'right', fontWeight: '700' }}>Rs. {(item.unitPrice * item.quantity).toFixed(2)}</td>
                                  </tr>
                                ))}
                              </tbody>
@@ -377,9 +449,13 @@ export default function SellerOrders() {
                               <p style={{ margin: '4px 0', color: '#64748b', fontSize: '0.9rem' }}>
                                 <span style={{ marginRight: '8px' }}>📧</span> {orderDetails[currentId].customerEmail || "N/A"}
                               </p>
-                              <p style={{ margin: '4px 0', color: '#64748b', fontSize: '0.9rem' }}>
-                                <MapPin size={14} style={{ marginRight: '4px', verticalAlign: 'middle', color: '#6366f1' }} /> {orderDetails[currentId].shippingAddress || "N/A"}
-                              </p>
+                              <div style={{ margin: '4px 0', color: '#64748b', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
+                                <MapPin size={14} style={{ marginRight: '4px', color: '#6366f1' }} /> 
+                                <span style={{ marginRight: '8px' }}>{orderDetails[currentId].shippingAddress || "N/A"}</span>
+                                <button className="so-copy-btn" onClick={() => handleCopy(orderDetails[currentId].shippingAddress)} title="Copy Address">
+                                   <Copy size={12} />
+                                </button>
+                              </div>
 
                               {/* NEW: Delivery Preference & Order Note */}
                               {(orderDetails[currentId].deliveryTimePreference && orderDetails[currentId].deliveryTimePreference !== "Any Time") && (
@@ -404,11 +480,7 @@ export default function SellerOrders() {
                               )}
                             </div>
                          </div>
-                      ) : (
-                         <div style={{padding: '1rem 0', color: '#94a3b8', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer'}} onClick={() => toggleOrderItems(currentId)}>
-                            + {order.items?.length || order.totalItems || 0} items identified in this shipment. Click to expand.
-                         </div>
-                      )}
+                       ) : null}
 
                       {order.status !== 'CANCELED' && (
                         <div className="so-actions">
@@ -505,7 +577,7 @@ export default function SellerOrders() {
                                       </div>
                                     </td>
                                     <td style={{ textAlign: 'center', fontWeight: '600' }}>{item.quantity}</td>
-                                    <td style={{ textAlign: 'right', fontWeight: '700' }}>${(item.unitPrice * item.quantity).toFixed(2)}</td>
+                                    <td style={{ textAlign: 'right', fontWeight: '700' }}>Rs. {(item.unitPrice * item.quantity).toFixed(2)}</td>
                                     <td style={{ textAlign: 'right' }}>
                                       <button
                                         className="so-action-btn"
@@ -523,7 +595,7 @@ export default function SellerOrders() {
                                 <div style={{ textAlign: 'right' }}>
                                   <div style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Settlement Value</div>
                                   <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>
-                                    ${(orderDetails[currentId].grandTotal || 0).toFixed(2)}
+                                    Rs. {(orderDetails[currentId].grandTotal || 0).toFixed(2)}
                                   </div>
                                 </div>
                             </div>

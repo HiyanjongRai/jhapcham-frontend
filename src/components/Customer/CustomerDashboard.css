@@ -307,9 +307,9 @@
 }
 
 .status-delivered { background: #000; color: #fff; }
-.status-pending, .status-processing { background: #fff; color: #000; }
-.status-shipped { background: #fff; color: #000; border-style: dashed; }
-.status-cancelled { background: #fff; color: #999; border-color: #ddd; }
+.status-pending, .status-processing, .status-new { background: #fff; color: #000; }
+.status-shipped, .status-shipped_to_branch, .status-out_for_delivery { background: #fff; color: #000; border-style: dashed; }
+.status-canceled { background: #fff; color: #999; border-color: #ddd; }
 
 /* Buttons */
 .cd-review-btn {
@@ -364,4 +364,113 @@
   .cd-sidebar { transform: translateX(-100%); }
   .cd-main { margin-left: 0; padding: 2rem 1.5rem; }
   .cd-welcome { font-size: 2rem; }
+}
+
+/* Stepper Styles */
+.cd-stepper {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3rem;
+  position: relative;
+  padding: 0 1rem;
+}
+
+.cd-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.cd-step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #e5e5e5;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  margin-bottom: 0.75rem;
+}
+
+.cd-step.active .cd-step-circle {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.cd-step-line {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: #e5e5e5;
+  z-index: 1;
+  transform: translateY(-50%);
+}
+
+.cd-step:last-child .cd-step-line {
+  display: none;
+}
+
+.cd-step.active .cd-step-line {
+  background: #000;
+}
+
+/* Only color the line of the previous step if the next one is active? 
+   Ideally, we want the line to be black if the NEXT step is active. 
+   css grid can handle this better, but let's stick to flex.
+   Override: Make the line black if the step itself is active, but not the last one.
+*/
+.cd-step.active:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: #000;
+  z-index: -1;
+}
+
+.cd-step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #999;
+  transition: all 0.3s;
+}
+
+.cd-step.active .cd-step-label {
+  color: #000;
+}
+
+/* Buy Again Button */
+.cd-buy-again-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #000;
+  background: transparent;
+  color: #000;
+  font-weight: 700;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.cd-buy-again-btn:hover {
+  background: #000;
+  color: #fff;
+  transform: translateY(-1px);
 }

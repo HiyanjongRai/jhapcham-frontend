@@ -11,6 +11,17 @@ import api from "../../api/axios";
 import { API_BASE } from "../config/config";
 import ErrorToast from "../ErrorToast/ErrorToast";
 import "./CheckoutPage.css";
+import { 
+  User, 
+  MapPin, 
+  Truck, 
+  CreditCard, 
+  FileText, 
+  CheckCircle,
+  ShieldCheck,
+  Wallet,
+  Banknote
+} from "lucide-react";
 
 
 function CheckoutPage() {
@@ -394,7 +405,7 @@ function CheckoutPage() {
         {/* Customer Information */}
         <div className="checkout-section">
           <h3 className="section-title">
-            <i className="icon">👤</i> Customer Details
+            <User className="icon-lucide" /> Customer Details
           </h3>
 
           <div className="form-field">
@@ -445,7 +456,7 @@ function CheckoutPage() {
         {/* Delivery Address - Structured */}
         <div className="checkout-section">
           <h3 className="section-title">
-            <i className="icon">📍</i> Delivery Address
+            <MapPin className="icon-lucide" /> Delivery Address
           </h3>
 
           <div className="form-field">
@@ -538,7 +549,7 @@ function CheckoutPage() {
         {/* Delivery Preferences */}
         <div className="checkout-section">
           <h3 className="section-title">
-            <i className="icon">🚚</i> Delivery Preferences
+            <Truck className="icon-lucide" /> Delivery Preferences
           </h3>
 
           <div className="form-field">
@@ -566,40 +577,48 @@ function CheckoutPage() {
         {/* Payment Method */}
         <div className="checkout-section">
           <h3 className="section-title">
-            <i className="icon">💳</i> Payment Method
+            <CreditCard className="icon-lucide" /> Payment Method
           </h3>
 
-          <div className="shipping-option">
-            <input
-              type="radio"
-              name="paymentMethod"
-              checked={paymentMethod === "COD"}
-              onChange={() => setPaymentMethod("COD")}
-            />
-            <label>
-              <strong>Cash on Delivery (COD)</strong> <br />
-              Pay when you receive your order
-            </label>
-          </div>
+          <div className="payment-grid">
+            <div 
+              className={`payment-card ${paymentMethod === "COD" ? "active" : ""}`}
+              onClick={() => setPaymentMethod("COD")}
+            >
+              <div className="payment-icon-wrapper">
+                <Banknote size={24} />
+              </div>
+              <div className="payment-info">
+                <strong>Cash on Delivery (COD)</strong>
+                <span>Pay when you receive your order</span>
+              </div>
+              <div className="payment-radio">
+                {paymentMethod === "COD" && <div className="payment-radio-inner" />}
+              </div>
+            </div>
 
-          <div className="shipping-option">
-            <input
-              type="radio"
-              name="paymentMethod"
-              checked={paymentMethod === "WALLET"}
-              onChange={() => setPaymentMethod("WALLET")}
-            />
-            <label>
-              <strong>Digital Wallet</strong> <br />
-              Pay with Khalti / Esewa (Coming Soon)
-            </label>
+            <div 
+              className={`payment-card ${paymentMethod === "WALLET" ? "active" : ""}`}
+              onClick={() => setPaymentMethod("WALLET")}
+            >
+              <div className="payment-icon-wrapper">
+                <Wallet size={24} />
+              </div>
+              <div className="payment-info">
+                <strong>Digital Wallet</strong>
+                <span>Pay with Khalti / Esewa (Coming Soon)</span>
+              </div>
+              <div className="payment-radio">
+                {paymentMethod === "WALLET" && <div className="payment-radio-inner" />}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Order Note */}
         <div className="checkout-section">
           <h3 className="section-title">
-            <i className="icon">📝</i> Order Note (Optional)
+            <FileText className="icon-lucide" /> Order Note (Optional)
           </h3>
           <div className="form-field">
             <textarea
@@ -679,12 +698,12 @@ function CheckoutPage() {
   </div>
 
   <div className="summary-item-price">
-    ${(item.unitPrice || 0).toFixed(2)}
+    Rs. {(item.unitPrice || 0).toFixed(2)}
   </div>
 </div>
 
 
-              <div className="summary-line">$ {(item.lineTotal || 0).toFixed(2)}</div>
+              <div className="summary-line">Rs. {(item.lineTotal || 0).toFixed(2)}</div>
             </div>
           ))}
 
@@ -692,29 +711,29 @@ function CheckoutPage() {
 
           <div className="summary-row">
             <span>Subtotal</span>
-            <span>$ {(previewData ? (previewData.itemsTotal || 0) : (total || 0)).toFixed(2)}</span>
+            <span>Rs. {(previewData ? (previewData.itemsTotal || 0) : (total || 0)).toFixed(2)}</span>
           </div>
 
           <div className="summary-row">
             <span>Shipping</span>
             <span>
                 {previewData 
-                  ? (previewData.shippingFee === 0 ? "Free Shipping" : `$ ${(previewData.shippingFee || 0).toFixed(2)}`)
+                  ? (previewData.shippingFee === 0 ? "Free Shipping" : `Rs. ${(previewData.shippingFee || 0).toFixed(2)}`)
                   : "Calculating..."}
             </span>
           </div>
 
           {previewData && previewData.discountTotal > 0 && (
-             <div className="summary-row" style={{ color: 'green' }}>
+             <div className="summary-row" style={{ color: '#10b981' }}>
                 <span>Discount</span>
-                <span>- $ {(previewData.discountTotal || 0).toFixed(2)}</span>
+                <span>- Rs. {(previewData.discountTotal || 0).toFixed(2)}</span>
              </div>
           )}
 
           <div className="summary-row total">
             <strong>Grand Total</strong>
             <strong>
-              $ {(previewData ? (previewData.grandTotal || 0) : (total || 0)).toFixed(2)}
+              Rs. {(previewData ? (previewData.grandTotal || 0) : (total || 0)).toFixed(2)}
             </strong>
           </div>
           

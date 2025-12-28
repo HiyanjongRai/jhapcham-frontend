@@ -13,7 +13,7 @@ import SellerRegister from "./components/Seller/SellerRegister";
 import SellerApplication from "./components/Seller/SellerApplication";
 import AdminDashboard from "./components/Admin/AdminDashboard";
 import CheckoutPage from "./components/Checkout/CheckoutPage";
-import OrderSuccess from "./components/Oder/OrderSuccess.jsx";
+import OrderSuccess from "./components/Order/OrderSuccess.jsx";
 import SellerOrders from "./components/Seller/SellerOrders";
 import NotificationList from "./components/NotificationPage/NotificationList";
 import ReviewForm from "./components/Review/ReviewForm.jsx";

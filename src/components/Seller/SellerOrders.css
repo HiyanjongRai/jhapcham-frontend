@@ -247,7 +247,7 @@
 }
 
 .so-badge-processing { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
-.so-badge-shipped { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+.so-badge-shipped, .so-badge-shipped_to_branch, .so-badge-out_for_delivery { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
 .so-badge-delivered { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
 .so-badge-canceled { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 .so-badge-new { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
@@ -400,5 +400,113 @@
 @media (max-width: 1024px) {
   .so-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
   .so-actions { flex-wrap: wrap; }
+}
+
+/* Stepper (Seller Side) */
+.so-stepper {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 1rem;
+}
+
+.so-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.so-step-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  transition: all 0.3s;
+}
+
+.so-step.active .so-step-circle {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+}
+
+.so-step-line {
+  position: absolute;
+  top: 19px; /* adjust based on circle pos */
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: -1;
+  transform: translateY(-50%);
+}
+
+.so-step:last-child .so-step-line {
+  display: none;
+}
+
+.so-step.active:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 19px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: #0f172a;
+  z-index: -1;
+}
+
+.so-step-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+  transition: all 0.3s;
+}
+
+.so-step.active .so-step-label {
+  color: #0f172a;
+}
+
+/* Copy Button */
+.so-copy-btn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 0.5rem;
+  transition: all 0.2s;
+}
+
+.so-copy-btn:hover {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+}
+
+/* Active Filter */
+.so-stat-card.active-filter {
+  box-shadow: 0 0 0 2px #0f172a;
+  transform: translateY(-4px);
 }
 

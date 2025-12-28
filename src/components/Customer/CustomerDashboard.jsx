@@ -213,7 +213,7 @@ export default function CustomerDashboard() {
 /* Tab Components */
 
 const OverviewTab = ({ user, orders, wishlist }) => {
-  const pendingCount = orders.filter(o => !["DELIVERED", "CANCELLED"].includes((o.stage || o.status || "").toUpperCase())).length;
+  const pendingCount = orders.filter(o => !["DELIVERED", "CANCELED"].includes((o.stage || o.status || "").toUpperCase())).length;
 
   return (
     <div className="fade-in">
@@ -280,7 +280,7 @@ const WishlistTab = ({ wishlist, navigate, onRemove }) => (
           <div style={{ padding: '1.25rem' }}>
             <h4 className="cd-order-title" style={{ fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.productName}</h4>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-              <span className="cd-order-price">₹{(item.price || 0).toLocaleString()}</span>
+              <span className="cd-order-price">Rs. {(item.price || 0).toLocaleString()}</span>
               <button className="cd-review-btn cd-review-btn-primary" style={{ padding: '0.5rem 1rem' }} onClick={() => navigate(`/products/${item.productId}`)}>Buy</button>
             </div>
           </div>
@@ -368,6 +368,7 @@ const StatCard = ({ icon, value, label }) => (
 
 const OrderItem = ({ order, showActions, onCancel }) => {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
   const status = (order.stage || order.status || 'PENDING').toUpperCase();
   const canCancel = ["NEW", "PENDING", "PROCESSING"].includes(status);
 
@@ -378,7 +379,13 @@ const OrderItem = ({ order, showActions, onCancel }) => {
   
   const title = productNames.length > 0 
     ? productNames.slice(0, 2).join(", ") + (productNames.length > 2 ? "..." : "")
-    : `Order #${order.orderId || order.id}`;
+    : `Order #${String(order.orderId || order.id).padStart(4, '0')}`;
+
+  // Stepper Logic
+  const steps = ["NEW", "PROCESSING", "SHIPPED", "DELIVERED"];
+  const currentStepIndex = steps.indexOf(status) === -1 
+      ? (["SHIPPED_TO_BRANCH", "OUT_FOR_DELIVERY"].includes(status) ? 2 : (status === "CANCELED" ? -1 : 0)) 
+      : steps.indexOf(status);
 
   return (
     <div style={{ borderBottom: '1px solid #f1f1f1' }}>
@@ -399,45 +406,74 @@ const OrderItem = ({ order, showActions, onCancel }) => {
           </div>
         </div>
         <div className="cd-order-price" style={{ marginRight: '2rem' }}>
-          ₹{(order.totalAmount || order.grandTotal || 0).toLocaleString()}
+          Rs. {(order.totalAmount || order.grandTotal || 0).toLocaleString()}
         </div>
-        <div className={`cd-status-badge status-${status.toLowerCase()}`}>{status}</div>
+        <div className={`cd-status-badge status-${status.toLowerCase()}`}>{status.replace(/_/g, " ")}</div>
         <ChevronRight size={20} style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: '0.2s', marginLeft: '1rem', color: '#ccc' }} />
       </div>
 
       {expanded && (
-        <div className="fade-in" style={{ padding: '1.5rem', background: '#fafafa', borderTop: '1px solid #eee' }}>
-           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+        <div className="fade-in" style={{ padding: '2rem', background: '#fafafa', borderTop: '1px solid #eee' }}>
+           {/* Order Tracker Stepper */}
+           {status !== "CANCELED" && (
+             <div className="cd-stepper">
+               {["Placed", "Processing", "Shipped", "Delivered"].map((step, idx) => (
+                 <div key={step} className={`cd-step ${idx <= currentStepIndex ? "active" : ""}`}>
+                   <div className="cd-step-circle">{idx <= currentStepIndex ? <Package size={14}/> : idx + 1}</div>
+                   <div className="cd-step-line"></div>
+                   <span className="cd-step-label">{step}</span>
+                 </div>
+               ))}
+             </div>
+           )}
+
+           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '3rem', marginTop: '2rem' }}>
              <div>
-                <h5 style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '900', color: '#999', margin: '0 0 1rem 0' }}>Order Details</h5>
+                <h5 style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '900', color: '#999', margin: '0 0 1.5rem 0' }}>Order Items</h5>
                 {order.items?.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '1.25rem', marginBottom: '1.25rem', alignItems: 'center' }}>
+                  <div key={idx} style={{ display: 'flex', gap: '1.25rem', marginBottom: '1.5rem', alignItems: 'center' }}>
                     <img 
                       src={item.imagePath 
                         ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) 
                         : "https://via.placeholder.com/50"} 
                       alt="Product" 
-                      style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #eee' }} 
+                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #eee' }} 
                     />
                     <div style={{ flex: 1 }}>
-                       <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#000' }}>
+                       <div style={{ fontWeight: '800', fontSize: '1rem', color: '#000', marginBottom: '0.25rem' }}>
                           {item.productName || item.name || item.productNameSnapshot || "Product Item"}
                        </div>
-                       <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: '600' }}>{item.quantity} × ₹{item.unitPrice?.toLocaleString()}</div>
+                       <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: '500' }}>
+                         {item.quantity} × Rs. {item.unitPrice?.toLocaleString()}
+                       </div>
                     </div>
+                    {/* Buy Again Button */}
+                    <button 
+                        className="cd-buy-again-btn"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/products/${item.productId || item.productIdSnapshot}`);
+                        }}
+                    >
+                        Buy Again
+                    </button>
                   </div>
                 ))}
              </div>
+             
              <div>
-                <div style={{ background: '#fff', padding: '1.5rem', border: '1px solid #eee' }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}><span>Subtotal</span><span>₹{order.itemsTotal?.toLocaleString()}</span></div>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}><span>Shipping</span><span>{order.shippingFee > 0 ? `₹${order.shippingFee}` : "FREE"}</span></div>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '900', fontSize: '1.1rem' }}><span>Total</span><span>₹{order.grandTotal?.toLocaleString()}</span></div>
+                <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #eee', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem', color: '#666' }}><span>Subtotal</span><span>Rs. {order.itemsTotal?.toLocaleString()}</span></div>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.9rem', color: '#666', borderBottom: '1px dashed #eee', paddingBottom: '1rem' }}><span>Shipping</span><span>{order.shippingFee > 0 ? `Rs. ${order.shippingFee}` : "Free"}</span></div>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '1.2rem', color: '#000' }}><span>Total</span><span>Rs. {order.grandTotal?.toLocaleString()}</span></div>
                 </div>
+                
                 {showActions && canCancel && (
                    <button 
                      onClick={(e) => { e.stopPropagation(); onCancel(order.orderId || order.id); }}
-                     style={{ width: '100%', marginTop: '1rem', background: '#fff', border: '1px solid #000', color: '#000', padding: '0.75rem', fontWeight: '800', cursor: 'pointer' }}
+                     style={{ width: '100%', marginTop: '1rem', background: '#fff', border: '1px solid #ff4d4f', color: '#ff4d4f', padding: '0.85rem', fontWeight: '700', cursor: 'pointer', borderRadius: '8px', transition: 'all 0.2s' }}
+                     onMouseOver={(e) => {e.currentTarget.style.background = '#ff4d4f'; e.currentTarget.style.color = '#fff';}}
+                     onMouseOut={(e) => {e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#ff4d4f';}}
                    >
                      CANCEL ORDER
                    </button>

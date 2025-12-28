@@ -13,15 +13,23 @@
 
 .nav {
   height: var(--nav-height);
-  background: var(--nav-bg);
-  border-bottom: 1px solid var(--nav-border);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(229, 229, 229, 0.5);
   position: sticky;
   top: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: 'Plus Jakarta Sans', sans-serif;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+.nav.scrolled {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
 }
 
 .nav-container {
@@ -91,24 +99,37 @@
   width: 100%;
 }
 
-/* CENTER: Search Bar */
+/* CENTER: Search Bar - Enhanced */
 .nav-center {
   flex: 1;
-  max-width: 500px;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
 }
 
 .nav-search-container {
   display: flex;
   align-items: center;
-  background: #ffffff;
-  border: 1.5px solid #000000;
-  border-radius: 4px;
-  padding: 2px 2px 2px 1rem;
-  transition: all 0.2s ease;
+  background: #f1f5f9;
+  border: 1px solid transparent;
+  border-radius: 99px; /* Pill shape for modern feel */
+  padding: 4px 4px 4px 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  max-width: 480px;
+}
+
+.nav-search-container:hover {
+  background: #fff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .nav-search-container:focus-within {
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+  background: #fff;
+  border-color: #000;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+  max-width: 100%; /* Expand slightly on focus */
 }
 
 .search-icon {
@@ -128,16 +149,17 @@
 }
 
 .search-submit-btn {
-  background: var(--nav-text);
+  background: #000;
   color: white;
   border: none;
-  padding: 0.6rem 1.25rem;
-  border-radius: 2px;
-  font-size: 0.8rem;
-  font-weight: 800;
+  padding: 0.6rem 1.5rem;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  transition: all 0.2s;
 }
 
 .search-submit-btn:hover {
@@ -177,12 +199,12 @@
 
 .nav-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  background: #000;
+  top: 0;
+  right: 0;
+  background: #ef4444;
   color: white;
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 800;
   min-width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -190,6 +212,13 @@
   align-items: center;
   justify-content: center;
   border: 2px solid white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
 .nav-auth-btns {
@@ -254,12 +283,18 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: #fff;
-  padding: 0.35rem 0.5rem;
-  border-radius: 4px;
+  background: #f8fafc;
+  padding: 0.4rem 0.6rem;
+  border-radius: 99px;
   cursor: pointer;
-  border: 1.5px solid #000;
-  transition: all 0.2s;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-user-profile:hover {
+  background: #fff;
+  border-color: #000;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .nav-user-profile:hover {
@@ -273,15 +308,16 @@
 }
 
 .nav-avatar {
-  width: 28px;
-  height: 28px;
-  background: #000;
-  border-radius: 2px;
+  width: 32px;
+  height: 32px;
+  background: #e2e8f0;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #64748b;
   transition: all 0.2s;
+  overflow: hidden;
 }
 
 .nav-role-tag {
