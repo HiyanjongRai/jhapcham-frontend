@@ -3,14 +3,20 @@ import { API_BASE } from "../config/config";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUserId, apiAddToCart } from "../AddCart/cartUtils";
 import { apiGetWishlist, apiRemoveFromWishlist } from "./wishlistUtils";
+import Toast from "../Toast/Toast";
 import "./WishlistPage.css";
 
 function WishlistPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
 
   const navigate = useNavigate();
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type, visible: true });
+  };
 
   const loadWishlist = async () => {
     const userId = getCurrentUserId();
@@ -51,9 +57,10 @@ function WishlistPage() {
     try {
       await apiRemoveFromWishlist(userId, productId);
       setItems((prev) => prev.filter((it) => it.id !== productId && it.productId !== productId));
+      showToast("Removed from wishlist", "info");
     } catch (e) {
       console.error(e);
-      alert("Failed to remove item");
+      showToast("Failed to remove item", "error");
     }
   };
 
@@ -70,10 +77,11 @@ function WishlistPage() {
 
     try {
       await apiAddToCart(userId, product.productId, 1, null, null);
-      navigate("/cart");
+      showToast("Added to cart!", "success");
+      setTimeout(() => navigate("/cart"), 1000);
     } catch (err) {
       console.error("Buy Now failed", err);
-      alert(err.message || "Unable to add product to cart");
+      showToast(err.message || "Unable to add product to cart", "error");
     }
   };
 
@@ -192,6 +200,13 @@ function WishlistPage() {
           );
         })}
       </div>
+      {toast.visible && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ ...toast, visible: false })} 
+        />
+      )}
     </div>
   );
 }

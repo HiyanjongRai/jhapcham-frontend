@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
 import './ErrorToast.css';
 
 /**
@@ -49,8 +50,15 @@ const ErrorToast = ({ error, onClose, duration = 5000 }) => {
               <span className="error-toast-status">Status: {error.status}</span>
             )}
           </div>
-          <button className="error-toast-close" onClick={onClose}>
-            ✕
+          <button 
+            className="error-toast-close" 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+          >
+            <X size={20} />
           </button>
         </div>
 

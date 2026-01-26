@@ -1,133 +1,491 @@
-.products-wrapper {
-  max-width: 1300px;
+/* =============================================
+   PRODUCTS GRID - LUXE MONO PREMIUM DESIGN
+   ============================================= */
+
+/* ============ MAIN LAYOUT ============ */
+.pg-layout {
+  display: flex;
+  gap: 24px;
+  padding: 2rem 30px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 20px;
-  box-sizing: border-box;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* ============ HEADER ============ */
+/* ============ SIDEBAR FILTERS ============ */
+.pg-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 16px;
+  height: fit-content;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 20px -5px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 100px;
+  border: 1px solid #f1f5f9;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pg-sidebar:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 20px 30px -10px rgba(0, 0, 0, 0.08);
+}
+
+.pg-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============ FILTER GROUPS ============ */
+.pg-filter-group {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pg-filter-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.pg-filter-title {
+  font-size: 0.75rem;
+  font-weight: 900;
+  margin-bottom: 1.25rem;
+  color: #000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Price/Range Inputs */
+.pg-price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pg-price-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #f1f5f9;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #000;
+  transition: all 0.2s ease;
+  background: #fafbfc;
+}
+
+.pg-price-input:focus {
+  outline: none;
+  border-color: #000;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.pg-price-separator {
+  color: #cbd5e1;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+/* Select Dropdown */
+.products-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #f1f5f9;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #000;
+  background: #fafbfc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.products-select:focus {
+  outline: none;
+  border-color: #000;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.products-select:hover {
+  border-color: #cbd5e1;
+}
+
+/* Checkboxes / Radio Labels */
+.pg-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 0.875rem;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.pg-checkbox-label:hover {
+  color: #000;
+  background: #f8fafc;
+  padding-left: 1rem;
+}
+
+.pg-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #000;
+  cursor: pointer;
+}
+
+/* Buttons */
+.pg-apply-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #000;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pg-apply-btn:hover {
+  background: #1a1a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.pg-apply-btn:active {
+  transform: translateY(0);
+}
+
+.pg-clear-btn {
+  background: transparent;
+  color: #64748b;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.pg-clear-btn:hover {
+  color: #000;
+}
+
+/* ============ PRODUCTS HEADER ============ */
 .products-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   flex-wrap: wrap;
-  margin-bottom: 20px;
-  gap: 16px;
+  margin-bottom: 2.5rem;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.products-header-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .products-title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: #000;
+  margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .products-subtitle {
-  margin-top: 4px;
-  color: #666;
-  font-size: 14px;
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 /* ============ TOOLBAR ============ */
 .products-toolbar {
   display: flex;
-  gap: 10px;
+  gap: 1rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
-.products-search,
-.products-select {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 14px;
+.products-search {
+  padding: 0.875rem 1.25rem;
+  border-radius: 12px;
+  border: 2px solid #f1f5f9;
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 280px;
+  background: #fafbfc;
+  transition: all 0.2s ease;
 }
 
-/* ======================================================
-   ⭐ GRID: DESKTOP/TABLET AUTO-FILL LAYOUT
-   ====================================================== */
+.products-search:focus {
+  outline: none;
+  border-color: #000;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.products-search::placeholder {
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+/* ============ PRODUCTS GRID ============ */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
   width: 100%;
-  box-sizing: border-box;
-
-  /* Makes cards stretch evenly */
-  justify-items: stretch;
+  animation: fadeInUp 0.5s ease;
 }
 
-/* ======================================================
-   📱 MOBILE (2×2 FIXED LAYOUT)
-   ====================================================== */
-/* 📱 Mobile: force exactly 2 columns */
-@media (max-width: 600px) {
-
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-
-  /* force each card to fully fit inside the column */
-  .products-grid .pc-card {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /* --- MOBILE SIZE FIXES --- */
-
-  /* Smaller product title */
-  .pc-title {
-    font-size: 14px;
-  }
-
-  /* Smaller description */
-  .pc-description {
-    font-size: 12px;
-    line-height: 1.3;
-  }
-
-  /* Smaller price */
-  .pc-price {
-    font-size: 14px;
-  }
-
-  /* Smaller star size */
-  .pc-stars {
-    font-size: 12px;
-  }
-
-  .pc-rating-count {
-    font-size: 11px;
-  }
-
-  /* Smaller meta icons */
-  .pc-meta-row {
-    font-size: 11px;
-    gap: 6px;
-  }
-
-  /* Smaller Add to cart button */
-  .pc-btn {
-    padding: 6px 10px;
-    font-size: 12px;
-    border-radius: 6px;
-  }
-
-  /* Reduce padding inside card */
-  .pc-card {
-    padding: 10px;
-  }
-
-  /* Slightly smaller image so grid stays aligned */
-  .pc-image-shell {
-    height: 150px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-
-
-/* ============ LOADING / ERROR ============ */
-.products-loading,
+/* ============ EMPTY / ERROR STATES ============ */
+.products-empty,
 .products-error {
   text-align: center;
-  font-size: 16px;
-  padding: 40px 0;
+  padding: 4rem 2rem;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 600;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 2px dashed #e2e8f0;
+}
+
+.products-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+/* ============ SKELETON LOADER ============ */
+.product-skeleton {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 280px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-text {
+  height: 16px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  margin: 1rem;
+  border-radius: 4px;
+}
+
+.skeleton-title {
+  width: 70%;
+  height: 20px;
+}
+
+.skeleton-price {
+  width: 40%;
+  height: 18px;
+}
+
+.skeleton-rating {
+  width: 50%;
+  height: 14px;
+}
+
+/* ============ RESPONSIVE DESIGN ============ */
+@media (max-width: 1400px) {
+  .products-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pg-layout {
+    flex-direction: column;
+    padding: 2rem 20px;
+    gap: 2rem;
+  }
+  
+  .pg-sidebar {
+    width: 100%;
+    position: static;
+  }
+
+  .products-title {
+    font-size: 1.75rem;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .products-title {
+    font-size: 1.5rem;
+  }
+
+  .products-header {
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .pg-layout {
+    padding: 1.5rem 16px;
+  }
+
+  .products-search {
+    min-width: 100%;
+  }
+
+  .products-toolbar {
+    width: 100%;
+  }
+
+  .products-select {
+    flex: 1;
+  }
+}
+
+/* ============ FILTER TOGGLE BUTTON (All Screens) ============ */
+.products-filter-toggle {
+  display: flex;
+  padding: 0.875rem 1.25rem;
+  background: #000;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.products-filter-toggle:hover {
+  background: #1a1a1a;
+}
+
+/* Sidebar hidden by default, shown when 'show' class is added */
+.pg-sidebar {
+  display: none;
+}
+
+.pg-sidebar.show {
+  display: block;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 1024px) {
+  .pg-sidebar.show {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    height: 100vh;
+    overflow-y: auto;
+    border-radius: 0;
+    animation: slideInLeft 0.3s ease;
+  }
+
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}
+
+/* Desktop: Sidebar appears in layout when shown */
+@media (min-width: 1025px) {
+  .pg-sidebar.show {
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

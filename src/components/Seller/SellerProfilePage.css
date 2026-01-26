@@ -55,7 +55,8 @@
 }
 
 .spp-header-content {
-  max-width: 1400px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 40px;
   display: flex;
@@ -199,7 +200,8 @@
 
 /* Main Content Layout */
 .spp-main-layout {
-  max-width: 1400px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 40px;
   display: grid;
@@ -391,7 +393,8 @@
 
 /* Products Section */
 .spp-section-header {
-  max-width: 1400px;
+  width: 100%;
+  max-width: 100%;
   margin: 60px auto 32px;
   padding: 0 40px;
   display: flex;
@@ -407,12 +410,13 @@
 }
 
 .spp-products-grid {
-  max-width: 1400px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 40px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
 }
 
 .spp-prod-card {
@@ -484,7 +488,18 @@
 }
 
 /* Responsive Styles */
-@media (max-width: 1024px) {
+@media (max-width: 1400px) {
+  .spp-products-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .spp-products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
   .spp-main-layout {
     grid-template-columns: 1fr;
   }

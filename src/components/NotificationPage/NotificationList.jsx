@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { API_BASE } from "../config/config";
 import axios from "../../api/axios";
-import { Bell, CheckCircle2, AlertTriangle, Package, Info, Search, XCircle, Shield, Store } from "lucide-react";
+import { Bell, CheckCircle2, AlertTriangle, Package, Info, Search, XCircle, Shield, Store, Flag, Megaphone, MessageSquare } from "lucide-react";
+import "./NotificationPage.css";
 
 export default function NotificationList() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
 
     useEffect(() => {
         fetchNotifications();
@@ -57,6 +59,17 @@ export default function NotificationList() {
         }
     };
 
+    const markAllAsRead = async () => {
+        try {
+            const unreadIds = notifications.filter(n => !n.isRead).map(n => n.id);
+            await Promise.all(unreadIds.map(id => axios.put(`${API_BASE}/api/notifications/${id}/read`)));
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            window.dispatchEvent(new Event('notifications-updated'));
+        } catch (err) {
+            console.error("Failed to mark all as read:", err);
+        }
+    };
+
     const formatStatus = (status) => {
         if (!status) return '';
         return status.replace(/_/g, ' ').toLowerCase()
@@ -78,18 +91,30 @@ export default function NotificationList() {
         return "Just now";
     };
 
-    const getIcon = (type, title) => {
+    const getIconData = (type, title) => {
+        const isReport = type === 'REPORT_ALERT' || title.toUpperCase().includes('REPORT');
+        const isMessage = type === 'SELLER_ALERT' || title.toUpperCase().includes('MESSAGE');
+        const isCampaign = type === 'NEW_CAMPAIGN' || title.toUpperCase().includes('CAMPAIGN');
+        const isOrder = type === 'ORDER_UPDATE';
+        const isPromo = title.toUpperCase().includes('DISCOUNT') || title.toUpperCase().includes('SALE') || title.toUpperCase().includes('OFF');
+
         const status = title.split(': ')[1] || '';
-        if (status.includes('RESOLVED')) return <CheckCircle2 size={18} className="notif-badge-icon success" />;
-        if (status.includes('INVESTIGATION')) return <Search size={18} className="notif-badge-icon warning" />;
-        if (status.includes('REJECTED') || status.includes('CLOSED')) return <XCircle size={18} className="notif-badge-icon danger" />;
+        
+        // Status-based icons
+        if (status.includes('RESOLVED')) return { icon: <CheckCircle2 size={20} className="notif-badge-icon success" />, bgClass: 'icon-message' };
+        if (status.includes('INVESTIGATION')) return { icon: <Search size={20} className="notif-badge-icon warning" />, bgClass: 'icon-promo' };
+        if (status.includes('REJECTED') || status.includes('CLOSED')) return { icon: <XCircle size={20} className="notif-badge-icon danger" />, bgClass: 'icon-report' };
+        
+        // Type-based icons
+        if (isReport) return { icon: <Flag size={20} className="notif-badge-icon danger" />, bgClass: 'icon-report' };
+        if (isMessage) return { icon: <MessageSquare size={20} className="notif-badge-icon green" />, bgClass: 'icon-message' };
+        if (isCampaign) return { icon: <Megaphone size={20} className="notif-badge-icon purple" />, bgClass: 'icon-campaign' };
+        if (isPromo) return { icon: <Megaphone size={20} className="notif-badge-icon warning" />, bgClass: 'icon-promo' };
+        if (isOrder) return { icon: <Package size={20} className="notif-badge-icon info" />, bgClass: 'icon-order' };
         
         switch (type) {
-            case 'REPORT_ALERT': return <AlertTriangle size={18} className="notif-badge-icon danger" />;
-            case 'ORDER_UPDATE': return <Package size={18} className="notif-badge-icon info" />;
-            case 'SYSTEM_ALERT': return <Shield size={18} className="notif-badge-icon blue" />;
-            case 'SELLER_ALERT': return <Store size={18} className="notif-badge-icon green" />;
-            default: return <Bell size={18} className="notif-badge-icon default" />;
+            case 'SYSTEM_ALERT': return { icon: <Shield size={20} className="notif-badge-icon blue" />, bgClass: 'icon-system' };
+            default: return { icon: <Bell size={20} className="notif-badge-icon default" />, bgClass: 'icon-default' };
         }
     };
 
@@ -110,11 +135,18 @@ export default function NotificationList() {
         };
     };
 
+    // Filter notifications
+    const filteredNotifications = notifications.filter(n => {
+        if (filter === 'unread') return !n.isRead;
+        if (filter === 'read') return n.isRead;
+        return true;
+    });
+
     if (loading) return (
         <div className="notif-container">
             <div className="notif-loader">
                 <div className="loader-spinner"></div>
-                <p>Syncing your alerts...</p>
+                <p>Loading notifications...</p>
             </div>
         </div>
     );
@@ -123,33 +155,73 @@ export default function NotificationList() {
         <div className="notif-container">
             <div className="notif-header">
                 <div className="notif-header-content">
-                    <h1>Notifications</h1>
-                    <p>Track your reports, orders, and account updates in real-time.</p>
+                    <div className="notif-title-row">
+                        <Bell size={32} className="header-icon" />
+                        <div>
+                            <h1>Notifications</h1>
+                            <p>Stay updated with your latest activities</p>
+                        </div>
+                    </div>
                 </div>
                 {notifications.length > 0 && (
-                    <div className="notif-header-stats">
-                        <span className="stat-pill unread">{notifications.filter(n => !n.isRead).length} Unread</span>
-                        <span className="stat-pill total">{notifications.length} Total</span>
+                    <div className="notif-header-actions">
+                        <div className="notif-header-stats">
+                            <span className="stat-pill unread">{notifications.filter(n => !n.isRead).length} Unread</span>
+                            <span className="stat-pill total">{notifications.length} Total</span>
+                        </div>
+                        {notifications.some(n => !n.isRead) && (
+                            <button className="mark-all-read-btn" onClick={markAllAsRead}>
+                                <CheckCircle2 size={16} />
+                                Mark all as read
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
 
+            {/* Filter Tabs */}
+            {notifications.length > 0 && (
+                <div className="notif-filter-tabs">
+                    <button 
+                        className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+                        onClick={() => setFilter('all')}
+                    >
+                        All
+                        <span className="tab-count">{notifications.length}</span>
+                    </button>
+                    <button 
+                        className={`filter-tab ${filter === 'unread' ? 'active' : ''}`}
+                        onClick={() => setFilter('unread')}
+                    >
+                        Unread
+                        <span className="tab-count">{notifications.filter(n => !n.isRead).length}</span>
+                    </button>
+                    <button 
+                        className={`filter-tab ${filter === 'read' ? 'active' : ''}`}
+                        onClick={() => setFilter('read')}
+                    >
+                        Read
+                        <span className="tab-count">{notifications.filter(n => n.isRead).length}</span>
+                    </button>
+                </div>
+            )}
+
             {error && <div className="notif-error-card"><AlertTriangle size={20}/> {error}</div>}
 
             <div className="notif-list">
-                {notifications.length === 0 ? (
+                {filteredNotifications.length === 0 ? (
                     <div className="notif-empty">
                         <div className="empty-icon-wrapper">
                             <Bell size={48} />
                         </div>
-                        <h3>All caught up!</h3>
-                        <p>No new notifications at the moment. We'll let you know when something happens.</p>
+                        <h3>{filter === 'all' ? 'All caught up!' : filter === 'unread' ? 'No unread notifications' : 'No read notifications'}</h3>
+                        <p>{filter === 'all' ? 'No notifications at the moment.' : filter === 'unread' ? 'You\'ve read all your notifications!' : 'No notifications have been read yet.'}</p>
                     </div>
                 ) : (
-                    notifications.map(n => {
+                    filteredNotifications.map(n => {
                         const { body, note } = parseMessage(n.message);
-                        const isUpdate = n.title.includes(':');
-                        const statusLabel = isUpdate ? n.title.split(': ')[1] : '';
+                        const iconData = getIconData(n.type, n.title);
+                        const displayTitle = n.title.includes(':') ? n.title.split(': ')[0] : n.title;
                         
                         return (
                             <div 
@@ -157,41 +229,28 @@ export default function NotificationList() {
                                 className={`notif-item ${!n.isRead ? 'unread' : ''}`}
                                 onClick={() => !n.isRead && markAsRead(n.id)}
                             >
-                                    <div className="notif-sidebar">
-                                        <div className="notif-icon-container">
-                                            {getIcon(n.type, n.title)}
-                                        </div>
+                                <div className="notif-sidebar">
+                                    <div className={`notif-icon-container ${iconData.bgClass}`}>
+                                        {iconData.icon}
                                     </div>
+                                </div>
 
                                 <div className="notif-main">
-                                    <div className="notif-top">
-                                        <div className="notif-title-row">
-                                            <span className="notif-category">{n.type.replace(/_/g, ' ')}</span>
-                                            <span className="notif-title-text">{isUpdate ? n.title.split(': ')[0] : n.title}</span>
-                                        </div>
-                                        <span className="notif-date">{timeAgo(n.createdAt)}</span>
+                                    <div className="notif-title-text">
+                                        {displayTitle}
                                     </div>
-
+                                    
                                     <div className="notif-content-area">
-                                        {statusLabel && (
-                                            <div className={`notif-status-badge ${getBadgeClass(n.title)}`}>
-                                                {formatStatus(statusLabel)}
-                                            </div>
-                                        )}
                                         <p className="notif-body-text">{body}</p>
                                         
                                         {note && (
                                             <div className="notif-admin-note">
-                                                <div className="note-label">ADMIN FEEDBACK</div>
+                                                <div className="note-label"><Info size={10}/> Admin Note</div>
                                                 <p>{note}</p>
                                             </div>
                                         )}
-
-                                        {n.relatedEntityId && (
-                                            <div className="notif-actions">
-                                                <span className="action-hint">Reference ID: #{n.relatedEntityId}</span>
-                                            </div>
-                                        )}
+                                        
+                                        <span className="notif-date">{timeAgo(n.createdAt)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -199,219 +258,6 @@ export default function NotificationList() {
                     })
                 )}
             </div>
-
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Same+Serif&family=Inter:wght@400;500;600;700&display=swap');
-
-                .notif-container {
-                    padding: 3rem 0;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    min-height: 100vh;
-                    font-family: 'Inter', sans-serif;
-                    background: #fff;
-                }
-
-                .notif-header {
-                    margin-bottom: 2rem;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 0 2rem;
-                    border-bottom: 1px solid #f1f5f9;
-                    padding-bottom: 1.5rem;
-                }
-
-                .notif-header h1 {
-                    font-size: 1.75rem;
-                    font-weight: 700;
-                    margin: 0;
-                    color: #0f172a;
-                }
-
-                .notif-header p {
-                    display: none;
-                }
-
-                .notif-header-stats {
-                    display: flex;
-                    align-items: center;
-                }
-
-                .stat-pill {
-                    font-size: 0.8rem;
-                    font-weight: 600;
-                    padding: 4px 12px;
-                    border-radius: 99px;
-                    margin-left: 8px;
-                }
-                .stat-pill.unread { background: #fee2e2; color: #ef4444; }
-                .stat-pill.total { background: #f1f5f9; color: #64748b; }
-
-                .notif-list {
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                /* Real E-commerce List Style */
-                .notif-item {
-                    display: flex;
-                    background: #fff;
-                    border-bottom: 1px solid #f1f5f9;
-                    transition: background 0.2s;
-                    cursor: pointer;
-                    padding: 1.5rem 2rem;
-                    position: relative;
-                }
-
-                .notif-item:last-child {
-                    border-bottom: none;
-                }
-
-                .notif-item:hover {
-                    background: #f8fafc;
-                    transform: none;
-                    box-shadow: none;
-                }
-
-                .notif-item.unread {
-                    background: #fdfdff; /* Very subtle blue tint */
-                    border-left: none; /* Removed the heavy border */
-                }
-                
-                /* Unread Indicator Dot */
-                .notif-item.unread:after {
-                    content: '';
-                    position: absolute;
-                    top: 50%;
-                    right: 2rem;
-                    transform: translateY(-50%);
-                    width: 10px;
-                    height: 10px;
-                    background: #2563eb;
-                    border-radius: 50%;
-                }
-
-                .notif-sidebar {
-                    margin-right: 1.5rem;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: flex-start;
-                    padding-top: 4px; /* Align icon with text title */
-                    width: auto;
-                    background: transparent;
-                    border: none;
-                }
-
-                .notif-icon-container {
-                    width: 48px;
-                    height: 48px;
-                    border-radius: 50%; /* Circle icons for standard feed look */
-                    background: #f1f5f9;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: #64748b;
-                    flex-shrink: 0;
-                }
-
-                .notif-item.unread .notif-icon-container {
-                     background: #e0f2fe;
-                     color: #0284c7;
-                }
-
-                .notif-main {
-                    flex: 1;
-                    padding: 0;
-                }
-
-                .notif-top {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: flex-start;
-                    margin-bottom: 0.25rem;
-                }
-
-                .notif-title-row {
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .notif-category {
-                    display: none; /* Hide category for cleaner look, like Amazon */
-                }
-
-                .notif-title-text {
-                    font-weight: 600;
-                    font-size: 1rem;
-                    color: #0f172a;
-                    line-height: 1.4;
-                }
-
-                .notif-date {
-                    font-size: 0.8rem;
-                    color: #94a3b8;
-                    white-space: nowrap;
-                    margin-left: 1rem;
-                    background: transparent;
-                    padding: 0;
-                }
-
-                .notif-body-text {
-                    color: #64748b;
-                    font-size: 0.95rem;
-                    line-height: 1.5;
-                    margin: 0.25rem 0 0.75rem 0;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                    max-width: 90%;
-                }
-
-                .notif-status-badge {
-                    display: inline-block;
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    padding: 2px 8px;
-                    border-radius: 4px;
-                    margin-bottom: 0.5rem;
-                }
-                .badge-success { color: #15803d; background: #dcfce7; border: none; }
-                .badge-warning { color: #b45309; background: #fef3c7; border: none; }
-                .badge-danger { color: #b91c1c; background: #fee2e2; border: none; }
-                .badge-info { display: none; } /* Hide info badges to reduce clutter */
-
-                .notif-admin-note {
-                    background: #f8fafc;
-                    border: none;
-                    border-left: 3px solid #cbd5e1;
-                    padding: 0.75rem 1rem;
-                    border-radius: 4px;
-                    margin-top: 0.5rem;
-                }
-
-                .notif-actions {
-                    margin-top: 0.5rem;
-                    padding-top: 0;
-                    border: none;
-                }
-
-                .action-hint {
-                    font-size: 0.75rem;
-                    color: #64748b;
-                    background: #f1f5f9;
-                    padding: 2px 8px;
-                    border-radius: 4px;
-                }
-
-                @media (max-width: 640px) {
-                    .notif-container { padding: 0; }
-                    .notif-item { padding: 1rem; }
-                    .notif-title-text { font-size: 0.95rem; }
-                }
-            `}</style>
         </div>
     );
 }

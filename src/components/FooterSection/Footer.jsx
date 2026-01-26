@@ -10,6 +10,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import './Footer.css';
+import logo from "../Images/Logo/logo1.png";
 
 const Footer = () => {
   return (
@@ -19,7 +20,7 @@ const Footer = () => {
           <div className="footer-grid">
             {/* Brand Section */}
             <div className="footer-brand">
-              <h2 className="footer-logo">JHAPCHAM</h2>
+              <img src={logo} alt="Jhapcham Logo" className="footer-logo-img" />
               <p className="footer-desc">
                 Your one-stop destination for premium electronics, fashion, and home decor. 
                 Experience seamless shopping with ultra-fast delivery.

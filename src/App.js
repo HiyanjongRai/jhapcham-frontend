@@ -14,6 +14,7 @@ import SellerApplication from "./components/Seller/SellerApplication";
 import AdminDashboard from "./components/Admin/AdminDashboard";
 import CheckoutPage from "./components/Checkout/CheckoutPage";
 import OrderSuccess from "./components/Order/OrderSuccess.jsx";
+import PaymentStatusPage from "./components/Checkout/PaymentStatusPage.jsx";
 import SellerOrders from "./components/Seller/SellerOrders";
 import NotificationList from "./components/NotificationPage/NotificationList";
 import ReviewForm from "./components/Review/ReviewForm.jsx";
@@ -25,9 +26,12 @@ import MessagesPage from "./components/Message/MessagesPage.jsx";
 import OnSalePage from "./components/Collections/OnSalePage.jsx";
 import NewArrivalsPage from "./components/Collections/NewArrivalsPage.jsx";
 import BrandsPage from "./components/Collections/BrandsPage.jsx";
+import CampaignsPage from "./components/Campaigns/CampaignsPage.jsx";
 
 import SellerProfilePage from "./components/Seller/SellerProfilePage.jsx";
 import SellerLayout from "./components/Seller/SellerLayout";
+import CartDrawer from "./components/CartDrawer/CartDrawer";
+
 
 // Error Pages
 import { 
@@ -43,10 +47,20 @@ import {
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary.jsx";
 
 function App() {
+  const [isCartOpen, setIsCartOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleOpen = () => setIsCartOpen(true);
+    window.addEventListener("open-cart-drawer", handleOpen);
+    return () => window.removeEventListener("open-cart-drawer", handleOpen);
+  }, []);
 
   return (
+
     <ErrorBoundary>
-      <Navbar />
+      <Navbar onOpenCart={() => setIsCartOpen(true)} />
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
 
       <Routes>
 
@@ -85,6 +99,11 @@ function App() {
         {/* Checkout */}
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-success" element={<OrderSuccess />} />
+        
+        {/* Payment Callbacks */}
+        <Route path="/payment/esewa_success" element={<PaymentStatusPage provider="esewa" status="success" />} />
+        <Route path="/payment/esewa_failure" element={<PaymentStatusPage provider="esewa" status="failure" />} />
+        <Route path="/payment/khalti_callback" element={<PaymentStatusPage provider="khalti" />} />
 
         {/* Admin */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -106,6 +125,7 @@ function App() {
         <Route path="/on-sale" element={<OnSalePage />} />
         <Route path="/new-arrivals" element={<NewArrivalsPage />} />
         <Route path="/brands" element={<BrandsPage />} />
+        <Route path="/campaigns" element={<CampaignsPage />} />
 
         {/* Error Pages */}
         <Route path="/403" element={<ForbiddenPage />} />

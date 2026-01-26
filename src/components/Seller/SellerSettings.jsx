@@ -59,19 +59,27 @@ export default function SellerSettings() {
                 description: data.description || "",
                 about: data.about || "",
                 address: data.address || "",
-                contactNumber: data.sellerContactNumber || "",
+                contactNumber: data.contactNumber || "",
                 insideValleyDeliveryFee: data.insideValleyDeliveryFee || "",
                 outsideValleyDeliveryFee: data.outsideValleyDeliveryFee || "",
                 freeShippingEnabled: data.freeShippingEnabled || false,
                 freeShippingMinOrder: data.freeShippingMinOrder || ""
             });
             if (data.logoImagePath) {
-                setPreviewUrl(`${API_BASE}/${data.logoImagePath}`);
+                setPreviewUrl(buildImageUrl(data.logoImagePath));
             }
         } catch (err) {
             console.error("Failed to fetch profile", err);
             showToast("Failed to load settings.", "error");
         }
+    };
+
+    const buildImageUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http') || path.startsWith('blob:')) return path;
+        const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        return `${base}${cleanPath}`;
     };
 
     const handleChange = (e) => {
@@ -116,6 +124,7 @@ export default function SellerSettings() {
 
             if (res.status === 200) {
                 showToast("Settings updated successfully!", "success");
+                setLogoFile(null); // Clear selected file
                 window.dispatchEvent(new Event('profile-updated'));
                 fetchProfile(); 
             }

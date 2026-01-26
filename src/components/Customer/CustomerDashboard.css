@@ -149,7 +149,8 @@
   flex: 1;
   margin-left: var(--cd-sidebar-width);
   padding: 3rem 4rem;
-  max-width: 1400px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .cd-header {

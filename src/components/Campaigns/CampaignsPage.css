@@ -1,0 +1,274 @@
+/* CampaignsPage.css - Refined Swoo Tech Aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --camp-bg: #f8fafc;
+    --camp-accent: #0d9488; /* Professional Muted Teal */
+    --camp-accent-hover: #0f766e;
+    --camp-text-main: #1d2b36;
+    --camp-text-muted: #64748b;
+    --camp-border: #f1f5f9;
+    --camp-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+}
+
+.campaigns-page {
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 60px 40px;
+    min-height: 90vh;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--camp-text-main);
+}
+
+/* Background refinement */
+.campaign-mesh-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--camp-bg);
+    background-image: 
+        radial-gradient(at 100% 0%, rgba(13, 148, 136, 0.05) 0, transparent 40%),
+        radial-gradient(at 0% 100%, rgba(29, 43, 54, 0.03) 0, transparent 40%);
+    z-index: -1;
+}
+
+.campaigns-header {
+    text-align: center;
+    margin-bottom: 60px;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fef9c3; /* Soft yellow for highlights */
+    color: #854d0e;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(250, 204, 21, 0.15);
+}
+
+.campaigns-header h1 {
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    font-weight: 900;
+    color: var(--camp-text-main);
+    margin-bottom: 15px;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -2px;
+    line-height: 1;
+}
+
+.campaigns-header p {
+    font-size: 1.2rem;
+    color: var(--camp-text-muted);
+    font-weight: 500;
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.campaigns-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    animation: fadeInUp 1s ease-out both;
+}
+
+/* Premium Campaign Card - Swoo Style */
+.campaign-card {
+    background: #fff;
+    border-radius: 16px;
+    min-height: 360px;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--camp-border);
+    box-shadow: var(--camp-shadow);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.campaign-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.12);
+    border-color: var(--camp-accent);
+}
+
+.campaign-content {
+    flex: 1.2;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 2;
+    background: white;
+}
+
+.campaign-top-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.status-pill {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-active { background: #e0f2f1; color: var(--camp-accent); }
+.status-soon { background: #fff3e0; color: #ef6c00; }
+.status-ended { background: #f1f5f9; color: var(--camp-text-muted); }
+
+.type-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--camp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.campaign-content h2 {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: var(--camp-text-main);
+    margin-bottom: 20px;
+    font-family: 'Outfit', sans-serif;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+
+.campaign-info-row {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--camp-text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.campaign-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 28px;
+    background: var(--camp-text-main);
+    color: white;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: fit-content;
+    transition: all 0.3s;
+}
+
+.campaign-card:hover .campaign-cta {
+    background: var(--camp-accent);
+    padding-right: 40px;
+}
+
+/* Image Section */
+.campaign-image-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+.campaign-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.campaign-card:hover .campaign-image-wrapper img {
+    transform: scale(1.08) rotate(1deg);
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #fff 0%, transparent 15%);
+    pointer-events: none;
+}
+
+/* Custom UI Colors */
+.type-icon-sale { color: #f43f5e; }
+.type-icon-winter { color: #0ea5e9; }
+.type-icon-default { color: var(--camp-accent); }
+
+/* Empty State Styling */
+.no-campaigns {
+    max-width: 500px;
+    margin: 80px auto;
+    text-align: center;
+    padding: 60px;
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid var(--camp-border);
+    box-shadow: var(--camp-shadow);
+}
+
+.back-btn {
+    margin-top: 30px;
+    padding: 14px 30px;
+    background: var(--camp-accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.back-btn:hover { 
+    background: var(--camp-text-main);
+    transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .campaign-content { padding: 40px; }
+    .campaign-content h2 { font-size: 2.22rem; }
+}
+
+@media (max-width: 768px) {
+    .campaigns-page { padding: 40px 20px; }
+    .campaign-card { flex-direction: column-reverse; height: auto; border-radius: 16px; }
+    .campaign-image-wrapper { height: 280px; }
+    .campaign-content { padding: 30px; width: 100%; }
+    .image-overlay { display: none; }
+    .campaign-content h2 { font-size: 2rem; }
+    .campaign-info-row { flex-direction: column; gap: 15px; margin-bottom: 30px; }
+}

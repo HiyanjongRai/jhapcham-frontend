@@ -123,23 +123,33 @@ const SellerCampaigns = () => {
 
     return (
         <div className="sc-container">
-            <h2 className="sc-title">Upcoming Campaigns</h2>
+            <h2 className="sc-title">All Campaigns</h2>
             <p className="sc-subtitle">Join platform-wide sales to boost your revenue.</p>
 
             <div className="sc-grid">
                 {Array.isArray(campaigns) && campaigns.map(c => (
                     <div key={c.id} className="sc-card">
-                        <div className="sc-card-badge">{c.type.replace('_',' ')}</div>
+                        <div className="sc-card-badge">{c.type?.replace('_',' ')}</div>
                         <h3>{c.name}</h3>
+                        
                         <div className="sc-dates">
-                            <span>Start: {new Date(c.startTime).toLocaleString()}</span>
-                            <span>End: {new Date(c.endTime).toLocaleString()}</span>
+                            <span>
+                                <Calendar size={13} strokeWidth={2.5} />
+                                {new Date(c.startTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {new Date(c.endTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </span>
+                            <span className="sc-full-dates">
+                                {new Date(c.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(c.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                         </div>
-                        <div className="sc-discount-tag">
-                            Discount Type: {c.discountType}
+
+                        <div className="sc-discount-info">
+                            <Tag size={13} className="text-emerald" />
+                            <span>{c.discountType?.replace('_',' ')} Discount</span>
                         </div>
+
                         <button className="sc-btn-join" onClick={() => handleJoinClick(c)}>
-                            Join Campaign <ChevronRight size={16} />
+                            Join Campaign
+                            <ChevronRight size={16} />
                         </button>
                     </div>
                 ))}

@@ -938,3 +938,86 @@ body {
       padding-bottom: 100px;
   }
 }
+
+/* =============================================
+   NEW PREMIUM FEATURES: ZOOM & MOBILE BAR
+   ============================================= */
+
+/* Zoom Hint Styling */
+.zoom-hint {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pd-main-image-wrapper:hover .zoom-hint {
+  opacity: 1;
+  bottom: 30px;
+}
+
+/* Enhanced Zoom Transition */
+.pd-main-image {
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Sticky Mobile Bar */
+@media (max-width: 768px) {
+  .pd-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    padding: 16px 20px env(safe-area-inset-bottom);
+    margin: 0;
+    z-index: 1000;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .pd-qty-wrapper {
+    height: 48px;
+    flex: 0 0 auto;
+  }
+
+  .pd-add-btn {
+    height: 48px;
+    flex: 1;
+    min-width: unset;
+    font-size: 0.85rem;
+  }
+
+  .pd-wish-btn, 
+  .pd-message-btn,
+  .pd-report-btn {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+  }
+
+  /* Add padding to the container bottom to avoid content being hidden by sticky bar */
+  .pd-container {
+    padding-bottom: 120px;
+  }
+}
+
+/* Toast Polish removed - using global Toast component */
+

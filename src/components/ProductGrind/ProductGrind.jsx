@@ -3,11 +3,22 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import ProductCard from "../productCard/ProductCard";
 import "./ProjectGrind.css";
 import "./ProductGridFilters.css";
-import { Filter, X } from "lucide-react";
+import { Filter, X, ArrowLeft } from "lucide-react";
+import CountdownTimer from "../Home/CountdownTimer";
 
 import { getCurrentUserId, addToGuestCart, apiAddToCart } from "../AddCart/cartUtils";
 
-const API_BASE = "http://localhost:8080";
+import { API_BASE } from "../config/config";
+
+const ProductSkeleton = () => (
+  <div className="product-skeleton">
+    <div className="skeleton-image"></div>
+    <div className="skeleton-text skeleton-title"></div>
+    <div className="skeleton-text skeleton-price"></div>
+    <div className="skeleton-text skeleton-rating"></div>
+  </div>
+);
+
 
 // Map backend ProductResponseDTO to frontend product format
 function mapProductDto(dto) {
@@ -46,7 +57,9 @@ function ProductGrid() {
   const [selectedColors, setSelectedColors] = useState([]);
   const [selectedStorage, setSelectedStorage] = useState([]);
 
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [campaignInfo, setCampaignInfo] = useState(null);
+
+  const [showFilters, setShowFilters] = useState(false);
 
   const navigate = useNavigate();
   const userId = getCurrentUserId();
@@ -72,9 +85,29 @@ function ProductGrid() {
         setLoading(true);
         setError("");
 
+
+        
         let data = [];
         let url = "";
         const params = new URLSearchParams();
+        
+        const campaignId = searchParams.get('campaign');
+        let fetchedCampaignName = null;
+
+        // Fetch Campaign Info if applicable to get the name
+        if (campaignId) {
+             try {
+                const cRes = await fetch(`${API_BASE}/api/campaigns`); 
+                const cList = await cRes.json();
+                const found = cList.find(c => c.id.toString() === campaignId);
+                if (found) {
+                    setCampaignInfo(found);
+                    fetchedCampaignName = found.name;
+                }
+             } catch(e) { console.error("Failed to load campaign info"); }
+        } else {
+             setCampaignInfo(null);
+        }
 
         // 1. Determine Endpoint & Primary Params
         if (search && search.trim()) {
@@ -84,23 +117,22 @@ function ProductGrid() {
            if (userId) params.append("userId", userId);
         } else {
            // Filter Mode (or List All)
-           // If any backend-supported filter is present, use /filter, otherwise /products (or just use /filter for all?)
-           // The provided controller has /filter mapped separately. Let's use it if any filter param matches.
-           // Actually, /filter with empty params might act like list all or empty logic. 
-           // Let's check the snippet: if params null, it ignores. if all null, returns all active.
-           // So we can use /filter safely or standard /products.
-           // Let's use /filter if valid backend filters exist, else /products for simplicity.
            
-           const hasBackendFilter = minPrice || maxPrice || (brand && brand.trim()) || (categoryFilter && categoryFilter !== "ALL");
-           
-           if (hasBackendFilter) {
-               url = `${API_BASE}/api/products/filter`;
-               if (minPrice) params.append("minPrice", minPrice);
-               if (maxPrice) params.append("maxPrice", maxPrice);
-               if (brand) params.append("brand", brand);
-               if (categoryFilter && categoryFilter !== "ALL") params.append("category", categoryFilter);
+           if (campaignId) {
+               // Campaign Mode
+               url = `${API_BASE}/api/campaigns/${campaignId}/products`;
            } else {
-               url = `${API_BASE}/api/products`;
+               const hasBackendFilter = minPrice || maxPrice || (brand && brand.trim()) || (categoryFilter && categoryFilter !== "ALL");
+               
+               if (hasBackendFilter) {
+                   url = `${API_BASE}/api/products/filter`;
+                   if (minPrice) params.append("minPrice", minPrice);
+                   if (maxPrice) params.append("maxPrice", maxPrice);
+                   if (brand) params.append("brand", brand);
+                   if (categoryFilter && categoryFilter !== "ALL") params.append("category", categoryFilter);
+               } else {
+                   url = `${API_BASE}/api/products`;
+               }
            }
         }
 
@@ -114,7 +146,27 @@ function ProductGrid() {
         data = await res.json();
         
         // 3. Map DTO
-        let filtered = Array.isArray(data) ? data.map(mapProductDto) : [];
+        let filtered = [];
+        if (Array.isArray(data)) {
+            if (searchParams.get('campaign')) {
+                 filtered = data.map(cp => ({
+                     id: cp.productId,
+                     name: cp.productName,
+                     imagePath: cp.productImage,
+                     price: cp.originalPrice,
+                     salePrice: cp.salePrice,
+                     onSale: true,
+                     saleLabel: fetchedCampaignName || "CAMPAIGN DEAL",
+                     stock: cp.stockLimit,
+                     category: "Campaign Deals",
+                     rating: 5,
+                     sellerName: cp.sellerName,
+                     storeName: cp.sellerName
+                 }));
+            } else {
+                 filtered = data.map(mapProductDto);
+            }
+        }
         
         // 4. Apply Client-Side Filters (for fields NOT handled by backend)
         
@@ -225,13 +277,63 @@ function ProductGrid() {
     <div className="pg-layout">
       
       {/* Sidebar Filters */}
-      <aside className={`pg-sidebar ${showMobileFilters ? 'show' : ''}`}>
+      <aside className={`pg-sidebar ${showFilters ? 'show' : ''}`}>
+        {/* Mobile Filter Header */}
+        <div className="pg-filter-mobile-header">
+          <h3 className="pg-filter-mobile-title">Filters</h3>
+          <button className="pg-filter-close-btn" onClick={() => setShowFilters(false)}>
+            <X size={20} />
+          </button>
+        </div>
+
         <div className="pg-filter-group">
           <div className="pg-filter-title">
             Filters
-            <button className="pg-clear-btn" onClick={clearFilters} style={{width: 'auto', marginTop: 0}}>Clear All</button>
+            <button className="pg-clear-btn" onClick={clearFilters}>Clear All</button>
           </div>
         </div>
+
+        {/* Active Filters Chips */}
+        {(categoryFilter !== "ALL" || minPrice || maxPrice || minRating || brand || onSale) && (
+          <div className="pg-active-filters">
+            {categoryFilter !== "ALL" && (
+              <div className="pg-filter-chip" onClick={() => setCategoryFilter("ALL")}>
+                {categoryFilter}
+                <span className="pg-filter-chip-remove">×</span>
+              </div>
+            )}
+            {minPrice && (
+              <div className="pg-filter-chip" onClick={() => setMinPrice("")}>
+                Min: Rs. {minPrice}
+                <span className="pg-filter-chip-remove">×</span>
+              </div>
+            )}
+            {maxPrice && (
+              <div className="pg-filter-chip" onClick={() => setMaxPrice("")}>
+                Max: Rs. {maxPrice}
+                <span className="pg-filter-chip-remove">×</span>
+              </div>
+            )}
+            {minRating && (
+              <div className="pg-filter-chip" onClick={() => setMinRating("")}>
+                {minRating}+ Stars
+                <span className="pg-filter-chip-remove">×</span>
+              </div>
+            )}
+            {brand && (
+              <div className="pg-filter-chip" onClick={() => setBrand("")}>
+                {brand}
+                <span className="pg-filter-chip-remove">×</span>
+              </div>
+            )}
+            {onSale && (
+              <div className="pg-filter-chip" onClick={() => setOnSale("")}>
+                On Sale
+                <span className="pg-filter-chip-remove">×</span>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="pg-filter-group">
           <div className="pg-filter-title">Category</div>
@@ -335,15 +437,90 @@ function ProductGrid() {
 
       {/* Main Content */}
       <main className="pg-main">
+        
+        {/* Campaign Hero Banner in Products Page */}
+        {campaignInfo && (
+            <div className="pg-campaign-hero" style={{ 
+                marginBottom: '32px', 
+                borderRadius: '16px', 
+                overflow: 'hidden', 
+                background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)',
+                border: '1px solid #e2e8f0',
+                padding: '40px',
+                display: 'grid',
+                gridTemplateColumns: '1.2fr 0.8fr',
+                gap: '40px',
+                alignItems: 'center',
+                position: 'relative'
+            }}>
+                <div className="pg-campaign-hero-content">
+                    <div className="campaign-badge-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                        <span className="hero-discount-badge" style={{ 
+                            background: '#ef4444', 
+                            color: 'white', 
+                            border: 'none',
+                            fontSize: '0.75rem', 
+                            fontWeight: '800', 
+                            padding: '6px 16px', 
+                            borderRadius: '100px', 
+                            textTransform: 'uppercase', 
+                            letterSpacing: '1px'
+                        }}>
+                             {campaignInfo.type?.replace(/_/g, ' ')}
+                        </span>
+                        <span className="live-indicator" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontWeight: '700', fontSize: '0.8rem', textTransform: 'uppercase' }}>
+                            <span className="blink-dot" style={{ width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', animation: 'blink 1.5s infinite running' }}></span> LIVE NOW
+                        </span>
+                        <style>{`
+                            @keyframes blink {
+                                0% { opacity: 1; transform: scale(1); }
+                                50% { opacity: 0.4; transform: scale(1.2); }
+                                100% { opacity: 1; transform: scale(1); }
+                            }
+                        `}</style>
+                    </div>
+                    
+                    <h1 className="pg-campaign-title" style={{ fontSize: '2.5rem', fontWeight: '900', color: '#0f172a', margin: '10px 0', lineHeight: '1.1' }}>
+                        {campaignInfo.name}
+                    </h1>
+                    
+                    <div className="hero-countdown-container" style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                         <p style={{ fontWeight: '600', color: '#64748b', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.05em' }}>Ending In:</p>
+                         <CountdownTimer targetDate={campaignInfo.endTime} />
+                    </div>
+                </div>
+                
+                <div className="pg-campaign-hero-image" style={{ display: 'flex', justifyContent: 'center' }}>
+                     <img 
+                        src={campaignInfo.imagePath ? (campaignInfo.imagePath.startsWith('http') ? campaignInfo.imagePath : `${API_BASE}/${campaignInfo.imagePath}`) : "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=800&auto=format&fit=crop"} 
+                        alt={campaignInfo.name} 
+                        style={{ objectFit: 'contain', maxHeight: '250px', mixBlendMode: 'multiply' }}
+                        onError={(e) => {
+                            e.target.onerror = null; 
+                            e.target.src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=800&auto=format&fit=crop';
+                        }}
+                      />
+                </div>
+            </div>
+        )}
+
         <div className="products-header">
-          <div>
-            <h2 className="products-title">Shop Products</h2>
+          <div className="products-header-left">
+            <h2 className="products-title">{campaignInfo ? "Campaign Items" : "Shop Products"}</h2>
             <p className="products-subtitle">
               {loading ? "Loading..." : `Showing ${products.length} results`}
             </p>
           </div>
 
           <div className="products-toolbar">
+            <button 
+              className="products-filter-toggle"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter size={20} />
+              <span>Filters</span>
+            </button>
+
             <input
               type="text"
               className="products-search"
@@ -362,19 +539,14 @@ function ProductGrid() {
               <option value="price,desc">Price: High to Low</option>
               <option value="rating,desc">Top Rated</option>
             </select>
-            
-            <button 
-              className="products-filter-toggle" // Add CSS for this if needed for mobile
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              style={{display: 'none'}} // Hidden on desktop usually
-            >
-              <Filter size={20} />
-            </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="products-loading">Loading products...</div>
+          <div className="products-grid">
+            {Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)}
+          </div>
+
         ) : error ? (
           <div className="products-error">{error}</div>
         ) : products.length === 0 ? (

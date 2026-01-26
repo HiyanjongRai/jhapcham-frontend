@@ -6,7 +6,8 @@ import {
   Star, 
   Eye, 
   ShoppingCart,
-  ShoppingBag
+  ShoppingBag,
+  Store
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUserId, apiAddToCart, addToGuestCart } from "../AddCart/cartUtils";
@@ -40,8 +41,15 @@ function ProductCard({ product }) {
     salePercentage,
     saleLabel,
     categoryName,
-    brand
+    brand,
+    sellerStoreName,
+    storeName,
+    sellerName,
+    sellerFullName
   } = product;
+
+  // Derive store name with fallbacks
+  const finalStoreName = storeName || sellerStoreName || sellerName || sellerFullName || "Official Store";
 
   // Check wishlist status on mount
   useEffect(() => {
@@ -67,11 +75,13 @@ function ProductCard({ product }) {
     ? product.imagePaths[0]
     : product.imagePath;
 
+  const PLACEHOLDER_IMG = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%20viewBox%3D%220%200%20300%20300%22%3E%3Crect%20fill%3D%22%23f0f0f0%22%20width%3D%22300%22%20height%3D%22300%22%2F%3E%3Ctext%20fill%3D%22%23999%22%20font-family%3D%22sans-serif%22%20font-size%3D%2230%22%20dy%3D%2210.5%22%20font-weight%3D%22bold%22%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';
+
   const imgSrc = isFullUrl(rawImg)
     ? rawImg
     : (rawImg
         ? `${API_BASE}/${rawImg}`
-        : "https://via.placeholder.com/600x400?text=No+Image");
+        : PLACEHOLDER_IMG);
 
   const handleCardClick = () => {
     navigate(`/products/${id}`);
@@ -161,13 +171,22 @@ function ProductCard({ product }) {
 
       {/* Product Image Area */}
       <div className="modern-pc-img-box">
-        <img src={imgSrc} alt={name} className="modern-pc-img" loading="lazy" />
+        <img 
+          src={imgSrc} 
+          alt={name} 
+          className="modern-pc-img" 
+          loading="lazy" 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = PLACEHOLDER_IMG;
+          }}
+        />
       </div>
 
       {/* Product Info Section */}
       <div className="modern-pc-body">
-        <h3 className="modern-pc-title">{name}</h3>
         <p className="modern-pc-brand">{brand || categoryName || "Official Brand"}</p>
+        <h3 className="modern-pc-title">{name}</h3>
         
         <div className="modern-pc-meta">
           <div className="modern-pc-rating">
@@ -188,6 +207,13 @@ function ProductCard({ product }) {
             </div>
             {onSale && safePrice > displayPrice && (
               <span className="modern-pc-old-price">Rs {Number(safePrice).toLocaleString()}</span>
+            )}
+            
+            {finalStoreName && (
+              <div className="modern-pc-seller-below-price" title={`Sold by: ${finalStoreName}`}>
+                <Store size={10} />
+                <span>{finalStoreName}</span>
+              </div>
             )}
           </div>
           

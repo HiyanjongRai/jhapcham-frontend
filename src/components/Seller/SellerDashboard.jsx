@@ -124,32 +124,34 @@ export default function SellerDashboard() {
 
   return (
     <div className="dashboard-content-inner">
-      <div className="dash-header-row">
-         <div>
-            <h2>Dashboard Overview</h2>
-            <p className="text-gray">Welcome back, <strong>{storeInfo?.storeName || 'Merchant'}</strong>! Here's your store performance.</p>
-         </div>
-         
-         <div style={{display:'flex', gap:'10px'}}>
-           <button className="btn-secondary-outline" onClick={() => setActiveTab('settings')}>Store Settings</button>
-           <button className="btn-primary" onClick={() => navigate('/seller/add-product')}>+ Add Product</button>
-         </div>
-      </div>
+      {activeTab === 'overview' && (
+        <div className="dash-header-row">
+           <div>
+              <h2>Dashboard Overview</h2>
+              <p className="text-gray">Welcome back, <strong>{storeInfo?.storeName || 'Merchant'}</strong>! Here's your store performance.</p>
+           </div>
+           
+           <div style={{display:'flex', gap:'10px'}}>
+             <button className="btn-secondary-outline" onClick={() => setActiveTab('settings')}>Store Settings</button>
+             <button className="btn-primary" onClick={() => navigate('/seller/add-product')}>+ Add Product</button>
+           </div>
+        </div>
+      )}
 
       {activeTab === 'overview' ? (
         <>
           {/* Stats Grid */}
           <div className="stats-grid">
              <div className="stat-card">
-                <div className="stat-icon purple"><DollarSign size={24} /></div>
+                <div className="stat-icon"><DollarSign size={24} /></div>
                 <div className="stat-info">
-                   <span className="stat-label">Total Sales</span>
+                   <span className="stat-label">Total Revenue</span>
                    <h3 className="stat-value">Rs. {stats.totalSales.toLocaleString()}</h3>
                 </div>
              </div>
              
              <div className="stat-card">
-                <div className="stat-icon blue"><ShoppingBag size={24} /></div>
+                <div className="stat-icon"><ShoppingBag size={24} /></div>
                 <div className="stat-info">
                    <span className="stat-label">Total Orders</span>
                    <h3 className="stat-value">{stats.totalOrders}</h3>
@@ -157,7 +159,7 @@ export default function SellerDashboard() {
              </div>
 
              <div className="stat-card">
-                <div className="stat-icon orange"><Clock size={24} /></div>
+                <div className="stat-icon"><Clock size={24} /></div>
                 <div className="stat-info">
                    <span className="stat-label">Pending Orders</span>
                    <h3 className="stat-value">{stats.pendingOrders}</h3>
@@ -165,7 +167,7 @@ export default function SellerDashboard() {
              </div>
 
              <div className="stat-card">
-                <div className="stat-icon green"><Package size={24} /></div>
+                <div className="stat-icon"><Package size={24} /></div>
                 <div className="stat-info">
                    <span className="stat-label">Total Products</span>
                    <h3 className="stat-value">{stats.productsCount}</h3>
@@ -207,7 +209,10 @@ export default function SellerDashboard() {
                          </tbody>
                       </table>
                     ) : (
-                      <p className="empty-text">No orders yet.</p>
+                      <div className="empty-state-nice">
+                        <ShoppingBag size={48} color="#e2e8f0" />
+                        <p className="empty-text">No orders yet.</p>
+                      </div>
                     )}
                  </div>
               </div>
@@ -217,8 +222,8 @@ export default function SellerDashboard() {
                  <div className="panel-header">
                     <h3>Weekly Sales</h3>
                     <div className="chart-legend">
-                      <span className="legend-dot"></span>
-                      <span className="legend-text">Sales (Rs)</span>
+                      <span className="legend-dot" style={{display:'inline-block', width:'8px', height:'8px', borderRadius:'50%', background:'#0f172a', marginRight:'6px'}}></span>
+                      <span className="legend-text" style={{fontWeight:600, fontSize:'0.8rem', color:'#64748b'}}>Revenue</span>
                     </div>
                  </div>
                  <div className="mock-chart-container">
@@ -227,7 +232,7 @@ export default function SellerDashboard() {
                           <div 
                             key={i} 
                             className="chart-bar" 
-                            style={{ height: `${(sale / maxSale) * 100}%` }} 
+                            style={{ height: `${sale > 0 ? (sale / maxSale) * 100 : 4}%` }} 
                             title={`${weekLabels[i]}: Rs. ${sale}`}
                           >
                               <div className="bar-tooltip">Rs. {sale}</div>
@@ -263,7 +268,10 @@ export default function SellerDashboard() {
                           </div>
                       </div>
                   )) : (
-                      <p className="empty-text">Update your inventory to see products here.</p>
+                      <div style={{gridColumn: '1/-1', textAlign:'center', padding:'40px', color:'#94a3b8'}}>
+                        <Package size={48} style={{opacity:0.5, marginBottom:'10px'}} />
+                        <p>No sales data yet.</p>
+                      </div>
                   )}
               </div>
           </div>

@@ -13,7 +13,8 @@ import {
   MessageCircle,
   Flag,
   Check,
-  ThumbsUp
+  ThumbsUp,
+  Package
 } from "lucide-react";
 import {
   getCurrentUserId,
@@ -23,6 +24,8 @@ import {
 import api from "../../api/axios";
 import { apiAddToWishlist, apiRemoveFromWishlist, apiCheckWishlist } from "../WishlistPage/wishlistUtils";
 import MessageModal from "../Message/MessageModal";
+import ProductCard from "./ProductCard";
+
 import ReportModal from "../Report/ReportModal";
 import ErrorToast from "../ErrorToast/ErrorToast";
 import Toast from "../Toast/Toast";
@@ -55,6 +58,11 @@ export default function ProductDetailPage() {
 
   const [markedHelpful, setMarkedHelpful] = useState(new Set());
   const [visibleReviews, setVisibleReviews] = useState(3);
+  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0, opacity: 0 });
+  const [relatedProducts, setRelatedProducts] = useState([]);
+
+
+
 
   const handleHelpful = async (reviewId) => {
     if (!userId) {
@@ -124,7 +132,7 @@ export default function ProductDetailPage() {
           ...data,
           id: data.productId || data.id,
           imagePath: (data.imagePaths && data.imagePaths.length > 0) ? data.imagePaths[0] : (data.imagePath || ""),
-          additionalImages: data.additionalImages || [],
+          additionalImages: (data.imagePaths && data.imagePaths.length > 1) ? data.imagePaths.slice(1) : [],
           stock: data.stockQuantity ?? data.stock ?? 0,
           colors: Array.isArray(data.colors) ? data.colors : (
             (() => {
@@ -174,6 +182,8 @@ export default function ProductDetailPage() {
         
         setProduct(mappedProduct);
         setMainImage(`${API_BASE}/${mappedProduct.imagePath}`);
+        if (mappedProduct.category) fetchRelated(mappedProduct.category);
+
 
         if (mappedProduct.colors?.length) setSelectedColor(mappedProduct.colors[0]);
         if (mappedProduct.storage?.length) setSelectedStorage(mappedProduct.storage[0]);
@@ -211,8 +221,35 @@ export default function ProductDetailPage() {
       }
     };
 
+    const fetchRelated = async (category) => {
+      try {
+        const res = await api.get(`/api/products/filter`, {
+          params: { category: category }
+        });
+        const list = Array.isArray(res.data) ? res.data : [];
+        setRelatedProducts(list.filter(p => p.id !== parseInt(id)).slice(0, 4));
+      } catch (err) {
+        console.error("Related products failed", err);
+      }
+    };
+
     load();
+    // After product is loaded, fetchRelated if possible
+    // We'll update the load function to call fetchRelated inside if we want it serial
+
   }, [id, userId]);
+
+  const handleMouseMove = (e) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.pageX - left - window.scrollX) / width) * 100;
+    const y = ((e.pageY - top - window.scrollY) / height) * 100;
+    setZoomPos({ x, y, opacity: 1 });
+  };
+
+  const handleMouseLeave = () => {
+    setZoomPos(prev => ({ ...prev, opacity: 0 }));
+  };
+
 
   if (loading) return <div className="pd-container" style={{textAlign: 'center', paddingTop: '4rem'}}>Loading...</div>;
   if (!product) return <div className="pd-container" style={{textAlign: 'center', paddingTop: '4rem'}}>Product Not Found</div>;
@@ -230,7 +267,7 @@ export default function ProductDetailPage() {
         if (liked) {
             await apiRemoveFromWishlist(userId, id);
             setLiked(false);
-            showToast("Removed from wishlist", "success");
+            showToast("Removed from wishlist", "info");
         } else {
             await apiAddToWishlist(userId, id);
             setLiked(true);
@@ -298,9 +335,24 @@ export default function ProductDetailPage() {
       <div className="pd-grid">
         {/* Left: Image Gallery */}
         <div className="pd-gallery">
-          <div className="pd-main-image-wrapper">
-            <img src={mainImage} className="pd-main-image" alt={product.name} />
+          <div 
+            className="pd-main-image-wrapper"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+          >
+            <img 
+              src={mainImage} 
+              className="pd-main-image" 
+              alt={product.name} 
+              style={{
+                transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                transform: zoomPos.opacity ? 'scale(2)' : 'scale(1)',
+                cursor: 'zoom-in'
+              }}
+            />
+            {!zoomPos.opacity && <div className="zoom-hint">Hover to Zoom</div>}
           </div>
+
           <div className="pd-thumbnails">
             {[product.imagePath, ...(product.additionalImages || [])].map((img, i) => {
               const src = `${API_BASE}/${img}`;
@@ -358,11 +410,6 @@ export default function ProductDetailPage() {
               </>
             ) : (
               <span className="pd-price-new">₹{product.price}</span>
-            )}
-            {product.freeShipping && (
-               <span className="pd-shipping-badge">
-                  Free Shipping
-               </span>
             )}
           </div>
 
@@ -503,7 +550,20 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
+      {/* Related Products Section */}
+      {relatedProducts.length > 0 && (
+        <div className="pd-related-section" style={{marginBottom: '80px', paddingTop: '40px', borderTop: '1px solid #f1f5f9'}}>
+          <h2 className="section-title">You May Also Like</h2>
+          <div className="pd-related-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px'}}>
+            {relatedProducts.map(p => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Reviews Section */}
+
       <div className="pd-reviews-section">
           <h2 className="section-title">Customer Reviews</h2>
           

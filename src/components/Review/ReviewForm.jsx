@@ -25,8 +25,18 @@ export default function ReviewForm() {
   const [messageType, setMessageType] = useState(""); // 'success' or 'error'
   const [submitting, setSubmitting] = useState(false);
   const [reviewId, setReviewId] = useState(null);
+  const [product, setProduct] = useState(null);
 
   const ratingLabels = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
+
+  useEffect(() => {
+    if (productId) {
+      fetch(`${API_BASE}/api/products/${productId}`)
+        .then((res) => res.json())
+        .then((data) => setProduct(data))
+        .catch((err) => console.error("Failed to load product", err));
+    }
+  }, [productId]);
 
   useEffect(() => {
     if (!userId) {
@@ -168,8 +178,41 @@ export default function ReviewForm() {
     <div className="review-form-page">
       <div className="review-form-container">
         <div className="review-form-header">
-          <h2>Write Your Review</h2>
-          <p>Share your experience with this product</p>
+          {product ? (
+            <div className="review-product-summary">
+              {(() => {
+                 const rawImg = (product.imagePaths && product.imagePaths.length > 0)
+                   ? product.imagePaths[0]
+                   : (product.imagePath || product.imageUrl || product.image);
+                 
+                 const imgSrc = rawImg 
+                   ? (rawImg.startsWith('http') ? rawImg : `${API_BASE}/${rawImg.replace(/\\/g, '/')}`)
+                   : "https://via.placeholder.com/150?text=No+Image";
+
+                 return (
+                  <img 
+                    src={imgSrc} 
+                    alt={product.name || product.productName || "Product"} 
+                    className="review-product-img"
+                    onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=Product"; }} 
+                  />
+                 );
+              })()}
+              
+              <div className="review-product-info">
+                 <h2>{product.name || product.productName || "Product Name"}</h2>
+                 <p className="review-product-subtitle">{product.brand || "Category: " + (product.category || "General")}</p>
+                 <div className="review-badges">
+                    <span className="badge-verified"><CheckCircle size={14} /> Verified Purchase</span>
+                 </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <h2>Write Your Review</h2>
+              <p>Share your experience with this product</p>
+            </>
+          )}
         </div>
 
         {/* Star Rating */}

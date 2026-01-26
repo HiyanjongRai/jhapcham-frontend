@@ -76,8 +76,10 @@ export function addToGuestCart(product, quantity = 1, color = null, storage = nu
   // Update global count (Sum of ALL quantities)
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   updateGlobalCartCount(totalCount);
+  // window.dispatchEvent(new Event("open-cart-drawer"));
   
   return cart;
+
 }
 
 /**
@@ -122,7 +124,9 @@ export async function apiAddToCart(userId, productId, quantity, color, storage) 
     if (cartData && Array.isArray(cartData.items)) {
         const totalCount = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
         updateGlobalCartCount(totalCount);
+        // window.dispatchEvent(new Event("open-cart-drawer"));
     }
+
 
     return cartData;
   } catch (err) {

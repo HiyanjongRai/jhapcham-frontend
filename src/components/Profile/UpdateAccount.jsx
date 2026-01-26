@@ -10,6 +10,7 @@ export default function UpdateAccount({ onUpdateSuccess }) {
     fullName: "",
     email: "",
     contactNumber: "",
+    address: "",
     username: "",
     role: ""
   });
@@ -32,6 +33,14 @@ export default function UpdateAccount({ onUpdateSuccess }) {
 
   const userId = getCurrentUserId();
 
+  const buildImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http') || path.startsWith('blob:')) return path;
+    const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
+  };
+
   // Load user profile
   async function loadProfile() {
     try {
@@ -41,12 +50,13 @@ export default function UpdateAccount({ onUpdateSuccess }) {
         fullName: data.fullName || "",
         email: data.email || "",
         contactNumber: data.contactNumber || "",
+        address: data.address || "",
         username: data.username || "",
         role: data.role || ""
       });
       
       if (data.profileImagePath) {
-        setPreviewImage(`${API_BASE}/api/users/${userId}/profile-image`);
+        setPreviewImage(buildImageUrl(data.profileImagePath));
       }
     } catch (err) {
       console.error("Failed to load profile:", err);
@@ -73,6 +83,7 @@ export default function UpdateAccount({ onUpdateSuccess }) {
       const formData = new FormData();
       formData.append("fullName", profile.fullName);
       formData.append("contactNumber", profile.contactNumber);
+      formData.append("address", profile.address || "");
 
       if (changePasswordMode && passwords.newPassword) {
         if (passwords.newPassword !== passwords.confirmPassword) {
@@ -100,17 +111,19 @@ export default function UpdateAccount({ onUpdateSuccess }) {
       setProfile(prev => ({
         ...prev,
         fullName: updatedUser.fullName,
-        contactNumber: updatedUser.contactNumber
+        contactNumber: updatedUser.contactNumber,
+        address: updatedUser.address
       }));
 
       if (updatedUser.profileImagePath) {
-        setPreviewImage(`${API_BASE}/api/users/${userId}/profile-image?t=${Date.now()}`);
+        setPreviewImage(buildImageUrl(updatedUser.profileImagePath));
       }
       
       setSelectedFile(null);
       setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setChangePasswordMode(false);
       
+      window.dispatchEvent(new Event('profile-updated'));
       if (onUpdateSuccess) onUpdateSuccess(updatedUser);
         
     } catch (err) {
@@ -197,6 +210,17 @@ export default function UpdateAccount({ onUpdateSuccess }) {
               onChange={(e) => setProfile({ ...profile, contactNumber: e.target.value })}
             />
           </div>
+        </div>
+
+        <div>
+           <label className="ua-label">Residential Address</label>
+           <input
+             className="ua-input"
+             type="text"
+             placeholder="House No., Street, City, Country"
+             value={profile.address}
+             onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+           />
         </div>
 
         <div className="ua-password-toggle" onClick={() => setChangePasswordMode(!changePasswordMode)}>

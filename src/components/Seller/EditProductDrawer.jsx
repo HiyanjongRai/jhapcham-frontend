@@ -21,6 +21,14 @@ export default function EditProductDrawer({
     setProduct(prev => ({ ...prev, [field]: value }));
   }
 
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+     axios.get(`${BASE_URL}/api/categories`)
+        .then(res => setCategories(res.data))
+        .catch(err => console.error("Failed to fetch categories", err));
+  }, [BASE_URL]);
+
   function toggleColor(color) {
     setProduct(prev => {
       const colors = prev.colors || [];
@@ -228,46 +236,19 @@ export default function EditProductDrawer({
                         onChange={e => handleFieldChange("brand", e.target.value)}
                     />
                 </div>
-                <div className="pm-form-group">
-                    <label>Category</label>
-                    <select
-                        value={product.category || ""}
-                        onChange={e => handleFieldChange("category", e.target.value)}
-                         style={{padding: '10px', borderRadius: '8px', border: '1px solid #ccc', width: '100%'}}
-                    >
-                      <option value="">Select a category</option>
-                      <option value="Fashion & Apparel">Fashion & Apparel</option>
-                      <option value="Electronics & Gadgets">Electronics & Gadgets</option>
-                      <option value="Home & Living">Home & Living</option>
-                      <option value="Beauty & Personal Care">Beauty & Personal Care</option>
-                      <option value="Groceries & Daily Essentials">Groceries & Daily Essentials</option>
-                      <option value="Health & Wellness">Health & Wellness</option>
-                      <option value="Sports & Fitness">Sports & Fitness</option>
-                      <option value="Books & Education">Books & Education</option>
-                      <option value="Automobiles & Accessories">Automobiles & Accessories</option>
-                      <option value="Toys, Games & Entertainment">Toys, Games & Entertainment</option>
-                      <option value="Baby & Kids">Baby & Kids</option>
-                      <option value="Furniture">Furniture</option>
-                      <option value="Kitchen & Dining">Kitchen & Dining</option>
-                      <option value="Mobile Accessories">Mobile Accessories</option>
-                      <option value="Computer & Office Supplies">Computer & Office Supplies</option>
-                      <option value="Jewelry & Watches">Jewelry & Watches</option>
-                      <option value="Bags, Luggage & Travel Gear">Bags, Luggage & Travel Gear</option>
-                      <option value="Pet Supplies">Pet Supplies</option>
-                      <option value="Tools & Hardware">Tools & Hardware</option>
-                      <option value="Industrial & Construction Supplies">Industrial & Construction Supplies</option>
-                      <option value="Agriculture & Farming">Agriculture & Farming</option>
-                      <option value="Electrical & Lighting">Electrical & Lighting</option>
-                      <option value="Gifts & Occasions">Gifts & Occasions</option>
-                      <option value="Art, Craft & Handmade">Art, Craft & Handmade</option>
-                      <option value="Music, Movies & Media">Music, Movies & Media</option>
-                      <option value="Software & Digital Products">Software & Digital Products</option>
-                      <option value="Services">Services</option>
-                      <option value="Real Estate">Real Estate</option>
-                      <option value="Vehicles (Cars, Bikes, Scooters)">Vehicles (Cars, Bikes, Scooters)</option>
-                      <option value="Others / Miscellaneous">Others / Miscellaneous</option>
-                    </select>
-                </div>
+              <div className="pm-form-group">
+                  <label>Category</label>
+                  <select
+                      value={product.category || ""}
+                      onChange={e => handleFieldChange("category", e.target.value)}
+                       style={{padding: '10px', borderRadius: '8px', border: '1px solid #ccc', width: '100%'}}
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
+              </div>
             </div>
 
             <div className="pm-form-group">

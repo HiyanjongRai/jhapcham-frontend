@@ -71,13 +71,13 @@
 /* Image Box */
 .modern-pc-img-box {
   width: 100%;
-  height: 240px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   background: #fafafa;
-  padding: 24px;
+  padding: 18px;
   border-bottom: 2px solid #e2e8f0;
 }
 
@@ -97,13 +97,13 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 15px 18px;
   background: #ffffff;
-  gap: 12px;
+  gap: 10px;
 }
 
 .modern-pc-title {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #0f172a;
   margin: 0;
@@ -113,7 +113,7 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 2.8rem;
+  min-height: 2.7rem;
 }
 
 .modern-pc-brand {
@@ -165,8 +165,8 @@
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
-  gap: 12px;
-  padding-top: 16px;
+  gap: 10px;
+  padding-top: 14px;
   border-top: 2px solid #e2e8f0;
 }
 
@@ -198,6 +198,29 @@
   text-decoration: line-through;
   color: #94a3b8;
   font-weight: 500;
+}
+
+/* Seller Below Price Text */
+.modern-pc-seller-below-price {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.modern-pc-seller-below-price svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.modern-pc-seller-below-price span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 /* Add to Cart Button - Full Button with Text */

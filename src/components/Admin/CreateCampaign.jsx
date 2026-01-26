@@ -4,7 +4,7 @@ import { API_BASE } from "../config/config";
 import { Calendar, Tag, Clock, AlertCircle, Plus, Trash2, CheckCircle2, ChevronRight, X, Eye } from "lucide-react";
 import "./CreateCampaign.css"; 
 
-const CreateCampaign = ({ showToast }) => {
+const CreateCampaign = ({ showToast, confirmConfig, setConfirmConfig }) => {
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(false);
     const [view, setView] = useState("list"); // 'list' or 'create'
@@ -16,7 +16,8 @@ const CreateCampaign = ({ showToast }) => {
         startTime: "",
         endTime: "",
         discountType: "PERCENTAGE",
-        priority: 1
+        priority: 1,
+        image: null
     });
 
     // Manage State
@@ -41,15 +42,34 @@ const CreateCampaign = ({ showToast }) => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, files } = e.target;
+        if (name === "image") {
+            setFormData(prev => ({ ...prev, image: files[0] }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post(`${API_BASE}/api/admin/campaigns`, formData);
+            const data = new FormData();
+            data.append("name", formData.name);
+            data.append("type", formData.type);
+            data.append("startTime", formData.startTime);
+            data.append("endTime", formData.endTime);
+            data.append("discountType", formData.discountType);
+            data.append("priority", formData.priority);
+            if (formData.image) {
+                data.append("image", formData.image);
+            }
+
+            await axios.post(`${API_BASE}/api/admin/campaigns`, data, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
             showToast("Campaign created successfully!", "success");
             setView("list");
             setFormData({
@@ -58,7 +78,8 @@ const CreateCampaign = ({ showToast }) => {
                 startTime: "",
                 endTime: "",
                 discountType: "PERCENTAGE",
-                priority: 1
+                priority: 1,
+                image: null
             });
             fetchCampaigns();
         } catch (err) {
@@ -106,16 +127,23 @@ const CreateCampaign = ({ showToast }) => {
         }
     };
 
-    const handleDeleteCampaign = async (campaignId) => {
-        if (!window.confirm("Are you sure you want to delete this campaign? All products will be reverted to their previous prices.")) return;
-        try {
-            await axios.delete(`${API_BASE}/api/admin/campaigns/${campaignId}`);
-            showToast("Campaign deleted successfully", "success");
-            fetchCampaigns();
-        } catch (err) {
-            console.error(err);
-            showToast("Failed to delete campaign", "error");
-        }
+    const handleDeleteCampaign = (campaignId) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Delete Campaign",
+            message: "Are you sure you want to delete this campaign? All products will be reverted to their previous prices.",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    await axios.delete(`${API_BASE}/api/admin/campaigns/${campaignId}`);
+                    showToast("Campaign deleted successfully", "success");
+                    fetchCampaigns();
+                } catch (err) {
+                    console.error(err);
+                    showToast("Failed to delete campaign", "error");
+                }
+            }
+        });
     };
 
     const renderList = () => (
@@ -129,40 +157,44 @@ const CreateCampaign = ({ showToast }) => {
             
             <div className="campaign-grid">
                 {Array.isArray(campaigns) && campaigns.map(campaign => (
-                    <div key={campaign.id} className={`campaign-card status-${campaign.status.toLowerCase()}`}>
-                        <div className="campaign-card-header">
-                            <span className="campaign-type-badge">{campaign.type.replace('_', ' ')}</span>
-                            <span className={`campaign-status-pill ${campaign.status.toLowerCase()}`}>
+                    <div key={campaign.id} className={`ad-campaign-card status-${campaign.status.toLowerCase()}`}>
+                        <div className="ad-campaign-card-header">
+                            <span className="ad-campaign-type-badge">{campaign.type.replace('_', ' ')}</span>
+                            <span className={`ad-campaign-status-pill ${campaign.status.toLowerCase()}`}>
                                 {campaign.status}
                             </span>
                         </div>
-                        <h3 className="campaign-title">{campaign.name}</h3>
+                        <h3 className="ad-campaign-title">{campaign.name}</h3>
                         
-                        <div className="campaign-details">
-                            <div className="campaign-detail-item">
+                        <div className="ad-campaign-details">
+                            <div className="ad-campaign-detail-item" title="Start Time">
                                 <Calendar size={14} />
-                                <span>Start: {new Date(campaign.startTime).toLocaleString()}</span>
+                                <span>{new Date(campaign.startTime).toLocaleDateString()}</span>
                             </div>
-                            <div className="campaign-detail-item">
+                            <div className="ad-campaign-detail-item" title="End Time">
                                 <Clock size={14} />
-                                <span>End: {new Date(campaign.endTime).toLocaleString()}</span>
+                                <span>{new Date(campaign.endTime).toLocaleDateString()}</span>
                             </div>
-                            <div className="campaign-detail-item">
+                            <div className="ad-campaign-detail-item" title="Discount Type">
                                 <Tag size={14} />
-                                <span>Discount: {campaign.discountType}</span>
+                                <span>{campaign.discountType === 'PERCENTAGE' ? '%' : 'Rs'} Off</span>
                             </div>
-                            <div className="campaign-detail-item">
+                            <div className="ad-campaign-detail-item" title="Priority">
                                 <AlertCircle size={14} />
-                                <span>Priority: {campaign.priority}</span>
+                                <span>P-{campaign.priority}</span>
                             </div>
                         </div>
 
-                        <div className="campaign-footer-actions">
+                        <div className="ad-campaign-footer-actions">
                              <button className="btn-manage" onClick={() => handleManage(campaign)}>
                                 <Eye size={16} /> Manage Items
                              </button>
-                             <button className="btn-delete-campaign" onClick={() => handleDeleteCampaign(campaign.id)} style={{ marginLeft: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }} title="Delete Campaign">
-                                <Trash2 size={16} />
+                             <button 
+                                className="btn-delete-campaign" 
+                                onClick={() => handleDeleteCampaign(campaign.id)} 
+                                title="Delete Campaign"
+                             >
+                                <Trash2 size={16} /> Delete
                              </button>
                         </div>
                     </div>
@@ -243,6 +275,17 @@ const CreateCampaign = ({ showToast }) => {
                     />
                 </div>
 
+                <div className="form-group">
+                    <label>Campaign Banner Image</label>
+                    <input 
+                        type="file" 
+                        name="image" 
+                        onChange={handleInputChange} 
+                        accept="image/*"
+                    />
+                    <small style={{ color: '#64748b' }}>Upload a horizontal banner for the home page (Recommended: 800x400px)</small>
+                </div>
+
                 <div className="form-actions">
                     <button type="button" className="btn-cancel" onClick={() => setView("list")}>Cancel</button>
                     <button type="submit" className="btn-submit" disabled={loading}>
@@ -262,7 +305,17 @@ const CreateCampaign = ({ showToast }) => {
                     <div className="ad-modal-content" style={{ maxWidth: '800px' }}>
                         <div className="ad-modal-header">
                             <h2>Manage Products: {selectedCampaign.name}</h2>
-                            <button className="ad-modal-close" onClick={() => setShowManageModal(false)}><X size={20}/></button>
+                            <div className="ad-modal-header-actions" style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                                <button 
+                                    className="btn-delete-campaign"
+                                    style={{padding: '6px 12px', fontSize: '0.8rem'}}
+                                    onClick={() => { handleDeleteCampaign(selectedCampaign.id); setShowManageModal(false); }}
+                                    title="Delete this campaign"
+                                >
+                                    <Trash2 size={14} /> Delete
+                                </button>
+                                <button className="ad-modal-close" onClick={() => setShowManageModal(false)}><X size={20}/></button>
+                            </div>
                         </div>
                         <div className="ad-modal-body" style={{ maxHeight: '65vh', overflowY: 'auto', padding: '0' }}>
                             <div className="modal-tabs" style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>

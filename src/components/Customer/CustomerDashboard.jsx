@@ -17,16 +17,20 @@ import {
   Clock,
   XCircle,
   Trash2,
-  ChevronRight
+  ChevronRight,
+  MapPin,
+  Plus
 } from "lucide-react";
 import UpdateAccount from "../Profile/UpdateAccount.jsx";
 import ConfirmModal from "../Common/ConfirmModal.jsx";
+import { apiGetAddresses, apiAddAddress, apiUpdateAddress, apiDeleteAddress } from "./addressUtils";
 
 export default function CustomerDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [userProfile, setUserProfile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+  const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirmConfig, setConfirmConfig] = useState({
     isOpen: false,
@@ -79,6 +83,14 @@ export default function CustomerDashboard() {
     } catch (err) {
       console.error("Wishlist API failed:", err);
       setWishlist([]);
+    }
+
+    try {
+        const addrData = await apiGetAddresses(userId);
+        setAddresses(addrData || []);
+    } catch (err) {
+        console.error("Addresses API failed:", err);
+        setAddresses([]);
     }
 
     setLoading(false);
@@ -146,6 +158,7 @@ export default function CustomerDashboard() {
       case "overview": return <OverviewTab {...commonProps} />;
       case "orders": return <OrdersTab {...commonProps} />;
       case "wishlist": return <WishlistTab {...commonProps} />;
+      case "addresses": return <AddressesTab userId={userId} addresses={addresses} setAddresses={setAddresses} setConfirmConfig={setConfirmConfig} />;
       case "reviews": return <ReviewsTab {...commonProps} />;
       case "settings": return <AccountSettingsTab {...commonProps} setUserProfile={setUserProfile} />;
       default: return <OverviewTab {...commonProps} />;
@@ -174,6 +187,7 @@ export default function CustomerDashboard() {
             { id: "overview", icon: LayoutDashboard, label: "Overview" },
             { id: "orders", icon: ShoppingBag, label: "Order History" },
             { id: "wishlist", icon: Heart, label: "My Wishlist" },
+            { id: "addresses", icon: MapPin, label: "Addresses" },
             { id: "reviews", icon: Star, label: "Product Reviews" },
             { id: "settings", icon: Settings, label: "Account Settings" },
           ].map(tab => (
@@ -492,6 +506,130 @@ const EmptyState = ({ icon, text }) => (
     <p style={{ fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem' }}>{text}</p>
   </div>
 );
+
+const AddressesTab = ({ userId, addresses, setAddresses, setConfirmConfig }) => {
+    const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({});
+
+    const openAdd = () => {
+        setFormData({ label: "Home", country: "Nepal", isDefault: false });
+        setIsEditing(false);
+        setShowModal(true);
+    };
+
+    const openEdit = (addr) => {
+        setFormData({ ...addr });
+        setIsEditing(true);
+        setShowModal(true);
+    };
+
+    const handleDelete = (id) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Delete Address",
+            message: "Are you sure you want to delete this address?",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                   await apiDeleteAddress(id);
+                   setAddresses(addresses.filter(a => a.id !== id));
+                } catch(e) {
+                   console.error("Delete failed", e);
+                }
+            }
+        });
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            if (isEditing) {
+                const updated = await apiUpdateAddress(formData.id, formData);
+                setAddresses(addresses.map(a => a.id === updated.id ? updated : (updated.isDefault ? {...a, isDefault: false} : a)));
+            } else {
+                const added = await apiAddAddress(userId, formData);
+                if (added.isDefault) {
+                     setAddresses(addresses.map(a => ({...a, isDefault: false})).concat(added));
+                } else {
+                     setAddresses([...addresses, added]);
+                }
+            }
+            setShowModal(false);
+        } catch (err) {
+            alert("Failed to save address: " + (err.message || "Unknown error"));
+        }
+    };
+
+    return (
+        <div className="fade-in">
+             <div className="cd-header" style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                <div>
+                    <h1 className="cd-welcome">Address Book</h1>
+                    <p className="cd-date">Manage your shipping destinations</p>
+                </div>
+                <button className="cd-review-btn cd-review-btn-primary" onClick={openAdd}>
+                    <Plus size={16}/> Add New
+                </button>
+             </div>
+             
+             <div className="cd-address-grid" style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px, 1fr))', gap:'2rem'}}>
+                 {addresses.map(addr => (
+                     <div key={addr.id} className="cd-card" style={{border: addr.isDefault ? '2px solid #000' : '1px solid #eee', position:'relative'}}>
+                         {addr.isDefault && <span className="cd-badge-default" style={{position:'absolute', top:'1rem', right:'1rem', background:'#000', color:'#fff', padding:'0.25rem 0.5rem', fontSize:'0.7rem', fontWeight:'bold', borderRadius:'4px'}}>DEFAULT</span>}
+                         <div style={{display:'flex', gap:'1rem', alignItems:'center', marginBottom:'1rem'}}>
+                             <div className="cd-stat-icon" style={{width:'40px', height:'40px'}}><MapPin size={20}/></div>
+                             <h3 style={{fontSize:'1.1rem', fontWeight:'700'}}>{addr.label}</h3>
+                         </div>
+                         <div style={{fontSize:'0.9rem', color:'#555', lineHeight:'1.6'}}>
+                             <p><strong>{addr.receiverName}</strong></p>
+                             <p>{addr.street}, {addr.city}</p>
+                             <p>{addr.state}</p>
+                             <p>{addr.receiverPhone}</p>
+                         </div>
+                         <div style={{marginTop:'1.5rem', display:'flex', gap:'1rem'}}>
+                             <button className="cd-logout-btn" style={{flex:1, padding:'0.5rem', justifyContent:'center'}} onClick={() => openEdit(addr)}>Edit</button>
+                             <button className="cd-logout-btn" style={{padding:'0.5rem', justifyContent:'center', border:'1px solid #ff4d4f', color:'#ff4d4f'}} onClick={() => handleDelete(addr.id)}><Trash2 size={16}/></button>
+                         </div>
+                     </div>
+                 ))}
+             </div>
+             
+             {showModal && (
+                 <div className="cd-modal-overlay" style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center'}}>
+                     <div className="cd-modal" style={{background:'#fff', borderRadius:'12px', width:'100%', maxWidth:'500px', overflow:'hidden', boxShadow:'0 20px 50px rgba(0,0,0,0.2)'}}>
+                         <div className="cd-modal-header" style={{padding:'1.5rem', borderBottom:'1px solid #eee', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                            <h3 style={{margin:0, fontSize:'1.2rem', fontWeight:'800'}}>{isEditing ? 'Edit Address' : 'Add New Address'}</h3>
+                            <button onClick={() => setShowModal(false)} style={{background:'none', border:'none', cursor:'pointer'}}><XCircle size={24}/></button>
+                         </div>
+                         <form onSubmit={handleSubmit} style={{display:'grid', gap:'1rem', padding:'1.5rem'}}>
+                             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem'}}>
+                                 <input placeholder="Label (e.g. Home)" value={formData.label || ''} onChange={e => setFormData({...formData, label: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
+                                 <input placeholder="Receiver Name" value={formData.receiverName || ''} onChange={e => setFormData({...formData, receiverName: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
+                             </div>
+                             <input placeholder="Phone Number" value={formData.receiverPhone || ''} onChange={e => setFormData({...formData, receiverPhone: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
+                             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem'}}>
+                                 <input placeholder="City" value={formData.city || ''} onChange={e => setFormData({...formData, city: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
+                                 <input placeholder="State / Zone" value={formData.state || ''} onChange={e => setFormData({...formData, state: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
+                             </div>
+                             <input placeholder="Street / Chowk" value={formData.street || ''} onChange={e => setFormData({...formData, street: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
+                             <input placeholder="Landmark (Optional)" value={formData.landMark || ''} onChange={e => setFormData({...formData, landMark: e.target.value})} className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
+                             
+                             <label style={{display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', userSelect:'none'}}>
+                                 <input type="checkbox" checked={formData.isDefault || false} onChange={e => setFormData({...formData, isDefault: e.target.checked})} style={{width:'18px', height:'18px'}} />
+                                 Set as default shipping address
+                             </label>
+                             
+                             <button type="submit" className="cd-review-btn cd-review-btn-primary" style={{width:'100%', marginTop:'1rem', height:'48px', fontSize:'1rem'}}>
+                                 {isEditing ? 'Save Changes' : 'Add Address'}
+                             </button>
+                         </form>
+                     </div>
+                 </div>
+             )}
+        </div>
+    );
+};
 
 const SecurityItem = ({ label, status }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
