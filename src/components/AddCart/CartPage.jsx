@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   getCurrentUserId,
   loadGuestCart,
@@ -18,15 +18,20 @@ import {
   Minus, 
   ArrowRight, 
   Package, 
-  Shield, 
   RotateCcw, 
   Lock,
   ShoppingBag,
   Sparkles,
-  MapPin,
-  Truck
+  ShieldCheck,
+  Heart,
+  X,
+  Check,
+  AlertCircle,
+  Truck,
+  Gift
 } from "lucide-react";
 import "./CartPage.css";
+import Toast from "../Toast/Toast";
 
 function CartPage() {
   const navigate = useNavigate();
@@ -34,18 +39,24 @@ function CartPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [removingItemId, setRemovingItemId] = useState(null);
+  const [updatingItemId, setUpdatingItemId] = useState(null);
+  const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
 
   const userId = getCurrentUserId();
   const isLoggedIn = !!userId;
 
   // Shipping states
-  const [shippingLocation, setShippingLocation] = useState('INSIDE'); // INSIDE or OUTSIDE
+  const [shippingLocation] = useState('INSIDE'); 
   const [shippingCost, setShippingCost] = useState(0);
   const [shippingPreview, setShippingPreview] = useState(null);
-  const [loadingShipping, setLoadingShipping] = useState(false);
 
   const recalcTotal = (list) =>
     list.reduce((sum, i) => sum + i.lineTotal, 0);
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ message: msg, type, visible: true });
+  };
 
   useEffect(() => {
     const loadCart = async () => {
@@ -55,8 +66,6 @@ function CartPage() {
 
         if (isLoggedIn) {
           const data = await apiGetCart(userId);
-          // Legacy DTO has 'subtotal' and 'items'
-          // Each item has 'cartItemId', 'price', 'image', etc.
           const mappedItems = (data.items || []).map(i => ({
             ...i,
             unitPrice: i.price || 0,
@@ -83,7 +92,6 @@ function CartPage() {
     loadCart();
   }, [isLoggedIn, userId]);
 
-  // Calculate shipping whenever items or location changes
   useEffect(() => {
     const calculateShipping = async () => {
       if (items.length === 0) {
@@ -92,11 +100,10 @@ function CartPage() {
         return;
       }
 
-      setLoadingShipping(true);
       try {
         const payload = {
           userId: userId || null,
-          shippingLocation: shippingLocation === 'INSIDE' ? 'INSIDE' : 'OUTSIDE',
+          shippingLocation: 'INSIDE',
           items: items.map(item => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -111,30 +118,21 @@ function CartPage() {
       } catch (err) {
         console.warn('Shipping calculation failed:', err);
         setShippingCost(0);
-      } finally {
-        setLoadingShipping(false);
       }
     };
 
     calculateShipping();
-  }, [items, shippingLocation, userId]);
-
-  /* INSTANT QTY UPDATE (NO FULL RELOAD) */
+  }, [items, userId]);
 
   const handleQtyChange = async (item, newQty) => {
     if (newQty <= 0) return;
+    
+    const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
+    setUpdatingItemId(itemKey);
 
     if (isLoggedIn) {
       try {
-        // The backend returns the updated cart DTO
-        // The backend returns a message, not the cart. So we must refetch.
-        await apiUpdateQuantity(
-          userId,
-          item.cartItemId, // Legacy uses cartItemId
-          newQty
-        );
-
-        // Refetch cart
+        await apiUpdateQuantity(userId, item.cartItemId, newQty);
         const data = await apiGetCart(userId);
         
         const mappedItems = (data.items || []).map(i => ({
@@ -148,12 +146,14 @@ function CartPage() {
           
         setItems(mappedItems);
         setTotal(data.subtotal || 0);
+        showToast("Cart quantity updated", "success");
 
       } catch (e) {
         alert(e.message || "Unable to update quantity");
+      } finally {
+        setUpdatingItemId(null);
       }
     } else {
-      /* Guest user */
       const updated = items.map((i) =>
         i.productId === item.productId &&
         i.color === item.color &&
@@ -164,27 +164,23 @@ function CartPage() {
       setItems(updated);
       setTotal(recalcTotal(updated));
       saveGuestCart(updated);
-      // Sync navbar count
       const totalCount = updated.reduce((sum, item) => sum + item.quantity, 0);
       updateGlobalCartCount(totalCount);
+      setUpdatingItemId(null);
     }
   };
 
-  /* INSTANT REMOVE (NO RELOAD) */
-
   const handleRemove = async (item) => {
+    const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
+    setRemovingItemId(itemKey);
+
+    // Add a small delay for animation
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     if (isLoggedIn) {
       try {
-        // Backend returns updated cart DTO (or if it returns 200 OK with data)
-        // Since apiRemoveItem calls apiUpdateQuantity with 0, it returns the cart DTO.
-        // Backend returns message. Refetch needed.
-        await apiRemoveItem(
-          userId,
-          item.cartItemId // Legacy uses cartItemId
-        );
-
+        await apiRemoveItem(userId, item.cartItemId);
         const data = await apiGetCart(userId);
-
         const mappedItems = (data.items || []).map(i => ({
             ...i,
             unitPrice: i.price || 0,
@@ -196,124 +192,79 @@ function CartPage() {
           
         setItems(mappedItems);
         setTotal(data.subtotal || 0);
-
+        showToast("Item removed from cart", "success");
       } catch (e) {
         alert(e.message || "Unable to remove item");
+      } finally {
+        setRemovingItemId(null);
       }
     } else {
-      const updated = items.filter(
-        (i) =>
-          !(
-            i.productId === item.productId &&
-            i.color === item.color &&
-            i.storage === item.storage
-          )
-      );
+      const updated = items.filter(i => !(i.productId === item.productId && i.color === item.color && i.storage === item.storage));
       setItems(updated);
       setTotal(recalcTotal(updated));
       saveGuestCart(updated);
-      // Sync navbar count
       const totalCount = updated.reduce((sum, item) => sum + item.quantity, 0);
       updateGlobalCartCount(totalCount);
+      setRemovingItemId(null);
+      showToast("Item removed from cart", "success");
     }
   };
 
-  // Loading State with Animation
   if (loading) {
     return (
       <div className="cart-loading">
-        <div className="loading-spinner" style={{
-          width: '48px',
-          height: '48px',
-          border: '4px solid #f3f4f6',
-          borderTop: '4px solid #667eea',
-          borderRadius: '50%',
-          animation: 'spin 0.8s linear infinite'
-        }}></div>
-        <p style={{ marginTop: '16px', fontSize: '16px' }}>Loading your cart...</p>
+        <div className="cart-loading-spinner">
+          <div className="spinner-ring"></div>
+          <div className="spinner-ring"></div>
+          <div className="spinner-ring"></div>
+        </div>
+        <p className="cart-loading-text">Loading your cart...</p>
       </div>
     );
   }
   
-  if (error) return <div className="cart-error">{error}</div>;
+  if (error) {
+    return (
+      <div className="cart-error-container">
+        <div className="cart-error-box">
+          <AlertCircle size={48} className="error-icon" />
+          <h2>Oops! Something went wrong</h2>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()} className="retry-button">
+            <RotateCcw size={18} />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  // Empty Cart State
   if (items.length === 0) {
     return (
-      <div style={{ 
-        minHeight: '80vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        padding: '40px 20px' 
-      }}>
-        <div style={{
-          textAlign: 'center',
-          maxWidth: '500px',
-          background: 'var(--glass-bg)',
-          backdropFilter: 'blur(20px)',
-          padding: '60px 40px',
-          borderRadius: '24px',
-          boxShadow: 'var(--shadow-lg)',
-          animation: 'fadeIn 0.6s ease-out'
-        }}>
-          <div style={{
-            width: '120px',
-            height: '120px',
-            margin: '0 auto 24px',
-            background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            animation: 'pulse 2s ease-in-out infinite'
-          }}>
-            <ShoppingBag size={56} color="#667eea" strokeWidth={1.5} />
+      <div className="empty-cart-container">
+        <div className="empty-cart-box">
+          <div className="empty-icon-wrap">
+            <ShoppingBag size={100} strokeWidth={1.5} />
+            <div className="empty-icon-glow"></div>
           </div>
-          <h2 style={{
-            fontSize: '28px',
-            fontWeight: '800',
-            marginBottom: '12px',
-            color: '#1a1a1a'
-          }}>Your Cart is Empty</h2>
-          <p style={{
-            fontSize: '16px',
-            color: '#64748b',
-            marginBottom: '32px',
-            lineHeight: '1.6'
-          }}>
-            Looks like you haven't added anything to your cart yet. 
-            Start exploring our amazing products!
-          </p>
-          <button 
-            onClick={() => navigate('/products')}
-            style={{
-              padding: '16px 36px',
-              background: '#111827',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-              e.currentTarget.style.background = '#000000';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
-              e.currentTarget.style.background = '#111827';
-            }}
-          >
-            <Sparkles size={20} />
+          <h2>Your cart is empty</h2>
+          <p>Discover amazing products waiting for you. Start adding items to your cart!</p>
+          <div className="empty-cart-features">
+            <div className="feature-item">
+              <Truck size={20} />
+              <span>Free shipping on orders over Rs. 5000</span>
+            </div>
+            <div className="feature-item">
+              <ShieldCheck size={20} />
+              <span>Secure checkout</span>
+            </div>
+            <div className="feature-item">
+              <RotateCcw size={20} />
+              <span>Easy returns</span>
+            </div>
+          </div>
+          <button onClick={() => navigate('/products')} className="empty-cart-button">
+            <ShoppingBag size={20} />
             Start Shopping
           </button>
         </div>
@@ -321,169 +272,222 @@ function CartPage() {
     );
   }
 
-  // Calculate shipping progress
-  // Now handled by backend preview API
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="cart-wrapper">
-      {/* LEFT SIDE - Cart Items */}
-      <div className="cart-left">
-        <div style={{
-          background: 'var(--glass-bg)',
-          backdropFilter: 'blur(20px)',
-          padding: '20px 24px',
-          borderRadius: '16px',
-          marginBottom: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: 'var(--shadow-sm)'
-        }}>
-          <h1 style={{ 
-            fontSize: '28px', 
-            fontWeight: '800', 
-            margin: 0,
-            color: '#111827',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <ShoppingCart size={28} color="#111827" />
-            Shopping Cart
-          </h1>
-          <span style={{
-            fontSize: '15px',
-            fontWeight: '600',
-            color: '#64748b'
-          }}>
-            {items.length} {items.length === 1 ? 'Item' : 'Items'}
-          </span>
-        </div>
+      {toast.visible && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ ...toast, visible: false })} 
+        />
+      )}
+      
+      <div className="cart-container">
+        <div className="cart-main-section">
+          <div className="cart-header-modern">
+            <div className="header-content">
+              <h1 className="cart-title">My Shopping Cart</h1>
+              <p className="cart-subtitle">{items.length} {items.length === 1 ? 'item' : 'items'} • {totalItems} {totalItems === 1 ? 'product' : 'products'}</p>
+            </div>
+            <div className="header-actions">
+              <button className="clear-cart-btn" onClick={() => navigate('/products')}>
+                Continue Shopping
+              </button>
+            </div>
+          </div>
 
-        {items.map((item) => (
-          <div
-            key={item.cartItemId || `${item.productId}-${item.color}-${item.storage}`}
-            className="cart-box"
-          >
-            <div className="item-info">
-              <img
-                src={
-                  item.imagePath
-                    ? `${API_BASE}/${item.imagePath}`
-                    : "https://via.placeholder.com/130x130?text=Product"
-                }
-                alt={item.name}
-                className="item-img"
-              />
-
-              <div className="item-text">
-                <div className="item-title">{item.name}</div>
-
-                <div className="item-tags">
-                  {item.brand && <span>{item.brand}</span>}
-                  {item.category && <span>{item.category}</span>}
-                </div>
-
-                {item.color && (
-                  <div className="item-attr">Color: {item.color}</div>
-                )}
-                {item.storage && (
-                  <div className="item-attr">Storage: {item.storage}</div>
-                )}
-
-                <button className="remove-btn" onClick={() => handleRemove(item)}>
-                  <Trash2 size={14} />
-                  Remove
-                </button>
-
-                {/* Shipping Details per Item */}
-                <div style={{ marginTop: '12px', fontSize: '11px' }}>
-                  {item.freeShipping === true ? (
-                     <div style={{ color: '#166534', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', background: '#dcfce7', padding: '4px 8px', borderRadius: '4px', width: 'fit-content' }}>
-                        <Package size={12} /> Free Shipping
-                     </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {item.sellerFreeShippingMinOrder > 0 && (
-                         <div style={{ color: '#b45309', background: '#fef3c7', padding: '4px 8px', borderRadius: '4px', width: 'fit-content', fontWeight: '500' }}>
-                           🎁 Free on orders over Rs. {item.sellerFreeShippingMinOrder.toLocaleString()}
-                         </div>
-                      )}
-                      {(item.insideValleyShipping !== undefined || item.outsideValleyShipping !== undefined) && (
-                        <div style={{ color: '#64748b', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                           {item.insideValleyShipping !== undefined && <span>Inside: Rs. {item.insideValleyShipping}</span>}
-                           {item.outsideValleyShipping !== undefined && <span>Outside: Rs. {item.outsideValleyShipping}</span>}
+          <div className="cart-items-grid">
+            {items.map((item) => {
+              const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
+              const isRemoving = removingItemId === itemKey;
+              const isUpdating = updatingItemId === itemKey;
+              
+              return (
+                <div 
+                  key={itemKey} 
+                  className={`cart-item-card-modern ${isRemoving ? 'removing' : ''} ${isUpdating ? 'updating' : ''}`}
+                >
+                  <div className="item-card-content">
+                    <Link to={`/product/${item.productId}`} className="item-image-modern">
+                      <img
+                        src={item.imagePath ? `${API_BASE}/${item.imagePath}` : "https://via.placeholder.com/300"}
+                        alt={item.name}
+                      />
+                      {isUpdating && (
+                        <div className="item-updating-overlay">
+                          <div className="updating-spinner"></div>
                         </div>
                       )}
+                    </Link>
+                    
+                    <div className="item-details-modern">
+                      <div className="item-header-modern">
+                        <Link to={`/product/${item.productId}`} className="item-name-modern">{item.name}</Link>
+                        <button 
+                          className="remove-icon-btn" 
+                          onClick={() => handleRemove(item)}
+                          disabled={isRemoving}
+                          title="Remove item"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                      
+                      {item.brand && (
+                        <p className="item-brand-modern">{item.brand}</p>
+                      )}
+                      
+                      {(item.color || item.storage) && (
+                        <div className="item-options-modern">
+                          {item.color && (
+                            <div className="option-badge">
+                              <span className="option-label">Color:</span>
+                              <span className="option-value">{item.color}</span>
+                            </div>
+                          )}
+                          {item.storage && (
+                            <div className="option-badge">
+                              <span className="option-label">Storage:</span>
+                              <span className="option-value">{item.storage}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <div className="item-pricing-row">
+                        <div className="price-info">
+                          <span className="unit-price">Rs. {item.unitPrice.toLocaleString()}</span>
+                          <span className="each-label">each</span>
+                        </div>
+                        <div className="quantity-control-modern">
+                          <button 
+                            onClick={() => handleQtyChange(item, item.quantity - 1)} 
+                            className="qty-btn-modern" 
+                            disabled={item.quantity <= 1 || isUpdating}
+                          >
+                            <Minus size={16} />
+                          </button>
+                          <span className="qty-display">{item.quantity}</span>
+                          <button 
+                            onClick={() => handleQtyChange(item, item.quantity + 1)} 
+                            className="qty-btn-modern"
+                            disabled={isUpdating}
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="item-total-row">
+                        <span className="total-label-modern">Item Total:</span>
+                        <span className="total-amount">Rs. {item.lineTotal.toLocaleString()}</span>
+                      </div>
                     </div>
-                  )}
+                  </div>
+                  
+                  <div className="item-card-footer">
+                    <button className="save-later-btn-modern">
+                      <Heart size={16} />
+                      <span>Save for later</span>
+                    </button>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="cart-sidebar-modern">
+          <div className="order-summary-modern">
+            <div className="summary-header-modern">
+              <h2>Order Summary</h2>
+            </div>
+            
+            <div className="summary-content-modern">
+              <div className="summary-line">
+                <div className="summary-line-left">
+                  <span className="line-label">Subtotal</span>
+                  <span className="line-items">({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
+                </div>
+                <span className="line-value">Rs. {total.toLocaleString()}</span>
+              </div>
+              
+              <div className="summary-line">
+                <div className="summary-line-left">
+                  <Truck size={16} />
+                  <span className="line-label">Shipping</span>
+                </div>
+                <span className={`line-value ${shippingCost === 0 ? 'free' : ''}`}>
+                  {shippingCost > 0 ? `Rs. ${shippingCost.toLocaleString()}` : "Free"}
+                </span>
+              </div>
+
+              {shippingCost === 0 && (
+                <div className="free-shipping-banner">
+                  <Check size={16} />
+                  <span>Free shipping applied!</span>
+                </div>
+              )}
+
+              <div className="summary-line savings-line">
+                <div className="summary-line-left">
+                  <Sparkles size={16} />
+                  <span className="line-label">Savings</span>
+                </div>
+                <span className="line-value savings">Rs. 0</span>
+              </div>
+
+              <div className="summary-divider-modern"></div>
+
+              <div className="summary-total-modern">
+                <span className="total-label-modern">Total</span>
+                <span className="total-price-modern">Rs. {(total + shippingCost).toLocaleString()}</span>
               </div>
             </div>
 
-            <div className="item-price">Rs. {item.unitPrice.toFixed(2)}</div>
-
-            <div className="item-qty">
+            <div className="summary-actions-modern">
               <button
-                onClick={() => handleQtyChange(item, item.quantity - 1)}
-                className="qty-button"
-                disabled={item.quantity <= 1}
+                className="checkout-btn-modern"
+                onClick={() => navigate("/checkout", { state: { preselectedZone: 'INSIDE' } })}
               >
-                <Minus size={16} />
-              </button>
-              <span>{item.quantity}</span>
-              <button
-                onClick={() => handleQtyChange(item, item.quantity + 1)}
-                className="qty-button"
-              >
-                <Plus size={16} />
+                <Lock size={18} />
+                <span>Proceed to Checkout</span>
+                <ArrowRight size={20} />
               </button>
             </div>
 
-            <div className="item-total">Rs. {item.lineTotal.toFixed(2)}</div>
+            <div className="trust-badges-modern">
+              <div className="trust-item">
+                <ShieldCheck size={16} />
+                <span>Secure Payment</span>
+              </div>
+              <div className="trust-item">
+                <Package size={16} />
+                <span>Quality Guaranteed</span>
+              </div>
+              <div className="trust-item">
+                <RotateCcw size={16} />
+                <span>Easy Returns</span>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
 
-      {/* RIGHT SIDE - Order Summary */}
-      <div className="cart-right">
-        <div className="summary-box">
-
-
-
-
-
-
-
-
-          <button
-            className="checkout-button"
-            onClick={() => navigate("/checkout", {
-              state: {
-                preselectedZone: shippingLocation === 'INSIDE' ? 'INSIDE' : 'OUTSIDE'
-              }
-            })}
-          >
-            Proceed to Checkout
-            <ArrowRight size={20} />
-          </button>
-
-          <button
-            className="continue-button"
-            onClick={() => navigate("/products")}
-          >
-            Continue Shopping
-          </button>
-
-          <p style={{
-            fontSize: '12px',
-            color: '#94a3b8',
-            textAlign: 'center',
-            marginTop: '16px',
-            lineHeight: '1.5'
-          }}>
-            💳 We accept all major payment methods
-          </p>
+          {total < 5000 && (
+            <div className="shipping-promo-modern">
+              <div className="promo-icon-wrapper">
+                <Truck size={24} />
+              </div>
+              <div className="promo-text-modern">
+                <h4>Free Shipping!</h4>
+                <p>Add Rs. {(5000 - total).toLocaleString()} more for free shipping</p>
+              </div>
+              <Link to="/products" className="promo-action-btn">
+                Shop Now
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

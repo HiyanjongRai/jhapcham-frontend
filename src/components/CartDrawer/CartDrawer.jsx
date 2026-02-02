@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight, Check, AlertCircle, Package, Truck, Sparkles } from "lucide-react";
 import { getCurrentUserId, apiGetCart, apiUpdateQuantity, loadGuestCart, saveGuestCart, updateGlobalCartCount } from "../AddCart/cartUtils";
 import { API_BASE } from "../config/config";
 import "./CartDrawer.css";
@@ -10,6 +10,9 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [subtotal, setSubtotal] = useState(0);
+  const [removingItemId, setRemovingItemId] = useState(null);
+  const [updatingItemId, setUpdatingItemId] = useState(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const userId = getCurrentUserId();
 
   const fetchCart = async () => {
@@ -61,9 +64,12 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   const handleUpdateQty = async (item, newQty) => {
     if (newQty < 1) return;
+    
+    const itemKey = item.cartItemId || item.id || `${item.productId}-${item.color}-${item.storage}`;
+    setUpdatingItemId(itemKey);
+    
     try {
       if (userId) {
-        // userId, cartItemId, quantity
         const cartItemId = item.cartItemId || item.id;
         await apiUpdateQuantity(userId, cartItemId, newQty);
       } else {
@@ -77,12 +83,22 @@ const CartDrawer = ({ isOpen, onClose }) => {
         }
       }
       fetchCart();
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 2000);
     } catch (e) {
       console.error("Update qty failed", e);
+    } finally {
+      setUpdatingItemId(null);
     }
   };
 
   const handleRemove = async (item) => {
+    const itemKey = item.cartItemId || item.id || `${item.productId}-${item.color}-${item.storage}`;
+    setRemovingItemId(itemKey);
+    
+    // Add delay for animation
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
     try {
       if (userId) {
         const cartItemId = item.cartItemId || item.id;
@@ -96,18 +112,35 @@ const CartDrawer = ({ isOpen, onClose }) => {
       fetchCart();
     } catch (e) {
       console.error("Remove item failed", e);
+    } finally {
+      setRemovingItemId(null);
     }
   };
 
   if (!isOpen && !loading) return null;
 
+  const totalItems = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
   return (
     <div className={`cart-drawer-overlay ${isOpen ? "open" : ""}`} onClick={onClose}>
       <div className={`cart-drawer-content ${isOpen ? "open" : ""}`} onClick={(e) => e.stopPropagation()}>
+        {showSuccessToast && (
+          <div className="drawer-success-toast">
+            <Check size={18} />
+            <span>Cart updated!</span>
+          </div>
+        )}
+        
         <div className="cart-drawer-header">
           <div className="cart-header-title">
-            <ShoppingBag size={20} />
-            <h2>Your Cart ({cartItems.length})</h2>
+            <div className="cart-icon-wrapper">
+              <ShoppingBag size={22} />
+              {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+            </div>
+            <div>
+              <h2>Your Cart</h2>
+              <p className="cart-header-subtitle">{cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}</p>
+            </div>
           </div>
           <button className="cart-close-btn" onClick={onClose}>
             <X size={24} />
@@ -132,71 +165,113 @@ const CartDrawer = ({ isOpen, onClose }) => {
             </div>
           ) : (
             <div className="cart-items-list">
-              {cartItems.map((item) => (
-                <div className="cart-item-card" key={item.cartItemId || `${item.productId}-${item.color}-${item.storage}`}>
-                  <div className="item-img-box">
-                    <img 
-                      src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : "https://via.placeholder.com/100"} 
-                      alt={item.name} 
-                    />
-                  </div>
-                  <div className="item-details">
-                    <div className="item-header">
-                      <h4 className="item-name">{item.name || item.productName}</h4>
-                      <button className="item-remove-btn" onClick={() => handleRemove(item)}>
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                    <p className="item-variant">
-                      {item.color && <span>{item.color}</span>}
-                      {item.color && item.storage && <span className="dot">•</span>}
-                      {item.storage && <span>{item.storage}</span>}
-                    </p>
-                    <div className="item-footer">
-                      <div className="qty-controls">
-                        <button onClick={() => handleUpdateQty(item, (item.quantity - 1))} className="qty-btn">
-                          <Minus size={14} />
-                        </button>
-                        <span>{item.quantity}</span>
-                        <button onClick={() => handleUpdateQty(item, (item.quantity + 1))} className="qty-btn">
-                          <Plus size={14} />
+              {cartItems.map((item) => {
+                const itemKey = item.cartItemId || item.id || `${item.productId}-${item.color}-${item.storage}`;
+                const isRemoving = removingItemId === itemKey;
+                const isUpdating = updatingItemId === itemKey;
+                
+                return (
+                  <div 
+                    className={`cart-item-card ${isRemoving ? 'removing' : ''} ${isUpdating ? 'updating' : ''}`} 
+                    key={itemKey}
+                  >
+                    <Link to={`/product/${item.productId}`} className="item-img-box">
+                      <img 
+                        src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : "https://via.placeholder.com/100"} 
+                        alt={item.name || item.productName} 
+                      />
+                      {isUpdating && (
+                        <div className="item-updating-overlay">
+                          <div className="updating-spinner-small"></div>
+                        </div>
+                      )}
+                    </Link>
+                    <div className="item-details">
+                      <div className="item-header">
+                        <Link to={`/product/${item.productId}`} className="item-name-link">
+                          <h4 className="item-name">{item.name || item.productName}</h4>
+                        </Link>
+                        <button 
+                          className="item-remove-btn" 
+                          onClick={() => handleRemove(item)}
+                          disabled={isRemoving}
+                          title="Remove item"
+                        >
+                          <Trash2 size={16} />
                         </button>
                       </div>
-                      <div className="item-price">
-                        Rs. {((item.unitPrice || 0) * (item.quantity || 1)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      {(item.color || item.storage) && (
+                        <div className="item-variant">
+                          {item.color && <span className="variant-chip color-chip">{item.color}</span>}
+                          {item.storage && <span className="variant-chip storage-chip">{item.storage}</span>}
+                        </div>
+                      )}
+                      <div className="item-footer">
+                        <div className="qty-controls">
+                          <button 
+                            onClick={() => handleUpdateQty(item, (item.quantity - 1))} 
+                            className="qty-btn"
+                            disabled={item.quantity <= 1 || isUpdating}
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className="qty-value">{item.quantity}</span>
+                          <button 
+                            onClick={() => handleUpdateQty(item, (item.quantity + 1))} 
+                            className="qty-btn"
+                            disabled={isUpdating}
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                        <div className="item-price">
+                          Rs. {((item.unitPrice || item.price || 0) * (item.quantity || 1)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
         {cartItems.length > 0 && (
           <div className="cart-drawer-footer">
-            <div className="cart-summary-row">
-              <span className="summary-label">Subtotal</span>
-              <span className="summary-value">Rs. {subtotal.toLocaleString()}</span>
+            <div className="cart-summary-section">
+              <div className="cart-summary-row">
+                <span className="summary-label">
+                  <Package size={16} />
+                  Subtotal ({totalItems} {totalItems === 1 ? 'item' : 'items'})
+                </span>
+                <span className="summary-value">Rs. {subtotal.toLocaleString()}</span>
+              </div>
+              <div className="shipping-info">
+                <Truck size={14} />
+                <span>Shipping calculated at checkout</span>
+              </div>
             </div>
-            <div style={{
-              fontSize: '11px',
-              color: '#94a3b8',
-              marginTop: '8px',
-              padding: '0 4px',
-              textAlign: 'center',
-              lineHeight: '1.4'
-            }}>
-              + Shipping costs calculated at checkout based on your location
-            </div>
-            <p className="shipping-note">Shipping & taxes calculated at checkout</p>
+            
             <div className="drawer-actions">
               <button className="view-cart-btn" onClick={() => { onClose(); navigate("/cart"); }}>
-                View Cart
+                <ShoppingBag size={18} />
+                View Full Cart
               </button>
               <button className="checkout-btn" onClick={() => { onClose(); navigate("/checkout"); }}>
-                Checkout <ArrowRight size={18} />
+                <span>Checkout</span>
+                <ArrowRight size={18} />
               </button>
+            </div>
+            
+            <div className="drawer-security-badges">
+              <div className="security-badge-item">
+                <Check size={12} />
+                <span>Secure Payment</span>
+              </div>
+              <div className="security-badge-item">
+                <Sparkles size={12} />
+                <span>Quality Guaranteed</span>
+              </div>
             </div>
           </div>
         )}

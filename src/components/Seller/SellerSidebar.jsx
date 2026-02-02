@@ -13,7 +13,8 @@ import {
   MessageCircle,
   HelpCircle,
   LogOut,
-  Store
+  Store,
+  Tag
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getCurrentUserId } from "../config/authUtils";
@@ -47,6 +48,7 @@ export default function SellerSidebar({ storeInfo }) {
       title: "Management",
       items: [
         { icon: <Settings size={18} />, label: "Store Setting", path: "/seller/dashboard", tab: "settings" },
+        { icon: <Tag size={18} />, label: "Promo Codes", path: "/seller/promos" }, // New Item
         { icon: <Users size={18} />, label: "Account Setting", path: "/seller/dashboard", tab: "account" },
         { icon: <Flag size={18} />, label: "Reports", path: "/seller/dashboard", tab: "reports" },
       ]

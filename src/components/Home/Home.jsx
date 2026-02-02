@@ -108,7 +108,7 @@ function Home() {
                             sellerName: cp.sellerName,
                             storeName: cp.sellerName
                         }));
-                        setCampaignProducts(mappedCampProducts.slice(0, 8));
+                        setCampaignProducts(mappedCampProducts.slice(0, 12));
                     }
                 } catch (err) {
                     console.warn("Campaign products fetch error", err);
@@ -123,7 +123,7 @@ function Home() {
   }, []);
 
   // Derived product lists
-  const featuredProducts = [...products].sort((a,b) => (b.totalViews || 0) - (a.totalViews || 0)).slice(0, 8);
+  const featuredProducts = [...products].sort((a,b) => (b.totalViews || 0) - (a.totalViews || 0)).slice(0, 12);
   const bestSellers = [...products].sort((a,b) => (b.salesCount || 0) - (a.salesCount || 0)).slice(0, 12);
 
   return (
@@ -133,13 +133,13 @@ function Home() {
         {/* Left Sidebar - Categories */}
         <aside className="categories-sidebar">
           <button className="browse-categories-btn">
-            <Package size={20} />
+            <Package size={18} />
             Browse Categories
           </button>
           
           <nav className="sidebar-nav">
             <div className="sidebar-section-header">
-              <Package size={18} />
+              <Package size={16} />
               <span>Categories</span>
             </div>
             {categories.length > 0 ? (
@@ -151,11 +151,11 @@ function Home() {
                         to={`/products?category=${encodeURIComponent(cat.name)}`}
                         className="sidebar-category-item"
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <Icon size={16} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Icon size={14} />
                             <span>{cat.name}</span>
                         </div>
-                        <ChevronRight size={14} />
+                        <ChevronRight size={12} />
                       </Link>
                   );
                 })
@@ -170,7 +170,7 @@ function Home() {
               className="sidebar-category-item view-all-categories"
             >
               <span>Explore All Products</span>
-              <ChevronRight size={16} />
+              <ChevronRight size={14} />
             </Link>
           </nav>
 
@@ -178,7 +178,7 @@ function Home() {
           <div className="sidebar-features">
             <div className="feature-item">
               <div className="feature-icon">
-                <Truck size={24} />
+                <Truck size={20} />
               </div>
               <div className="feature-text">
                 <h4>Free Shipping</h4>
@@ -188,7 +188,7 @@ function Home() {
 
             <div className="feature-item">
               <div className="feature-icon">
-                <Headphones size={24} />
+                <Headphones size={20} />
               </div>
               <div className="feature-text">
                 <h4>24/7 Support</h4>
@@ -198,7 +198,7 @@ function Home() {
 
             <div className="feature-item">
               <div className="feature-icon">
-                <ShieldCheck size={24} />
+                <ShieldCheck size={20} />
               </div>
               <div className="feature-text">
                 <h4>Best Prices & offers</h4>
@@ -208,7 +208,7 @@ function Home() {
 
             <div className="feature-item">
               <div className="feature-icon">
-                <RotateCcw size={24} />
+                <RotateCcw size={20} />
               </div>
               <div className="feature-text">
                 <h4>Easy Returns</h4>
@@ -257,7 +257,7 @@ function Home() {
                           </div>
                           <button className="promo-btn">
                             VIEW DEALS
-                            <ArrowRight size={14} />
+                            <ArrowRight size={12} />
                           </button>
                         </div>
                         <div className="promo-image-wrapper">
@@ -282,7 +282,7 @@ function Home() {
                       <p className="promo-offer">Up to 50% Off</p>
                       <button onClick={() => navigate('/products')} className="promo-btn">
                         Shop Now
-                        <ArrowRight size={18} />
+                        <ArrowRight size={14} />
                       </button>
                     </div>
                     <div className="promo-image">
@@ -302,7 +302,7 @@ function Home() {
                       <p className="promo-offer">Fresh Looks</p>
                       <button onClick={() => navigate('/products?sort=newest')} className="promo-btn">
                          Explore
-                         <ArrowRight size={18} />
+                         <ArrowRight size={14} />
                       </button>
                     </div>
                     <div className="promo-image">
@@ -348,7 +348,7 @@ function Home() {
                     className="view-all-campaign-btn"
                   >
                     View All Deals
-                    <ArrowRight size={18} />
+                    <ArrowRight size={16} />
                   </button>
                 </div>
               </div>
@@ -369,17 +369,17 @@ function Home() {
               <h2 className="section-title">Featured Item</h2>
               <div className="section-nav-arrows">
                 <button className="nav-arrow-btn" aria-label="Previous">
-                  <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />
+                  <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} />
                 </button>
                 <button className="nav-arrow-btn" aria-label="Next">
-                  <ChevronRight size={20} />
+                  <ChevronRight size={18} />
                 </button>
               </div>
             </div>
 
             <div className="featured-products-grid-v2">
               {loading ? (
-                Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)
+                Array(12).fill(0).map((_, i) => <ProductSkeleton key={i} />)
               ) : featuredProducts.length > 0 ? (
                 featuredProducts.map(product => (
                   <div key={product.id} className="featured-product-wrapper">

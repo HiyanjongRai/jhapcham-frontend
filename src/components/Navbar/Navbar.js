@@ -307,7 +307,7 @@ const Navbar = ({ onOpenCart }) => {
                     onClick={() => navigate(link.path)}
                   >
                     {link.label}
-                    {link.hasMegaMenu && <ChevronDown size={14} className="nav-chevron" />}
+                    {link.hasMegaMenu && <ChevronDown size={12} className="nav-chevron" />}
                   </button>
 
                   {link.hasMegaMenu && activeMegaMenu === link.labelKey && (
@@ -383,7 +383,7 @@ const Navbar = ({ onOpenCart }) => {
                   setShowSuggestions(false);
                 }
             }}>
-                <Search className="search-icon" size={18} />
+                <Search className="search-icon" size={16} />
                 <input 
                   type="text" 
                   placeholder="Search for products, brands..." 
@@ -434,7 +434,7 @@ const Navbar = ({ onOpenCart }) => {
               <>
                 {!isSeller && (
                   <button className="nav-icon-btn" onClick={() => navigate("/cart")}>
-                    <ShoppingBag size={22} />
+                    <ShoppingBag size={20} />
                     {cartCount > 0 && <span className="nav-badge">{cartCount}</span>}
                   </button>
 
@@ -445,8 +445,8 @@ const Navbar = ({ onOpenCart }) => {
                   <button className="nav-btn-primary" onClick={() => navigate("/signup")}>Sign Up</button>
                 </div>
                 
-                <button className="nav-seller-link" onClick={() => navigate("/seller/register")}>
-                  <Store size={18} />
+                  <button className="nav-seller-link" onClick={() => navigate("/seller/register")}>
+                  <Store size={16} />
                   <span>Become Seller</span>
                 </button>
               </>
@@ -454,19 +454,19 @@ const Navbar = ({ onOpenCart }) => {
               <div className="nav-logged-in">
                 {!isSeller && (
                   <button className="nav-icon-btn" onClick={() => navigate("/cart")}>
-                    <ShoppingBag size={22} />
+                    <ShoppingBag size={20} />
                     {cartCount > 0 && <span className="nav-badge">{cartCount}</span>}
                   </button>
 
                 )}
 
                 <button className="nav-icon-btn" onClick={() => navigate("/messages")}>
-                  <MessageCircle size={22} />
+                  <MessageCircle size={20} />
                   {messageCount > 0 && <span className="nav-badge">{messageCount}</span>}
                 </button>
 
                 <button className="nav-icon-btn" onClick={() => navigate("/notifications")} title="Notifications">
-                  <Bell size={22} />
+                  <Bell size={20} />
                   {notificationCount > 0 && <span className="nav-badge">{notificationCount}</span>}
                 </button>
 
@@ -475,21 +475,21 @@ const Navbar = ({ onOpenCart }) => {
                       {profileImage ? (
                         <img src={profileImage} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <User size={18} />
+                        <User size={16} />
                       )}
                    </div>
                    <span className="nav-role-tag">{role}</span>
-                   <ChevronDown size={14} />
+                   <ChevronDown size={12} />
                 </div>
 
                 <button className="nav-logout-btn" onClick={handleLogout} title="Logout">
-                   <LogOut size={20} />
+                   <LogOut size={18} />
                 </button>
               </div>
             )}
             
             <button className="nav-mobile-btn" onClick={toggleMobileMenu}>
-              {mobileOpen ? <X size={28} /> : <Menu size={28} />}
+              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>

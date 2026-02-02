@@ -18,6 +18,8 @@ function ProductCard({ product }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
 
   const showToast = (message, type = 'info') => {
@@ -135,9 +137,9 @@ function ProductCard({ product }) {
       stars.push(
         <Star 
           key={i} 
-          size={14} 
-          fill={i <= Math.round(rating) ? "#fbc02d" : "none"} 
-          color={i <= Math.round(rating) ? "#fbc02d" : "#64748b"} 
+          size={12} 
+          fill={i <= Math.round(rating) ? "#fbbf24" : "none"} 
+          color={i <= Math.round(rating) ? "#fbbf24" : "#d1d5db"} 
         />
       );
     }
@@ -150,7 +152,19 @@ function ProductCard({ product }) {
   };
 
   return (
-    <div className="modern-pc-card" onClick={handleCardClick}>
+    <div 
+      className="modern-pc-card" 
+      onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
+      tabIndex={0}
+      role="article"
+      aria-label={`Product: ${name}`}
+    >
       {/* Wishlist Button */}
       {!isSeller && (
         <button
@@ -158,7 +172,7 @@ function ProductCard({ product }) {
           onClick={toggleWishlist}
           aria-label="Toggle Wishlist"
         >
-          <Heart size={18} fill={liked ? "#ff4d4d" : "none"} color={liked ? "#ff4d4d" : "#666"} />
+          <Heart size={14} fill={liked ? "#ef4444" : "none"} color={liked ? "#ef4444" : "#6b7280"} />
         </button>
       )}
 
@@ -171,16 +185,27 @@ function ProductCard({ product }) {
 
       {/* Product Image Area */}
       <div className="modern-pc-img-box">
+        {!imageLoaded && !imageError && (
+          <div className="modern-pc-img-skeleton" />
+        )}
         <img 
           src={imgSrc} 
           alt={name} 
-          className="modern-pc-img" 
+          className={`modern-pc-img ${imageLoaded ? 'loaded' : ''}`}
           loading="lazy" 
+          onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = PLACEHOLDER_IMG;
+            setImageError(true);
+            setImageLoaded(true);
           }}
         />
+        {!inStock && (
+          <div className="modern-pc-out-of-stock-overlay">
+            <span>Out of Stock</span>
+          </div>
+        )}
       </div>
 
       {/* Product Info Section */}
@@ -194,7 +219,7 @@ function ProductCard({ product }) {
             <span className="rating-value">{safeRating.toFixed(1)}</span>
           </div>
           <div className="modern-pc-views">
-            <Eye size={14} />
+            <Eye size={12} />
             <span>{formatViews(totalViews)} Views</span>
           </div>
         </div>
@@ -211,7 +236,7 @@ function ProductCard({ product }) {
             
             {finalStoreName && (
               <div className="modern-pc-seller-below-price" title={`Sold by: ${finalStoreName}`}>
-                <Store size={10} />
+                <Store size={9} />
                 <span>{finalStoreName}</span>
               </div>
             )}
@@ -219,15 +244,23 @@ function ProductCard({ product }) {
           
           {!isSeller && (
             <button 
-              className="modern-pc-btn" 
+              className={`modern-pc-btn ${!inStock ? 'out-of-stock' : ''}`}
               onClick={handleAddToCartClick} 
               disabled={stock === 0 || adding}
+              aria-label={stock === 0 ? "Out of stock" : "Add to cart"}
             >
               {adding ? (
-                "Adding..."
+                <>
+                  <span className="spinner"></span>
+                  <span>Adding...</span>
+                </>
+              ) : stock === 0 ? (
+                <>
+                  <span>Out of Stock</span>
+                </>
               ) : (
                 <>
-                  <ShoppingCart size={16} />
+                  <ShoppingCart size={14} />
                   <span>Add to Cart</span>
                 </>
               )}

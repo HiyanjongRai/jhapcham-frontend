@@ -321,7 +321,8 @@ export default function SellerOrders() {
                 <th>RECIPIENT</th>
                 <th>PRODUCT</th>
                 <th>PAYMENT</th>
-                <th>TOTAL</th>
+                <th>TOTAL & DISCOUNT</th>
+                <th>SETTLEMENT</th>
                 <th>STATUS</th>
               </tr>
             </thead>
@@ -376,7 +377,18 @@ export default function SellerOrders() {
                       </span>
                     </td>
                     <td>
-                      <span className="total-cell-v2">NPR {(order.grandTotal || order.totalPrice || 0).toLocaleString()}</span>
+                      <div className="total-cell-v2">
+                        <span className="grand-total-v2">NPR {(order.grandTotal || 0).toLocaleString()}</span>
+                        {order.discountTotal > 0 && (
+                          <span className="discount-tag-v2">-NPR {order.discountTotal.toLocaleString()}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="settlement-cell-v2">
+                         <span className="net-amount-v2">NPR {(order.sellerNetAmount || 0).toLocaleString()}</span>
+                         <span className="settlement-sub-v2">Net Income</span>
+                      </div>
                     </td>
                     <td>
                       <div className={`status-dot-pill ${(order.status || 'PENDING').toLowerCase()}`}>
@@ -503,18 +515,41 @@ export default function SellerOrders() {
                     </div>
                   ))}
                   <div className="manifest-total-v2">
-                     <div className="total-row-v2">
-                        <span>Items Total</span>
+                      <div className="total-row-v2">
+                        <span>Items Total (Gross)</span>
                         <span>NPR {currentDetail?.itemsTotal?.toLocaleString()}</span>
-                     </div>
-                     <div className="total-row-v2">
-                        <span>Shipping Fee</span>
+                      </div>
+                      {currentDetail?.discountTotal > 0 && (
+                        <div className="total-row-v2 discount">
+                          <span>Promo Discount</span>
+                          <span style={{ color: '#ff4d4f' }}>- NPR {currentDetail?.discountTotal?.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="total-row-v2">
+                        <span>Shipping (Customer Paid)</span>
                         <span>NPR {currentDetail?.shippingFee?.toLocaleString()}</span>
-                     </div>
-                     <div className="total-row-v2 grand">
-                        <span>Settlement Net</span>
+                      </div>
+                      <div className="total-divider-v2" style={{ margin: '12px 0', borderTop: '1px dashed #eee' }}></div>
+                      <div className="total-row-v2 grand">
+                        <span>User Paid</span>
                         <span>NPR {currentDetail?.grandTotal?.toLocaleString()}</span>
-                     </div>
+                      </div>
+                      
+                      <div className="settlement-box-v2" style={{ marginTop: '20px', padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <h4 style={{ margin: '0 0 12px', fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Seller Settlement</h4>
+                        <div className="total-row-v2">
+                          <span>Seller Gross</span>
+                          <span>NPR {currentDetail?.sellerGrossAmount?.toLocaleString()}</span>
+                        </div>
+                        <div className="total-row-v2">
+                          <span>Logistics Charge</span>
+                          <span>- NPR {currentDetail?.sellerShippingCharge?.toLocaleString()}</span>
+                        </div>
+                        <div className="total-row-v2" style={{ marginTop: '8px', fontWeight: '800', color: '#0f172a' }}>
+                          <span>Final Net</span>
+                          <span>NPR {currentDetail?.sellerNetAmount?.toLocaleString()}</span>
+                        </div>
+                      </div>
                   </div>
                 </div>
               </section>

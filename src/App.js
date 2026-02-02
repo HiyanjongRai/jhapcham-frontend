@@ -30,6 +30,7 @@ import CampaignsPage from "./components/Campaigns/CampaignsPage.jsx";
 
 import SellerProfilePage from "./components/Seller/SellerProfilePage.jsx";
 import SellerLayout from "./components/Seller/SellerLayout";
+import PromoCodeManager from './components/Seller/PromoCodes/PromoCodeManager'; // New
 import CartDrawer from "./components/CartDrawer/CartDrawer";
 
 
@@ -86,6 +87,7 @@ function App() {
           <Route path="orders" element={<SellerOrders />} />
           <Route path="add-product" element={<AddProduct />} />
           <Route path="products" element={<ProductManagement />} />
+          <Route path="promos" element={<PromoCodeManager />} /> {/* New Route */}
           <Route path="settings" element={<UpdateAccount />} />
         </Route>
 
