@@ -6,7 +6,7 @@
   background: #000000;
   color: #ffffff;
   font-family: 'Outfit', sans-serif;
-  margin-top: 60px; /* Reduced from 140px */
+  margin-top: 40px; /* Reduced from 60px */
   position: relative;
   overflow: hidden;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -33,7 +33,7 @@
 
 /* --- Top Section Architecture --- */
 .footer-top {
-  padding: 100px 0 80px;
+  padding: 40px 0 25px; /* Reduced from 60px 0 40px */
   position: relative;
   z-index: 1;
 }
@@ -41,20 +41,20 @@
 .footer-grid {
   display: grid;
   grid-template-columns: 1.5fr 0.8fr 0.8fr 1.5fr;
-  gap: 60px;
+  gap: 25px; /* Reduced from 40px */
 }
 
 /* Brand Presence */
 .footer-brand {
-  max-width: 320px;
+  max-width: 280px; /* Reduced from 320px */
 }
 
 .footer-logo-img {
-  height: 42px;
+  height: 26px; /* Reduced from 32px */
   width: auto;
   object-fit: contain;
-  margin-bottom: 32px;
-  filter: brightness(0) invert(1); /* Ensure it's wedding-white */
+  margin-bottom: 15px; /* Reduced from 20px */
+  filter: brightness(0) invert(1);
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -63,12 +63,12 @@
 }
 
 .footer-desc {
-  line-height: 1.8;
+  line-height: 1.5; /* Reduced from 1.6 */
   color: #a1a1aa;
-  margin-bottom: 40px;
-  font-size: 0.95rem;
+  margin-bottom: 15px; /* Reduced from 24px */
+  font-size: 0.8rem; /* Reduced from 0.85rem */
   font-weight: 300;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.1px;
 }
 
 /* Social Ecosystem */
@@ -78,8 +78,8 @@
 }
 
 .social-link {
-  width: 44px;
-  height: 44px;
+  width: 30px; /* Reduced from 36px */
+  height: 30px; /* Reduced from 36px */
   border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
@@ -104,10 +104,10 @@
 .footer-links h3, 
 .footer-newsletter h3 {
   color: #ffffff;
-  font-size: 0.85rem;
+  font-size: 0.7rem; /* Reduced from 0.75rem */
   font-weight: 700;
-  margin-bottom: 36px;
-  letter-spacing: 2px;
+  margin-bottom: 16px; /* Reduced from 24px */
+  letter-spacing: 1.2px; /* Reduced from 1.5px */
   text-transform: uppercase;
 }
 
@@ -118,14 +118,14 @@
 }
 
 .footer-links li {
-  margin-bottom: 18px;
+  margin-bottom: 6px; /* Reduced from 10px */
 }
 
 .footer-links a {
   color: #a1a1aa;
   text-decoration: none;
   transition: all 0.3s ease;
-  font-size: 0.95rem;
+  font-size: 0.8rem; /* Reduced from 0.85rem */
   font-weight: 400;
   display: inline-block;
 }
@@ -138,17 +138,17 @@
 /* --- Newsletter Refinement --- */
 .footer-newsletter {
   background: rgba(255, 255, 255, 0.03);
-  padding: 40px;
-  border-radius: 24px;
+  padding: 15px 20px; /* Reduced from 25px */
+  border-radius: 12px; /* Reduced from 16px */
   border: 1px solid rgba(255, 255, 255, 0.05);
   height: fit-content;
 }
 
 .footer-newsletter p {
   color: #a1a1aa;
-  margin-bottom: 24px;
-  line-height: 1.6;
-  font-size: 0.9rem;
+  margin-bottom: 16px; /* Reduced from 24px */
+  line-height: 1.5; /* Reduced from 1.6 */
+  font-size: 0.8rem; /* Reduced from 0.9rem */
   font-weight: 300;
 }
 
@@ -157,7 +157,7 @@
   display: flex;
   background: #ffffff;
   border-radius: 100px;
-  padding: 6px;
+  padding: 3px; /* Reduced from 4px */
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -170,9 +170,9 @@
   flex: 1;
   background: transparent;
   border: none;
-  padding: 12px 20px;
+  padding: 6px 12px; /* Reduced padding */
   color: #000000;
-  font-size: 0.95rem;
+  font-size: 0.8rem; /* Reduced from 0.85rem */
   font-family: inherit;
   font-weight: 500;
   outline: none;
@@ -185,8 +185,8 @@
 .newsletter-form button {
   background: #000000;
   border: none;
-  width: 44px;
-  height: 44px;
+  width: 30px; /* Reduced from 36px */
+  height: 30px; /* Reduced from 36px */
   border-radius: 50%;
   color: #ffffff;
   cursor: pointer;
@@ -203,7 +203,7 @@
 
 /* --- Unified Contact Bar --- */
 .footer-contact-bar {
-  padding: 24px 0;
+  padding: 12px 0; /* Reduced from 16px 0 */
   background: transparent;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -212,16 +212,16 @@
 .bar-content {
   display: flex;
   justify-content: center;
-  gap: 60px;
+  gap: 30px; /* Reduced from 40px */
   flex-wrap: wrap;
 }
 
 .contact-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px; /* Reduced from 10px */
   color: #71717a;
-  font-size: 0.85rem;
+  font-size: 0.8rem; /* Reduced from 0.85rem */
   font-weight: 400;
   transition: color 0.3s;
 }
@@ -237,7 +237,7 @@
 
 /* --- Bottom Copyright Architecture --- */
 .footer-bottom {
-  padding: 40px 0;
+  padding: 15px 0; /* Reduced from 25px 0 */
 }
 
 .bottom-flex {
@@ -250,7 +250,7 @@
 
 .footer-policies {
   display: flex;
-  gap: 40px;
+  gap: 30px; /* Reduced from 40px */
 }
 
 .footer-policies a {
@@ -277,7 +277,7 @@
 
 @media (max-width: 768px) {
   .footer-container { padding: 0 30px; }
-  .footer-top { padding: 60px 0 40px; }
+  .footer-top { padding: 40px 0 30px; } /* Reduced from 60px 0 40px */
   .footer-grid {
     grid-template-columns: 1fr 1fr;
     gap: 40px;

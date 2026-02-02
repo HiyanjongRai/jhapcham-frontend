@@ -196,14 +196,15 @@ export default function CustomerDashboard() {
               className={`cd-nav-item ${activeTab === tab.id ? "active" : ""}`}
               onClick={() => setActiveTab(tab.id)}
             >
-              <tab.icon size={18} /> {tab.label}
+              <div className="cd-nav-indicator"></div>
+              <tab.icon size={16} /> {tab.label}
             </button>
           ))}
         </nav>
 
         <div className="cd-logout">
           <button className="cd-logout-btn" onClick={handleLogout}>
-            <LogOut size={18} /> Sign Out
+            <LogOut size={14} /> Sign Out
           </button>
         </div>
       </aside>
@@ -237,13 +238,13 @@ const OverviewTab = ({ user, orders, wishlist }) => {
       </div>
 
       <div className="cd-stats-grid">
-        <StatCard icon={<ShoppingBag size={24}/>} value={orders.length} label="Total Orders" />
-        <StatCard icon={<Clock size={24}/>} value={pendingCount} label="In Progress" />
-        <StatCard icon={<Heart size={24}/>} value={wishlist.length} label="Wishlist Items" />
+        <StatCard type="orders" icon={<ShoppingBag size={20}/>} value={orders.length} label="Total Orders" />
+        <StatCard type="progress" icon={<Clock size={20}/>} value={pendingCount} label="In Progress" />
+        <StatCard type="wishlist" icon={<Heart size={20}/>} value={wishlist.length} label="Wishlist Items" />
       </div>
 
       <div className="cd-section-title">
-        <ShoppingBag size={20} /> Recent Tracked Orders
+        <ShoppingBag size={18} /> Recent Tracked Orders
       </div>
       
       <div className="cd-card" style={{ padding: '0' }}>
@@ -277,25 +278,25 @@ const WishlistTab = ({ wishlist, navigate, onRemove }) => (
       <h1 className="cd-welcome">Your Wishlist</h1>
       <p className="cd-date">{wishlist.length} items saved</p>
     </div>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '2rem' }}>
+    <div className="cd-wishlist-grid">
       {wishlist.map(item => (
-        <div key={item.productId} className="cd-card" style={{ padding: '0', overflow: 'hidden' }}>
-          <div style={{ position: 'relative', height: '240px', background: '#f5f5f5' }}>
+        <div key={item.productId} className="cd-wish-card">
+          <div className="cd-wish-img-container">
             <img 
               src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : "https://via.placeholder.com/240"}
               alt={item.productName}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+              className="cd-wish-img"
               onClick={() => navigate(`/products/${item.productId}`)}
             />
-            <button className="cd-stat-icon" style={{ position: 'absolute', top: '10px', right: '10px', width: '36px', height: '36px', cursor: 'pointer', border: 'none' }} onClick={() => onRemove(item.productId)}>
-              <Trash2 size={16} />
+            <button className="cd-wish-remove" onClick={() => onRemove(item.productId)}>
+              <Trash2 size={14} />
             </button>
           </div>
-          <div style={{ padding: '1.25rem' }}>
-            <h4 className="cd-order-title" style={{ fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.productName}</h4>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-              <span className="cd-order-price">Rs. {(item.price || 0).toLocaleString()}</span>
-              <button className="cd-review-btn cd-review-btn-primary" style={{ padding: '0.5rem 1rem' }} onClick={() => navigate(`/products/${item.productId}`)}>Buy</button>
+          <div className="cd-wish-info">
+            <h4 className="cd-wish-title">{item.productName}</h4>
+            <div className="cd-wish-footer">
+              <span className="cd-wish-price">Rs. {Number(item.price || 0).toLocaleString()}</span>
+              <button className="cd-wish-btn" onClick={() => navigate(`/products/${item.productId}`)}>Buy Now</button>
             </div>
           </div>
         </div>
@@ -319,14 +320,14 @@ const ReviewsTab = ({ orders, navigate }) => {
           const mainItem = order.items?.[0];
           const productName = mainItem?.productName || mainItem?.name || mainItem?.productNameSnapshot || "Product";
           return (
-            <div key={order.orderId || order.id} className="cd-order-item" style={{ borderBottom: '1px solid #f1f1f1' }}>
-               <img src={mainItem?.imagePath ? (mainItem.imagePath.startsWith('http') ? mainItem.imagePath : `${API_BASE}/${mainItem.imagePath}`) : "https://via.placeholder.com/80"} alt="Product" className="cd-order-img" />
-               <div className="cd-order-info">
-                 <div className="cd-order-title">{productName}</div>
-                 <div className="cd-order-meta">Delivered on {new Date(order.updateTime || order.orderDate).toLocaleDateString()}</div>
+            <div key={order.orderId || order.id} className="cd-review-item">
+               <img src={mainItem?.imagePath ? (mainItem.imagePath.startsWith('http') ? mainItem.imagePath : `${API_BASE}/${mainItem.imagePath}`) : "https://via.placeholder.com/80"} alt="Product" className="cd-review-img" />
+               <div className="cd-review-info">
+                 <div className="cd-review-name">{productName}</div>
+                 <div className="cd-review-meta">Delivered: {new Date(order.updateTime || order.orderDate).toLocaleDateString()}</div>
                </div>
                <button 
-                 className={`cd-review-btn ${order.review ? "cd-review-btn-outline" : "cd-review-btn-primary"}`}
+                 className={`cd-action-btn ${order.review ? "outline" : "primary"}`}
                  onClick={() => {
                    localStorage.setItem("reviewOrderId", order.orderId || order.id);
                    if (mainItem?.productId) localStorage.setItem("reviewProductId", mainItem.productId);
@@ -335,13 +336,13 @@ const ReviewsTab = ({ orders, navigate }) => {
                    navigate("/review");
                  }}
                >
-                 <Star size={16} fill={order.review ? "currentColor" : "none"} />
-                 {order.review ? "Edit Rating" : "Write Review"}
+                 <Star size={14} fill={order.review ? "currentColor" : "none"} />
+                 {order.review ? "Edit" : "Rate Product"}
                </button>
             </div>
           );
         })}
-        {delivered.length === 0 && <EmptyState icon={<Star size={40}/>} text="No delivered orders to review yet." />}
+        {delivered.length === 0 && <EmptyState icon={<Star size={40}/>} text="No delivered orders to review." />}
       </div>
     </div>
   );
@@ -353,16 +354,24 @@ const AccountSettingsTab = ({ user, setUserProfile }) => (
       <h1 className="cd-welcome">Account Settings</h1>
       <p className="cd-date">Identity and login management</p>
     </div>
-    <div className="cd-card" style={{ padding: '2rem' }}>
-       <UpdateAccount onUpdateSuccess={(data) => setUserProfile(prev => ({...prev, ...data}))} />
-    </div>
     
-    <div className="cd-card" style={{ background: '#000', color: '#fff', marginTop: '2rem' }}>
-      <h4 style={{ margin: '0 0 1.5rem 0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Security Checklist</h4>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-         <SecurityItem label="Email Verified" status={true} />
-         <SecurityItem label="Two-Factor Auth" status={false} />
-         <SecurityItem label="Secure Password" status={true} />
+    <div className="cd-settings-grid">
+      <div className="cd-card cd-settings-form">
+         <h4 className="cd-settings-title">Profile Information</h4>
+         <UpdateAccount onUpdateSuccess={(data) => setUserProfile(prev => ({...prev, ...data}))} />
+      </div>
+      
+      <div className="cd-security-card">
+        <h4 className="cd-settings-title">Security & Privacy</h4>
+        <div className="cd-security-list">
+           <SecurityItem label="Email Verified" status={true} />
+           <SecurityItem label="Two-Factor Auth" status={false} />
+           <SecurityItem label="Secure Password" status={true} />
+           <SecurityItem label="Active Session" status={true} />
+        </div>
+        <div className="cd-security-footer">
+          <p>Protecting your data is our top priority.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -370,8 +379,8 @@ const AccountSettingsTab = ({ user, setUserProfile }) => (
 
 /* Small Sub-components */
 
-const StatCard = ({ icon, value, label }) => (
-  <div className="cd-stat-card">
+const StatCard = ({ icon, value, label, type }) => (
+  <div className={`cd-stat-card cd-stat-${type}`}>
     <div className="cd-stat-icon">{icon}</div>
     <div className="cd-stat-info">
       <h3>{value}</h3>
@@ -433,7 +442,7 @@ const OrderItem = ({ order, showActions, onCancel }) => {
              <div className="cd-stepper">
                {["Placed", "Processing", "Shipped", "Delivered"].map((step, idx) => (
                  <div key={step} className={`cd-step ${idx <= currentStepIndex ? "active" : ""}`}>
-                   <div className="cd-step-circle">{idx <= currentStepIndex ? <Package size={14}/> : idx + 1}</div>
+                   <div className="cd-step-circle">{idx <= currentStepIndex ? <Package size={12}/> : idx + 1}</div>
                    <div className="cd-step-line"></div>
                    <span className="cd-step-label">{step}</span>
                  </div>
@@ -478,8 +487,11 @@ const OrderItem = ({ order, showActions, onCancel }) => {
              <div>
                 <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #eee', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem', color: '#666' }}><span>Subtotal</span><span>Rs. {order.itemsTotal?.toLocaleString()}</span></div>
+                   {order.discountTotal > 0 && (
+                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem', color: '#ff4d4f' }}><span>Discount</span><span>-Rs. {order.discountTotal.toLocaleString()}</span></div>
+                   )}
                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.9rem', color: '#666', borderBottom: '1px dashed #eee', paddingBottom: '1rem' }}><span>Shipping</span><span>{order.shippingFee > 0 ? `Rs. ${order.shippingFee}` : "Free"}</span></div>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '1.2rem', color: '#000' }}><span>Total</span><span>Rs. {order.grandTotal?.toLocaleString()}</span></div>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '1.2rem', color: '#000' }}><span>Total Paid</span><span>Rs. {(order.totalAmount || order.grandTotal || 0).toLocaleString()}</span></div>
                 </div>
                 
                 {showActions && canCancel && (
@@ -573,23 +585,25 @@ const AddressesTab = ({ userId, addresses, setAddresses, setConfirmConfig }) => 
                 </button>
              </div>
              
-             <div className="cd-address-grid" style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px, 1fr))', gap:'2rem'}}>
+             <div className="cd-address-grid">
                  {addresses.map(addr => (
-                     <div key={addr.id} className="cd-card" style={{border: addr.isDefault ? '2px solid #000' : '1px solid #eee', position:'relative'}}>
-                         {addr.isDefault && <span className="cd-badge-default" style={{position:'absolute', top:'1rem', right:'1rem', background:'#000', color:'#fff', padding:'0.25rem 0.5rem', fontSize:'0.7rem', fontWeight:'bold', borderRadius:'4px'}}>DEFAULT</span>}
-                         <div style={{display:'flex', gap:'1rem', alignItems:'center', marginBottom:'1rem'}}>
-                             <div className="cd-stat-icon" style={{width:'40px', height:'40px'}}><MapPin size={20}/></div>
-                             <h3 style={{fontSize:'1.1rem', fontWeight:'700'}}>{addr.label}</h3>
+                     <div key={addr.id} className={`cd-address-card ${addr.isDefault ? 'default' : ''}`}>
+                         <div className="cd-address-header">
+                             <div className="cd-address-label">
+                               <MapPin size={14} />
+                               <span>{addr.label}</span>
+                             </div>
+                             {addr.isDefault && <span className="cd-badge-pro">DEFAULT</span>}
                          </div>
-                         <div style={{fontSize:'0.9rem', color:'#555', lineHeight:'1.6'}}>
-                             <p><strong>{addr.receiverName}</strong></p>
-                             <p>{addr.street}, {addr.city}</p>
-                             <p>{addr.state}</p>
-                             <p>{addr.receiverPhone}</p>
+                         <div className="cd-address-content">
+                             <p className="cd-receiver">{addr.receiverName}</p>
+                             <p className="cd-street">{addr.street}, {addr.city}</p>
+                             <p className="cd-state-zip">{addr.state}</p>
+                             <p className="cd-phone">{addr.receiverPhone}</p>
                          </div>
-                         <div style={{marginTop:'1.5rem', display:'flex', gap:'1rem'}}>
-                             <button className="cd-logout-btn" style={{flex:1, padding:'0.5rem', justifyContent:'center'}} onClick={() => openEdit(addr)}>Edit</button>
-                             <button className="cd-logout-btn" style={{padding:'0.5rem', justifyContent:'center', border:'1px solid #ff4d4f', color:'#ff4d4f'}} onClick={() => handleDelete(addr.id)}><Trash2 size={16}/></button>
+                         <div className="cd-address-actions">
+                             <button className="cd-mini-btn" onClick={() => openEdit(addr)}>Edit</button>
+                             <button className="cd-mini-btn danger" onClick={() => handleDelete(addr.id)}><Trash2 size={12}/></button>
                          </div>
                      </div>
                  ))}

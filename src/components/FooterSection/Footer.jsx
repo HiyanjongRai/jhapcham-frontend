@@ -26,10 +26,10 @@ const Footer = () => {
                 Experience seamless shopping with ultra-fast delivery.
               </p>
               <div className="footer-socials">
-                <a href="#" className="social-link"><Facebook size={20} /></a>
-                <a href="#" className="social-link"><Twitter size={20} /></a>
-                <a href="#" className="social-link"><Instagram size={20} /></a>
-                <a href="#" className="social-link"><Youtube size={20} /></a>
+                <a href="#" className="social-link"><Facebook size={16} /></a>
+                <a href="#" className="social-link"><Twitter size={16} /></a>
+                <a href="#" className="social-link"><Instagram size={16} /></a>
+                <a href="#" className="social-link"><Youtube size={16} /></a>
               </div>
             </div>
 
@@ -61,7 +61,7 @@ const Footer = () => {
               <form className="newsletter-form">
                 <input type="email" placeholder="Your email address" required />
                 <button type="submit">
-                  <ArrowRight size={20} />
+                  <ArrowRight size={18} />
                 </button>
               </form>
             </div>
@@ -72,15 +72,15 @@ const Footer = () => {
       <div className="footer-contact-bar">
         <div className="footer-container bar-content">
           <div className="contact-item">
-            <Phone size={18} />
+            <Phone size={16} />
             <span>+977-9800000000</span>
           </div>
           <div className="contact-item">
-            <Mail size={18} />
+            <Mail size={16} />
             <span>support@jhapcham.com</span>
           </div>
           <div className="contact-item">
-            <MapPin size={18} />
+            <MapPin size={16} />
             <span>Kathmandu, Nepal</span>
           </div>
         </div>
