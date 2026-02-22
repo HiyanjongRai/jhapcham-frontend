@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import SellerSidebar from "./SellerSidebar";
-import { getCurrentUserId } from "../config/authUtils";
+import { getCurrentUserId } from "../../utils/authUtils";
 import { API_BASE } from "../config/config";
 import "./seller.css";
 

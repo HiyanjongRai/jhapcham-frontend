@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Home from "./components/Home/Home";
 import CartPage from "./components/AddCart/CartPage";
@@ -46,6 +46,15 @@ import {
 
 // Error Boundary
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary.jsx";
+
+const ProfileRedirect = () => {
+  const role = localStorage.getItem("userRole");
+  if (!role) return <Navigate to="/login" replace />;
+  const path = role === "SELLER" ? "/seller/dashboard" : 
+               role === "ADMIN" ? "/admin/dashboard" : 
+               "/customer/dashboard";
+  return <Navigate to={path} replace />;
+};
 
 function App() {
   const [isCartOpen, setIsCartOpen] = React.useState(false);
@@ -135,6 +144,9 @@ function App() {
         <Route path="/network-error" element={<NetworkErrorPage />} />
         <Route path="/backend-down" element={<BackendDownPage />} />
         <Route path="/error" element={<AllErrorsPage />} />
+        
+        {/* Account Redirect */}
+        <Route path="/profile" element={<ProfileRedirect />} />
         
         {/* 404 - Must be last to catch all undefined routes */}
         <Route path="*" element={<NotFoundPage />} />

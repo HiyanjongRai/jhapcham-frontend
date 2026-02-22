@@ -1,9 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
-import { getCurrentUserId } from "../config/authUtils";
+import { getCurrentUserId } from "../../utils/authUtils";
 import { API_BASE } from "../config/config";
-import { useNavigate } from "react-router-dom";
 import "./SellerOrders.css";
 import { 
   Package, 
@@ -11,22 +10,14 @@ import {
   CheckCircle, 
   XCircle, 
   MapPin,
-  ChevronDown,
-  ChevronUp,
-  Edit2,
   MessageSquare,
   Copy,
-  ExternalLink,
   Clock,
-  ShieldCheck,
   RefreshCcw,
   Search,
-  Filter,
-  MoreHorizontal,
   Archive,
   FileText,
   AlertCircle,
-  Navigation,
   User
 } from "lucide-react";
 import { apiGetSellerOrders, apiGetOrder } from "../AddCart/cartUtils";
@@ -36,9 +27,8 @@ import MessageModal from "../Message/MessageModal"; // Import MessageModal
 
 export default function SellerOrders() {
   const sellerId = useMemo(() => getCurrentUserId(), []);
-  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [orderBranches, setOrderBranches] = useState({});
   const [statusFilter, setStatusFilter] = useState("NEW");
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -247,11 +237,12 @@ export default function SellerOrders() {
         <header className="so-header-v2">
           <div className="so-header-left">
             <h1 className="so-page-title">Order Hub</h1>
+            <p className="so-page-subtitle">Manage your fulfillment pipeline with precision.</p>
           </div>
           <div className="so-header-right">
              <div className="so-header-actions">
-                <button className="so-btn-icon" title="Notifications"><AlertCircle size={20} /></button>
-                <button className="so-btn-help">Help Center</button>
+                <button className="so-btn-icon" title="Notifications"><AlertCircle size={18} strokeWidth={2.5} /></button>
+                <button className="so-btn-help">Execution Guide</button>
              </div>
           </div>
         </header>
@@ -259,11 +250,11 @@ export default function SellerOrders() {
         {/* Executive Metrics */}
         <div className="so-metrics-grid-v2">
           {[
-            { key: 'total', label: 'Gross Volume', value: stats.total, sub: 'Total Orders', icon: <Package size={18} /> },
-            { key: 'pending', label: 'Unfulfilled', value: stats.pending, sub: 'New & Pending', color: 'amber', icon: <AlertCircle size={18} /> },
-            { key: 'processing', label: 'In Execution', value: stats.processing, sub: 'Processing', color: 'blue', icon: <RefreshCcw size={18} /> },
-            { key: 'shipped', label: 'In Transit', value: stats.shipped, sub: 'Shipped', color: 'cyan', icon: <Truck size={18} /> },
-            { key: 'delivered', label: 'Settled', value: stats.delivered, sub: 'Delivered', color: 'emerald', icon: <CheckCircle size={18} /> },
+            { key: 'total', label: 'Gross Volume', value: stats.total, sub: 'Total Orders', icon: <Package size={18} strokeWidth={2.5} /> },
+            { key: 'pending', label: 'Unfulfilled', value: stats.pending, sub: 'New & Pending', color: 'amber', icon: <AlertCircle size={18} strokeWidth={2.5} /> },
+            { key: 'processing', label: 'In Execution', value: stats.processing, sub: 'Processing', color: 'blue', icon: <RefreshCcw size={18} strokeWidth={2.5} /> },
+            { key: 'shipped', label: 'In Transit', value: stats.shipped, sub: 'Shipped', color: 'cyan', icon: <Truck size={18} strokeWidth={2.5} /> },
+            { key: 'delivered', label: 'Settled', value: stats.delivered, sub: 'Delivered', color: 'emerald', icon: <CheckCircle size={18} strokeWidth={2.5} /> },
           ].map((s) => (
             <div 
                key={s.key} 
@@ -292,7 +283,7 @@ export default function SellerOrders() {
 
           <div className="so-filters-v2">
             <div className="so-search-box-v2">
-              <Search size={16} />
+              <Search size={18} strokeWidth={2.5} />
               <input 
                 type="text" 
                 placeholder="Search Order ID, Name, Product..." 
@@ -308,7 +299,7 @@ export default function SellerOrders() {
               <button className={`filter-pill-v2 ${statusFilter === 'DELIVERED' ? 'active' : ''}`} onClick={() => setStatusFilter('DELIVERED')}>Success</button>
               <button className={`filter-pill-v2 ${statusFilter === 'CANCELED' ? 'active' : ''}`} onClick={() => setStatusFilter('CANCELED')}>Voided</button>
             </div>
-            <button className="so-btn-sync" onClick={loadOrders}><RefreshCcw size={14} /> Sync</button>
+            <button className="so-btn-sync" onClick={loadOrders}><RefreshCcw size={18} strokeWidth={2.5} /> Sync Pipeline</button>
           </div>
         </div>
 
@@ -416,13 +407,13 @@ export default function SellerOrders() {
           <div className="drawer-inner">
             <header className="drawer-header">
               <div className="order-id-meta">
-                <span className="label">ORDER DETAIL</span>
-                <h2>#ORD-{String(selectedOrderId).padStart(5, '0')} <Copy size={14} className="copy-btn" onClick={() => handleCopy(`ORD-${selectedOrderId}`)} /></h2>
+                <span className="label">ORDER MANIFEST</span>
+                <h2>#ORD-{String(selectedOrderId).padStart(5, '0')} <Copy size={16} strokeWidth={2.5} className="copy-btn" onClick={() => handleCopy(`ORD-${selectedOrderId}`)} /></h2>
                 {currentOrder.status && <span className={`status-label ${currentOrder.status.toLowerCase()}`}>{currentOrder.status.replace(/_/g, ' ')}</span>}
               </div>
               <div className="drawer-actions">
-                <button className="so-btn-icon" onClick={() => window.print()} title="Print"><FileText size={18} /></button>
-                <button className="so-btn-close" onClick={() => setSelectedOrderId(null)}><XCircle size={20} /></button>
+                <button className="so-btn-icon" onClick={() => window.print()} title="Print"><FileText size={18} strokeWidth={2.5} /></button>
+                <button className="so-btn-close" onClick={() => setSelectedOrderId(null)}><XCircle size={22} strokeWidth={2.5} /></button>
               </div>
             </header>
 
@@ -446,7 +437,7 @@ export default function SellerOrders() {
                   
                   return (
                     <div key={step.label} className={`step-item-v2 ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}`}>
-                      <div className="step-circle">{isDone ? <CheckCircle size={14} /> : idx + 1}</div>
+                      <div className="step-circle">{isDone ? <CheckCircle size={10} /> : idx + 1}</div>
                       <span className="step-label">{step.label}</span>
                       {idx < 3 && <div className="step-line"></div>}
                     </div>
@@ -572,7 +563,7 @@ export default function SellerOrders() {
                     <div className="main-actions-v2">
                       {["NEW", "PENDING"].includes(currentOrder.status) && (
                         <button className="so-btn-big primary" onClick={() => updateStatus(selectedOrderId, 'PROCESSING')}>
-                           <CheckCircle size={18} /> Confirm Process
+                           <CheckCircle size={14} /> Confirm Process
                         </button>
                       )}
                       {currentOrder.status === "PROCESSING" && (

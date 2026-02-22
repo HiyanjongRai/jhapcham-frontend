@@ -4,11 +4,10 @@ import {
   Package,
   ShoppingBag,
   DollarSign,
-  Clock,
-  Flag
+  Clock
 } from "lucide-react";
 import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
-import { getCurrentUserId } from "../config/authUtils";
+import { getCurrentUserId } from "../../utils/authUtils";
 import { apiGetSellerOrders } from "../AddCart/cartUtils";
 import { API_BASE } from "../config/config";
 import UpdateAccount from "../Profile/UpdateAccount.jsx";
@@ -127,8 +126,8 @@ export default function SellerDashboard() {
       {activeTab === 'overview' && (
         <div className="dash-header-row">
            <div>
-              <h2>Dashboard Overview</h2>
-              <p className="text-gray">Welcome back, <strong>{storeInfo?.storeName || 'Merchant'}</strong>! Here's your store performance.</p>
+              <h2>DASHBOARD OVERVIEW</h2>
+              <p className="text-gray" style={{fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase'}}>Welcome back, <strong>{storeInfo?.storeName || 'Merchant'}</strong>! Your store performance at a glance.</p>
            </div>
            
            <div style={{display:'flex', gap:'10px'}}>
@@ -143,7 +142,7 @@ export default function SellerDashboard() {
           {/* Stats Grid */}
           <div className="stats-grid">
              <div className="stat-card">
-                <div className="stat-icon"><DollarSign size={24} /></div>
+                <div className="stat-icon"><DollarSign size={14} /></div>
                 <div className="stat-info">
                    <span className="stat-label">Total Revenue</span>
                    <h3 className="stat-value">Rs. {stats.totalSales.toLocaleString()}</h3>
@@ -151,7 +150,7 @@ export default function SellerDashboard() {
              </div>
              
              <div className="stat-card">
-                <div className="stat-icon"><ShoppingBag size={24} /></div>
+                <div className="stat-icon"><ShoppingBag size={14} /></div>
                 <div className="stat-info">
                    <span className="stat-label">Total Orders</span>
                    <h3 className="stat-value">{stats.totalOrders}</h3>
@@ -159,7 +158,7 @@ export default function SellerDashboard() {
              </div>
 
              <div className="stat-card">
-                <div className="stat-icon"><Clock size={24} /></div>
+                <div className="stat-icon"><Clock size={14} /></div>
                 <div className="stat-info">
                    <span className="stat-label">Pending Orders</span>
                    <h3 className="stat-value">{stats.pendingOrders}</h3>
@@ -167,7 +166,7 @@ export default function SellerDashboard() {
              </div>
 
              <div className="stat-card">
-                <div className="stat-icon"><Package size={24} /></div>
+                <div className="stat-icon"><Package size={14} /></div>
                 <div className="stat-info">
                    <span className="stat-label">Total Products</span>
                    <h3 className="stat-value">{stats.productsCount}</h3>
@@ -210,7 +209,7 @@ export default function SellerDashboard() {
                       </table>
                     ) : (
                       <div className="empty-state-nice">
-                        <ShoppingBag size={48} color="#e2e8f0" />
+                        <ShoppingBag size={24} color="#000" />
                         <p className="empty-text">No orders yet.</p>
                       </div>
                     )}
@@ -259,7 +258,7 @@ export default function SellerDashboard() {
                               {prod.mainImage ? (
                                   <img src={`${API_BASE}/${prod.mainImage}`} alt={prod.name} />
                               ) : (
-                                  <Package size={24} color="#ccc" />
+                              <Package size={14} color="#000" />
                               )}
                           </div>
                           <div className="mini-prod-info">
@@ -268,9 +267,9 @@ export default function SellerDashboard() {
                           </div>
                       </div>
                   )) : (
-                      <div style={{gridColumn: '1/-1', textAlign:'center', padding:'40px', color:'#94a3b8'}}>
-                        <Package size={48} style={{opacity:0.5, marginBottom:'10px'}} />
-                        <p>No sales data yet.</p>
+                      <div style={{gridColumn: '1/-1', textAlign:'center', padding:'20px', color:'#000'}}>
+                        <Package size={24} style={{opacity:0.5, marginBottom:'4px'}} />
+                        <p style={{fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase'}}>No sales data yet.</p>
                       </div>
                   )}
               </div>

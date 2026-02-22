@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import "./SellerProducts.css";
 import { 
@@ -7,26 +7,12 @@ import {
   Trash2, 
   AlertCircle,
   Eye,
-  EyeOff,
-  X
+  EyeOff
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getCurrentUserId } from "../../utils/authUtils";
+import { API_BASE } from "../config/config";
 import EditProductDrawer from "./EditProductDrawer";
-
-const BASE_URL = "http://localhost:8080";
-
-function getCurrentUserId() {
-  try {
-    const encoded = localStorage.getItem("userId");
-    if (!encoded) return null;
-    const decoded = window.atob(encoded);
-    const idNum = Number(decoded);
-    return Number.isNaN(idNum) ? null : idNum;
-  } catch (e) {
-    console.error("Error decoding userId:", e);
-    return null;
-  }
-}
 
 function safeParseList(input) {
   if (Array.isArray(input)) return input;
@@ -99,9 +85,7 @@ export default function ProductManagement() {
   const currentUserId = getCurrentUserId();
   const navigate = useNavigate();
 
-  useEffect(() => { loadProducts(); }, []);
-
-  async function loadProducts() {
+  const loadProducts = useCallback(async () => {
     setLoading(true); setMessage("");
     
     if (!currentUserId) {
@@ -112,7 +96,7 @@ export default function ProductManagement() {
     
     try {
       // Use the correct legacy endpoint: GET /api/products/seller/{sellerUserId}/all
-      const res = await axios.get(`${BASE_URL}/api/products/seller/${currentUserId}/all`);
+      const res = await axios.get(`${API_BASE}/api/products/seller/${currentUserId}/all`);
       console.log("Products fetched:", res.data);
       setProducts(res.data.map(mapDtoToProduct));
     } catch (err) {
@@ -120,7 +104,9 @@ export default function ProductManagement() {
       showError(err.response?.data?.message || err.message || "Failed to load products"); 
     }
     setLoading(false);
-  }
+  }, [currentUserId]);
+
+  useEffect(() => { loadProducts(); }, [loadProducts]);
 
   function showSuccess(text) { setMessage(text); setMessageType("success"); setTimeout(() => setMessage(""), 2500); }
   function showError(text) { setMessage(text); setMessageType("error"); setTimeout(() => setMessage(""), 3000); }
@@ -135,7 +121,7 @@ export default function ProductManagement() {
     if (!deleteProduct) return;
     try {
       // Use the correct legacy endpoint: DELETE /api/products/{id}/seller/{sellerId}/hard
-      await axios.delete(`${BASE_URL}/api/products/${deleteProduct.id}/seller/${currentUserId}/hard`);
+      await axios.delete(`${API_BASE}/api/products/${deleteProduct.id}/seller/${currentUserId}/hard`);
       setProducts((prev) => prev.filter(p => p.id !== deleteProduct.id));
       showSuccess("Product deleted permanently"); 
       closeDeleteDialog();
@@ -153,7 +139,7 @@ export default function ProductManagement() {
           <p className="sp-subtitle">Manage your inventory, pricing, and stock levels.</p>
         </div>
         <button className="sp-add-btn" onClick={() => navigate('/seller/add-product')}>
-          <Plus size={20} /> Add Product
+          <Plus size={14} /> Add Product
         </button>
       </div>
 
@@ -162,16 +148,18 @@ export default function ProductManagement() {
           className={`sp-filter-btn ${showExpiringOnly ? "active" : ""}`}
           onClick={() => setShowExpiringOnly(prev => !prev)}
         >
-          <AlertCircle size={16} />
+          <AlertCircle size={14} />
           Expiring Soon ({expiringProducts.length})
         </button>
       </div>
 
       {message && (
         <div style={{
-          padding: '1rem', marginBottom: '1rem', borderRadius: '8px',
-          background: messageType === 'error' ? '#fee2e2' : '#dcfce7',
-          color: messageType === 'error' ? '#991b1b' : '#166534'
+          padding: '8px 12px', marginBottom: '1rem', borderRadius: '2px',
+          fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase',
+          background: messageType === 'error' ? '#fff' : '#000',
+          color: messageType === 'error' ? '#000' : '#fff',
+          border: '1px solid #000'
         }}>
           {message}
         </div>
@@ -205,7 +193,7 @@ export default function ProductManagement() {
                       <div className="sp-product-cell">
                         <div style={{position: 'relative'}}>
                           <img 
-                            src={p.imagePath ? `${BASE_URL}/${p.imagePath}` : "https://via.placeholder.com/48"} 
+                            src={p.imagePath ? `${API_BASE}/${p.imagePath}` : "https://via.placeholder.com/48"} 
                             alt={p.name} 
                             className="sp-product-img"
                           />
@@ -267,10 +255,10 @@ export default function ProductManagement() {
                     <td>
                       <div className="sp-actions">
                         <button className="sp-action-btn" onClick={() => setEditingProduct(p)} title="Edit">
-                          <Edit2 size={16} />
+                          <Edit2 size={12} />
                         </button>
                         <button className="sp-action-btn delete" onClick={() => openDeleteDialog(p)} title="Delete">
-                          <Trash2 size={16} />
+                          <Trash2 size={12} />
                         </button>
                       </div>
                     </td>
@@ -292,7 +280,7 @@ export default function ProductManagement() {
           showSuccess={showSuccess}
           showError={showError}
           currentUserId={currentUserId}
-          BASE_URL={BASE_URL}
+          BASE_URL={API_BASE}
         />
       )}
 

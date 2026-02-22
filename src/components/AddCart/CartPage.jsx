@@ -12,23 +12,13 @@ import {
 } from "./cartUtils";
 import { API_BASE } from "../config/config";
 import { 
-  ShoppingCart, 
   Trash2, 
   Plus, 
   Minus, 
   ArrowRight, 
-  Package, 
-  RotateCcw, 
-  Lock,
+  RotateCcw,
   ShoppingBag,
-  Sparkles,
-  ShieldCheck,
-  Heart,
-  X,
-  Check,
-  AlertCircle,
-  Truck,
-  Gift
+  AlertCircle
 } from "lucide-react";
 import "./CartPage.css";
 import Toast from "../Toast/Toast";
@@ -46,10 +36,8 @@ function CartPage() {
   const userId = getCurrentUserId();
   const isLoggedIn = !!userId;
 
-  // Shipping states
-  const [shippingLocation] = useState('INSIDE'); 
+  const [shippingLocation, setShippingLocation] = useState('INSIDE');
   const [shippingCost, setShippingCost] = useState(0);
-  const [shippingPreview, setShippingPreview] = useState(null);
 
   const recalcTotal = (list) =>
     list.reduce((sum, i) => sum + i.lineTotal, 0);
@@ -96,14 +84,13 @@ function CartPage() {
     const calculateShipping = async () => {
       if (items.length === 0) {
         setShippingCost(0);
-        setShippingPreview(null);
         return;
       }
 
       try {
         const payload = {
           userId: userId || null,
-          shippingLocation: 'INSIDE',
+          shippingLocation: shippingLocation,
           items: items.map(item => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -113,7 +100,6 @@ function CartPage() {
         };
 
         const preview = await apiPreviewOrder(payload);
-        setShippingPreview(preview);
         setShippingCost(preview.shippingFee || 0);
       } catch (err) {
         console.warn('Shipping calculation failed:', err);
@@ -122,7 +108,7 @@ function CartPage() {
     };
 
     calculateShipping();
-  }, [items, userId]);
+  }, [items, userId, shippingLocation]);
 
   const handleQtyChange = async (item, newQty) => {
     if (newQty <= 0) return;
@@ -146,7 +132,7 @@ function CartPage() {
           
         setItems(mappedItems);
         setTotal(data.subtotal || 0);
-        showToast("Cart quantity updated", "success");
+        showToast("Quantity updated", "success");
 
       } catch (e) {
         alert(e.message || "Unable to update quantity");
@@ -174,7 +160,6 @@ function CartPage() {
     const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
     setRemovingItemId(itemKey);
 
-    // Add a small delay for animation
     await new Promise(resolve => setTimeout(resolve, 300));
 
     if (isLoggedIn) {
@@ -192,7 +177,7 @@ function CartPage() {
           
         setItems(mappedItems);
         setTotal(data.subtotal || 0);
-        showToast("Item removed from cart", "success");
+        showToast("Item removed", "success");
       } catch (e) {
         alert(e.message || "Unable to remove item");
       } finally {
@@ -206,34 +191,38 @@ function CartPage() {
       const totalCount = updated.reduce((sum, item) => sum + item.quantity, 0);
       updateGlobalCartCount(totalCount);
       setRemovingItemId(null);
-      showToast("Item removed from cart", "success");
+      showToast("Item removed", "success");
     }
   };
 
   if (loading) {
     return (
-      <div className="cart-loading">
-        <div className="cart-loading-spinner">
-          <div className="spinner-ring"></div>
-          <div className="spinner-ring"></div>
-          <div className="spinner-ring"></div>
+      <div className="cart-page">
+        <div className="cart-loading">
+          <div className="cart-loading-spinner">
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
+          </div>
+          <p className="cart-loading-text">Loading your cart...</p>
         </div>
-        <p className="cart-loading-text">Loading your cart...</p>
       </div>
     );
   }
   
   if (error) {
     return (
-      <div className="cart-error-container">
-        <div className="cart-error-box">
-          <AlertCircle size={48} className="error-icon" />
-          <h2>Oops! Something went wrong</h2>
-          <p>{error}</p>
-          <button onClick={() => window.location.reload()} className="retry-button">
-            <RotateCcw size={18} />
-            Retry
-          </button>
+      <div className="cart-page">
+        <div className="cart-error">
+          <div className="cart-error-box">
+            <AlertCircle size={48} />
+            <h2>Something went wrong</h2>
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()} className="retry-btn">
+              <RotateCcw size={16} />
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -241,30 +230,15 @@ function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="empty-cart-container">
-        <div className="empty-cart-box">
-          <div className="empty-icon-wrap">
-            <ShoppingBag size={100} strokeWidth={1.5} />
-            <div className="empty-icon-glow"></div>
+      <div className="cart-page">
+        <div className="empty-cart">
+          <div className="empty-cart-icon">
+            <ShoppingBag size={40} />
           </div>
           <h2>Your cart is empty</h2>
-          <p>Discover amazing products waiting for you. Start adding items to your cart!</p>
-          <div className="empty-cart-features">
-            <div className="feature-item">
-              <Truck size={20} />
-              <span>Free shipping on orders over Rs. 5000</span>
-            </div>
-            <div className="feature-item">
-              <ShieldCheck size={20} />
-              <span>Secure checkout</span>
-            </div>
-            <div className="feature-item">
-              <RotateCcw size={20} />
-              <span>Easy returns</span>
-            </div>
-          </div>
-          <button onClick={() => navigate('/products')} className="empty-cart-button">
-            <ShoppingBag size={20} />
+          <p>Looks like you haven't added anything to your cart yet.</p>
+          <button onClick={() => navigate('/products')} className="empty-cart-btn">
+            <ShoppingBag size={18} />
             Start Shopping
           </button>
         </div>
@@ -272,10 +246,10 @@ function CartPage() {
     );
   }
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const grandTotal = total + shippingCost;
 
   return (
-    <div className="cart-wrapper">
+    <div className="cart-page">
       {toast.visible && (
         <Toast 
           message={toast.message} 
@@ -284,210 +258,138 @@ function CartPage() {
         />
       )}
       
-      <div className="cart-container">
-        <div className="cart-main-section">
-          <div className="cart-header-modern">
-            <div className="header-content">
-              <h1 className="cart-title">My Shopping Cart</h1>
-              <p className="cart-subtitle">{items.length} {items.length === 1 ? 'item' : 'items'} • {totalItems} {totalItems === 1 ? 'product' : 'products'}</p>
-            </div>
-            <div className="header-actions">
-              <button className="clear-cart-btn" onClick={() => navigate('/products')}>
-                Continue Shopping
-              </button>
-            </div>
-          </div>
-
-          <div className="cart-items-grid">
-            {items.map((item) => {
-              const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
-              const isRemoving = removingItemId === itemKey;
-              const isUpdating = updatingItemId === itemKey;
-              
-              return (
-                <div 
-                  key={itemKey} 
-                  className={`cart-item-card-modern ${isRemoving ? 'removing' : ''} ${isUpdating ? 'updating' : ''}`}
-                >
-                  <div className="item-card-content">
-                    <Link to={`/product/${item.productId}`} className="item-image-modern">
-                      <img
-                        src={item.imagePath ? `${API_BASE}/${item.imagePath}` : "https://via.placeholder.com/300"}
-                        alt={item.name}
-                      />
-                      {isUpdating && (
-                        <div className="item-updating-overlay">
-                          <div className="updating-spinner"></div>
-                        </div>
-                      )}
-                    </Link>
-                    
-                    <div className="item-details-modern">
-                      <div className="item-header-modern">
-                        <Link to={`/product/${item.productId}`} className="item-name-modern">{item.name}</Link>
-                        <button 
-                          className="remove-icon-btn" 
-                          onClick={() => handleRemove(item)}
-                          disabled={isRemoving}
-                          title="Remove item"
-                        >
-                          <X size={18} />
-                        </button>
-                      </div>
-                      
-                      {item.brand && (
-                        <p className="item-brand-modern">{item.brand}</p>
-                      )}
-                      
-                      {(item.color || item.storage) && (
-                        <div className="item-options-modern">
-                          {item.color && (
-                            <div className="option-badge">
-                              <span className="option-label">Color:</span>
-                              <span className="option-value">{item.color}</span>
-                            </div>
-                          )}
-                          {item.storage && (
-                            <div className="option-badge">
-                              <span className="option-label">Storage:</span>
-                              <span className="option-value">{item.storage}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="item-pricing-row">
-                        <div className="price-info">
-                          <span className="unit-price">Rs. {item.unitPrice.toLocaleString()}</span>
-                          <span className="each-label">each</span>
-                        </div>
-                        <div className="quantity-control-modern">
-                          <button 
-                            onClick={() => handleQtyChange(item, item.quantity - 1)} 
-                            className="qty-btn-modern" 
-                            disabled={item.quantity <= 1 || isUpdating}
-                          >
-                            <Minus size={16} />
-                          </button>
-                          <span className="qty-display">{item.quantity}</span>
-                          <button 
-                            onClick={() => handleQtyChange(item, item.quantity + 1)} 
-                            className="qty-btn-modern"
-                            disabled={isUpdating}
-                          >
-                            <Plus size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="item-total-row">
-                        <span className="total-label-modern">Item Total:</span>
-                        <span className="total-amount">Rs. {item.lineTotal.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="item-card-footer">
-                    <button className="save-later-btn-modern">
-                      <Heart size={16} />
-                      <span>Save for later</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="cart-sidebar-modern">
-          <div className="order-summary-modern">
-            <div className="summary-header-modern">
-              <h2>Order Summary</h2>
-            </div>
+      <h1 className="cart-page-title">YOUR CART</h1>
+      
+      <div className="cart-layout">
+        {/* Cart Items */}
+        <div className="cart-items-list">
+          {items.map((item) => {
+            const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
+            const isRemoving = removingItemId === itemKey;
+            const isUpdating = updatingItemId === itemKey;
             
-            <div className="summary-content-modern">
-              <div className="summary-line">
-                <div className="summary-line-left">
-                  <span className="line-label">Subtotal</span>
-                  <span className="line-items">({totalItems} {totalItems === 1 ? 'item' : 'items'})</span>
-                </div>
-                <span className="line-value">Rs. {total.toLocaleString()}</span>
-              </div>
-              
-              <div className="summary-line">
-                <div className="summary-line-left">
-                  <Truck size={16} />
-                  <span className="line-label">Shipping</span>
-                </div>
-                <span className={`line-value ${shippingCost === 0 ? 'free' : ''}`}>
-                  {shippingCost > 0 ? `Rs. ${shippingCost.toLocaleString()}` : "Free"}
-                </span>
-              </div>
-
-              {shippingCost === 0 && (
-                <div className="free-shipping-banner">
-                  <Check size={16} />
-                  <span>Free shipping applied!</span>
-                </div>
-              )}
-
-              <div className="summary-line savings-line">
-                <div className="summary-line-left">
-                  <Sparkles size={16} />
-                  <span className="line-label">Savings</span>
-                </div>
-                <span className="line-value savings">Rs. 0</span>
-              </div>
-
-              <div className="summary-divider-modern"></div>
-
-              <div className="summary-total-modern">
-                <span className="total-label-modern">Total</span>
-                <span className="total-price-modern">Rs. {(total + shippingCost).toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div className="summary-actions-modern">
-              <button
-                className="checkout-btn-modern"
-                onClick={() => navigate("/checkout", { state: { preselectedZone: 'INSIDE' } })}
+            return (
+              <div 
+                key={itemKey} 
+                className={`cart-item ${isRemoving ? 'removing' : ''} ${isUpdating ? 'updating' : ''}`}
               >
-                <Lock size={18} />
-                <span>Proceed to Checkout</span>
-                <ArrowRight size={20} />
+                {/* Product Image */}
+                <Link to={`/product/${item.productId}`} className="cart-item-image">
+                  <img
+                    src={item.imagePath ? `${API_BASE}/${item.imagePath}` : "https://via.placeholder.com/100"}
+                    alt={item.name}
+                  />
+                  {isUpdating && (
+                    <div className="updating-overlay">
+                      <div className="spinner"></div>
+                    </div>
+                  )}
+                </Link>
+                
+                {/* Product Details */}
+                <div className="cart-item-details">
+                  <Link to={`/product/${item.productId}`} className="cart-item-name">
+                    {item.name}
+                  </Link>
+                  
+                  {(item.color || item.storage) && (
+                    <div className="cart-item-variant">
+                      {item.storage && <span>Size: {item.storage}</span>}
+                      {item.color && <span>Color: {item.color}</span>}
+                    </div>
+                  )}
+                  
+                  <div className="cart-item-price">
+                    Rs. {item.lineTotal.toLocaleString()}
+                  </div>
+                </div>
+                
+                {/* Delete Button */}
+                <button 
+                  className="cart-item-delete" 
+                  onClick={() => handleRemove(item)}
+                  disabled={isRemoving}
+                  title="Remove item"
+                >
+                  <Trash2 size={16} />
+                </button>
+                
+                {/* Quantity Controls */}
+                <div className="cart-item-qty">
+                  <button 
+                    className="qty-btn"
+                    onClick={() => handleQtyChange(item, item.quantity - 1)} 
+                    disabled={item.quantity <= 1 || isUpdating}
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <span className="qty-value">{item.quantity}</span>
+                  <button 
+                    className="qty-btn"
+                    onClick={() => handleQtyChange(item, item.quantity + 1)} 
+                    disabled={isUpdating}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Order Summary */}
+        <div className="order-summary">
+          <h2 className="order-summary-title">Order Summary</h2>
+          
+          <div className="shipping-toggle-container">
+            <span className="toggle-label">Shipping To:</span>
+            <div className="shipping-toggle-group">
+              <button 
+                className={`toggle-btn ${shippingLocation === 'INSIDE' ? 'active' : ''}`}
+                onClick={() => setShippingLocation('INSIDE')}
+              >
+                Inside Valley
               </button>
-            </div>
-
-            <div className="trust-badges-modern">
-              <div className="trust-item">
-                <ShieldCheck size={16} />
-                <span>Secure Payment</span>
-              </div>
-              <div className="trust-item">
-                <Package size={16} />
-                <span>Quality Guaranteed</span>
-              </div>
-              <div className="trust-item">
-                <RotateCcw size={16} />
-                <span>Easy Returns</span>
-              </div>
+              <button 
+                className={`toggle-btn ${shippingLocation === 'OUTSIDE' ? 'active' : ''}`}
+                onClick={() => setShippingLocation('OUTSIDE')}
+              >
+                Outside Valley
+              </button>
             </div>
           </div>
 
-          {total < 5000 && (
-            <div className="shipping-promo-modern">
-              <div className="promo-icon-wrapper">
-                <Truck size={24} />
-              </div>
-              <div className="promo-text-modern">
-                <h4>Free Shipping!</h4>
-                <p>Add Rs. {(5000 - total).toLocaleString()} more for free shipping</p>
-              </div>
-              <Link to="/products" className="promo-action-btn">
-                Shop Now
-              </Link>
-            </div>
-          )}
+          <div className="summary-row">
+            <span className="label">Subtotal</span>
+            <span className="value">Rs. {total.toLocaleString()}</span>
+          </div>
+          
+          <div className="summary-row">
+            <span className="label">Delivery Fee</span>
+            <span className="value">
+              {shippingCost > 0 ? `Rs. ${shippingCost.toLocaleString()}` : "Free"}
+            </span>
+          </div>
+          
+          <div className="summary-row total">
+            <span className="label">Total</span>
+            <span className="value">Rs. {grandTotal.toLocaleString()}</span>
+          </div>
+          
+          <button
+            className="checkout-btn"
+            onClick={() => {
+              if (!isLoggedIn) {
+                showToast("Please login first to checkout", "info");
+                setTimeout(() => navigate("/login"), 1500);
+                return;
+              }
+              navigate("/checkout", { state: { preselectedZone: shippingLocation } });
+            }}
+          >
+            Go to Checkout
+            <ArrowRight size={18} />
+          </button>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Package, Truck, ShoppingBag, MapPin, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import './OrderSuccess.css';
 import { API_BASE } from '../config/config';
 
@@ -9,14 +9,11 @@ function OrderSuccess() {
   const navigate = useNavigate();
   const orderData = location.state?.order || location.state?.session;
 
-  const [animate, setAnimate] = useState(false);
-
   useEffect(() => {
     if (!orderData) {
        const timer = setTimeout(() => navigate('/'), 3000);
        return () => clearTimeout(timer);
     }
-    setAnimate(true);
   }, [orderData, navigate]);
 
   if (!orderData) {
@@ -52,9 +49,9 @@ function OrderSuccess() {
      shippingAddress = finalOrder.shippingAddress || finalOrder.address || "N/A",
      paymentMethod = finalOrder.paymentMethod || finalOrder.payment || "COD",
      estimatedDelivery = finalOrder.estimatedDelivery || "Standard Arrival",
-     customerName = finalOrder.customerName || "Customer",
      shippingFee = finalOrder.shippingFee || 0,
      itemsTotal = finalOrder.itemsTotal || 0,
+     discountTotal = finalOrder.discountTotal || 0,
   } = finalOrder;
 
   const buildImageUrl = (path) => {
@@ -67,28 +64,16 @@ function OrderSuccess() {
     <div className="os-wrapper">
       <div className="os-card">
         <div className="os-success-icon">
-          <Check size={36} strokeWidth={3} />
+          <Check size={24} strokeWidth={3} />
         </div>
         
-        <h1 className="os-title">Thank you for your order.</h1>
+        <h1 className="os-title">Order Secured.</h1>
         <p className="os-subtitle">We've received your request and are preparing your collection for delivery. ID: #{orderId}</p>
 
-        {finalOrder.discountTotal > 0 && (
-            <div className="os-savings-badge" style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: '#f0fdf4',
-                color: '#16a34a',
-                padding: '12px 24px',
-                borderRadius: '100px',
-                fontWeight: '700',
-                fontSize: '14px',
-                marginBottom: '40px',
-                border: '1px solid #dcfce7'
-            }}>
-                <span style={{ fontSize: '20px' }}>🎉</span>
-                You saved Rs. {finalOrder.discountTotal.toLocaleString()} on this order!
+        {discountTotal > 0 && (
+            <div className="os-savings-badge">
+                <span>🎉</span>
+                You saved Rs. {discountTotal.toLocaleString()} on this order!
             </div>
         )}
 
@@ -99,23 +84,23 @@ function OrderSuccess() {
                     <div className="os-info-box">
                         <p className="os-label">Shipping To</p>
                         <p className="os-value">{shippingAddress}</p>
-                        <div style={{ height: '1px', background: '#eee', margin: '24px 0' }}></div>
+                        <div style={{ height: '1px', background: '#e5e7eb', margin: '16px 0' }}></div>
                         <p className="os-label">Estimated Delivery</p>
                         <p className="os-value">{estimatedDelivery}</p>
                     </div>
                 </div>
 
-                <div className="os-section" style={{ marginTop: '60px' }}>
+                <div className="os-section" style={{ marginTop: '32px' }}>
                    <h3>Your Items ({items.length})</h3>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {items.map((item, idx) => (
                           <div key={idx} className="os-item">
                              <img src={buildImageUrl(item.imagePath || item.image)} alt="" className="os-item-img" />
-                             <div style={{ flex: 1 }}>
-                                 <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700' }}>{item.productName || item.name}</h4>
-                                 <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#999' }}>Quantity: {item.quantity}</p>
+                             <div className="os-item-info">
+                                 <h4>{item.productName || item.name}</h4>
+                                 <p>Quantity: {item.quantity}</p>
                              </div>
-                             <div style={{ fontWeight: '700' }}>Rs. {(item.lineTotal || (item.unitPrice * item.quantity) || 0).toLocaleString()}</div>
+                             <div className="os-item-price">Rs. {(item.lineTotal || (item.unitPrice * item.quantity) || 0).toLocaleString()}</div>
                           </div>
                       ))}
                    </div>
@@ -126,19 +111,19 @@ function OrderSuccess() {
                 <div className="os-summary-box">
                     <h3>Statement</h3>
                     <div className="os-row"><span>Subtotal</span><span>Rs. {itemsTotal.toLocaleString()}</span></div>
-                    {finalOrder.discountTotal > 0 && (
-                        <div className="os-row" style={{ color: '#ff4d4f' }}>
-                            <span>Discount</span>
-                            <span>-Rs. {finalOrder.discountTotal.toLocaleString()}</span>
+                    {discountTotal > 0 && (
+                        <div className="os-row" style={{ color: '#fff', opacity: 1 }}>
+                            <span style={{ fontWeight: 700 }}>Discount</span>
+                            <span style={{ fontWeight: 700 }}>-Rs. {discountTotal.toLocaleString()}</span>
                         </div>
                     )}
                     <div className="os-row"><span>Logistics</span><span>{shippingFee === 0 ? "Free" : `Rs. ${shippingFee.toLocaleString()}`}</span></div>
-                    <div className="os-row total"><span>Total Paid</span><span>Rs. {grandTotal.toLocaleString()}</span></div>
-                    <p style={{ marginTop: '24px', fontSize: '12px', opacity: 0.6 }}>Charged via {paymentMethod}</p>
+                    <div className="os-row total"><span>Total</span><span>Rs. {grandTotal.toLocaleString()}</span></div>
+                    <p className="os-payment-note">Charged via {paymentMethod}</p>
                 </div>
 
                 <Link to="/" className="os-btn primary">Continue Exploring</Link>
-                <Link to="/profile" className="os-btn secondary">View My Orders</Link>
+                <Link to="/customer/dashboard?tab=orders" className="os-btn secondary">View My Orders</Link>
             </div>
         </div>
       </div>

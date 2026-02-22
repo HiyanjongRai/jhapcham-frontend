@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config/config";
 import { getCurrentUserId } from "../AddCart/cartUtils";
@@ -8,7 +8,6 @@ import FollowService from "./followService";
 import "./SellerProfilePage.css";
 import { 
   Star, 
-  CheckCircle, 
   Plus, 
   UserPlus, 
   MessageSquare, 
@@ -17,7 +16,6 @@ import {
   TrendingUp, 
   MessageCircle, 
   Truck, 
-  RotateCcw, 
   MapPin, 
   Calendar,
   Store,
@@ -38,15 +36,8 @@ export default function SellerProfilePage() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
-  useEffect(() => {
-    loadSellerProfile();
-    checkFollowStatus();
-    // Scroll to top on load
-    window.scrollTo(0, 0);
-  }, [id]);
-
   // Fetch seller profile
-  const loadSellerProfile = async () => {
+  const loadSellerProfile = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/seller-profiles/${id}`);
@@ -59,10 +50,10 @@ export default function SellerProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   // Check if user is already following
-  const checkFollowStatus = async () => {
+  const checkFollowStatus = useCallback(async () => {
     if (!customerId) return;
     try {
       const isFollowing = await FollowService.isFollowing(customerId, id);
@@ -70,7 +61,14 @@ export default function SellerProfilePage() {
     } catch (err) {
       console.error("Follow status error:", err);
     }
-  };
+  }, [customerId, id]);
+
+  useEffect(() => {
+    loadSellerProfile();
+    checkFollowStatus();
+    // Scroll to top on load
+    window.scrollTo(0, 0);
+  }, [id, loadSellerProfile, checkFollowStatus]);
 
   // Toggle Follow / Unfollow
   const toggleFollow = async () => {
@@ -114,7 +112,7 @@ export default function SellerProfilePage() {
                 className="spp-store-logo"
               />
             ) : (
-              <Store size={64} className="spp-store-icon" />
+              <Store size={32} className="spp-store-icon" />
             )}
           </div>
 
@@ -143,7 +141,7 @@ export default function SellerProfilePage() {
 
               {seller.isVerified && (
                 <div className="spp-verified-badge">
-                  <ShieldCheck size={18} />
+                  <ShieldCheck size={14} />
                   Verified Store
                 </div>
               )}
@@ -155,7 +153,7 @@ export default function SellerProfilePage() {
               className={`spp-action-btn spp-follow-btn ${isFollowing ? 'following' : ''}`}
               onClick={toggleFollow}
             >
-              {isFollowing ? <Check size={20} /> : <Plus size={20} />}
+              {isFollowing ? <Check size={14} /> : <Plus size={14} />}
               {isFollowing ? "Following" : "Follow Store"}
             </button>
 
@@ -163,7 +161,7 @@ export default function SellerProfilePage() {
               className="spp-action-btn spp-message-btn"
               onClick={() => setShowMessageModal(true)}
             >
-              <MessageSquare size={20} />
+              <MessageSquare size={14} />
               Message
             </button>
 
@@ -172,7 +170,7 @@ export default function SellerProfilePage() {
               onClick={() => setShowReportModal(true)}
               title="Report Store"
             >
-              <Flag size={20} />
+              <Flag size={14} />
             </button>
           </div>
         </div>
@@ -185,7 +183,7 @@ export default function SellerProfilePage() {
           <div className="spp-card">
             <div className="spp-card-header">
               <h3>
-                <Store size={22} className="spp-icon-accent" /> Store Overview
+                <Store size={14} className="spp-icon-accent" /> Store Overview
               </h3>
             </div>
 
@@ -204,14 +202,14 @@ export default function SellerProfilePage() {
                 <div className="spp-info-item">
                   <label>Service Area</label>
                   <div className="spp-info-val">
-                    <MapPin size={18} className="spp-text-muted" /> {seller.address || "Global"}
+                    <MapPin size={14} className="spp-text-muted" /> {seller.address || "Global"}
                   </div>
                 </div>
 
                 <div className="spp-info-item">
                   <label>Partnership Since</label>
                   <div className="spp-info-val">
-                    <Calendar size={18} className="spp-text-muted" />{" "}
+                    <Calendar size={14} className="spp-text-muted" />{" "}
                     {seller.joinedDate ? new Date(seller.joinedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "N/A"}
                   </div>
                 </div>
@@ -223,7 +221,7 @@ export default function SellerProfilePage() {
             <div className="spp-stats-grid">
               <div className="spp-stat-card">
                 <div className="spp-stat-header">
-                  <div className="spp-stat-icon-wrap"><Package size={20} /></div>
+                  <div className="spp-stat-icon-wrap"><Package size={14} /></div>
                   <div className="spp-stat-label">Catalog Size</div>
                 </div>
                 <div className="spp-stat-val">{products.length}</div>
@@ -232,7 +230,7 @@ export default function SellerProfilePage() {
 
               <div className="spp-stat-card">
                 <div className="spp-stat-header">
-                  <div className="spp-stat-icon-wrap"><TrendingUp size={20} /></div>
+                  <div className="spp-stat-icon-wrap"><TrendingUp size={14} /></div>
                   <div className="spp-stat-label">Total Sales</div>
                 </div>
                 <div className="spp-stat-val">2.5k+</div>
@@ -241,7 +239,7 @@ export default function SellerProfilePage() {
 
               <div className="spp-stat-card">
                 <div className="spp-stat-header">
-                  <div className="spp-stat-icon-wrap"><MessageCircle size={20} /></div>
+                  <div className="spp-stat-icon-wrap"><MessageCircle size={14} /></div>
                   <div className="spp-stat-label">Avg. Response</div>
                 </div>
                 <div className="spp-stat-val">98%</div>
@@ -250,7 +248,7 @@ export default function SellerProfilePage() {
 
               <div className="spp-stat-card">
                 <div className="spp-stat-header">
-                  <div className="spp-stat-icon-wrap"><Truck size={20} /></div>
+                  <div className="spp-stat-icon-wrap"><Truck size={14} /></div>
                   <div className="spp-stat-label">Logistics Score</div>
                 </div>
                 <div className="spp-stat-val">4.9</div>
@@ -302,8 +300,8 @@ export default function SellerProfilePage() {
       {/* PRODUCTS SECTION */}
       <div className="spp-section-header">
         <h2 className="spp-section-title">Latest & Trending</h2>
-        <div style={{ color: '#6366f1', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-          View All Collection <ChevronRight size={20} />
+        <div style={{ color: '#000', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+          View All Collection <ChevronRight size={14} />
         </div>
       </div>
 

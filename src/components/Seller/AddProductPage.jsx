@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./AddProduct.css";
 import {
-  Package,
   DollarSign,
-  Tag,
   Info,
   Layers,
-  ShieldCheck,
   FileText,
   Image as ImageIcon,
   Plus,
@@ -14,7 +11,7 @@ import {
   PlusCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getCurrentUserId } from "../config/authUtils";
+import { getCurrentUserId } from "../../utils/authUtils";
 import { API_BASE } from "../config/config";
 import Toast from "../Toast/Toast";
 
@@ -168,7 +165,7 @@ export default function AddProductPage() {
         {/* SECTION 1: Blueprints & Identity */}
         <div className="ap-section">
           <div className="section-head">
-            <Info size={18} className="text-blue" />
+            <Info size={18} strokeWidth={2.5} />
             <span>Product Identity</span>
           </div>
           
@@ -208,7 +205,7 @@ export default function AddProductPage() {
         {/* SECTION 2: Economics & Inventory */}
         <div className="ap-section">
           <div className="section-head">
-            <DollarSign size={18} className="text-emerald" />
+            <DollarSign size={18} strokeWidth={2.5} />
             <span>Economics & Inventory</span>
           </div>
           <div className="ap-grid-2">
@@ -241,7 +238,7 @@ export default function AddProductPage() {
         {/* SECTION 3: Content Audit */}
         <div className="ap-section">
           <div className="section-head">
-            <FileText size={18} className="text-blue" />
+            <FileText size={18} strokeWidth={2.5} />
             <span>Detailed Manifest</span>
           </div>
           <div className="ap-field">
@@ -270,7 +267,7 @@ export default function AddProductPage() {
         {/* SECTION 4: System Specs & Variants */}
         <div className="ap-section">
           <div className="section-head">
-            <Layers size={18} className="text-blue" />
+            <Layers size={18} strokeWidth={2.5} />
             <span>Specifications & Variants</span>
           </div>
           
@@ -342,7 +339,7 @@ export default function AddProductPage() {
         {/* SECTION 5: Media Intelligence */}
         <div className="ap-section">
           <div className="section-head">
-            <ImageIcon size={18} className="text-blue" />
+            <ImageIcon size={18} strokeWidth={2.5} />
             <span>Visual Assets</span>
           </div>
           <div className="ap-media-grid">
@@ -353,11 +350,11 @@ export default function AddProductPage() {
                 {formData.image ? (
                   <div className="preview-wrap">
                     <img src={URL.createObjectURL(formData.image)} alt="Main" />
-                    <div className="btn-edit-layer"><PlusCircle /> Replace</div>
+                    <div className="btn-edit-layer"><PlusCircle size={14} /> Replace</div>
                   </div>
                 ) : (
                   <div className="upload-placeholder">
-                    <Plus size={32} />
+                    <Plus size={18} />
                     <span>Blueprinting Image</span>
                     <p>Primary asset for your product</p>
                   </div>
@@ -378,7 +375,7 @@ export default function AddProductPage() {
                 {formData.additionalImages.length < 5 && (
                   <label className="gallery-add">
                     <input type="file" name="additionalImages" accept="image/*" multiple onChange={handleInput} hidden />
-                    <Plus size={20} />
+                    <Plus size={14} />
                   </label>
                 )}
               </div>

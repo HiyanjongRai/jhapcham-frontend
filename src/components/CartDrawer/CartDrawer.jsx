@@ -4,6 +4,7 @@ import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight, Check, AlertCircle, Pa
 import { getCurrentUserId, apiGetCart, apiUpdateQuantity, loadGuestCart, saveGuestCart, updateGlobalCartCount } from "../AddCart/cartUtils";
 import { API_BASE } from "../config/config";
 import "./CartDrawer.css";
+import Toast from "../Toast/Toast";
 
 const CartDrawer = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
   const [removingItemId, setRemovingItemId] = useState(null);
   const [updatingItemId, setUpdatingItemId] = useState(null);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
   const userId = getCurrentUserId();
 
   const fetchCart = async () => {
@@ -147,6 +149,14 @@ const CartDrawer = ({ isOpen, onClose }) => {
           </button>
         </div>
 
+        {toast.visible && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast({ ...toast, visible: false })} 
+          />
+        )}
+
         <div className="cart-drawer-body">
           {loading && cartItems.length === 0 ? (
             <div className="cart-drawer-loading">
@@ -257,7 +267,18 @@ const CartDrawer = ({ isOpen, onClose }) => {
                 <ShoppingBag size={18} />
                 View Full Cart
               </button>
-              <button className="checkout-btn" onClick={() => { onClose(); navigate("/checkout"); }}>
+              <button className="checkout-btn" onClick={() => {
+                if (!userId) {
+                  setToast({ message: "Please login first to checkout", type: "info", visible: true });
+                  setTimeout(() => {
+                    onClose();
+                    navigate("/login");
+                  }, 1500);
+                  return;
+                }
+                onClose(); 
+                navigate("/checkout"); 
+              }}>
                 <span>Checkout</span>
                 <ArrowRight size={18} />
               </button>

@@ -1,49 +1,51 @@
-/* SellerProducts.css - Black & White Edition */
+/* SellerProducts.css - Luxe Mono Ultra-Compact */
+
 .sp-container {
   padding: 0;
-  max-width: 1400px;
-  font-family: 'Outfit', 'Inter', sans-serif;
-  color: #111;
+  max-width: 1200px;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: #000;
 }
 
 .sp-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
-  padding-bottom: 24px;
-  border-bottom: 2px solid #000;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #000;
 }
 
 .sp-title {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 900;
   color: #000;
   margin: 0;
-  letter-spacing: -1px;
+  text-transform: uppercase;
 }
 
 .sp-subtitle {
   color: #666;
-  margin-top: 8px;
-  font-size: 0.95rem;
+  margin-top: 2px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 .sp-add-btn {
   background: #000;
   color: white;
-  padding: 12px 24px;
-  border-radius: 4px;
-  font-weight: 700;
-  border: 2px solid #000;
+  padding: 6px 12px;
+  border-radius: 2px;
+  font-weight: 800;
+  border: 1px solid #000;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   transition: all 0.2s;
   text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.5px;
+  font-size: 0.65rem;
 }
 
 .sp-add-btn:hover {
@@ -52,29 +54,29 @@
 }
 
 .sp-controls {
-  margin-bottom: 24px;
+  margin-bottom: 0.75rem;
   display: flex;
-  gap: 16px;
+  gap: 8px;
 }
 
 .sp-filter-btn {
-  padding: 8px 16px;
+  padding: 4px 10px;
   border: 1px solid #000;
   background: white;
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   color: #000;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  font-weight: 600;
-  gap: 8px;
+  font-weight: 800;
+  gap: 4px;
   text-transform: uppercase;
 }
 
 .sp-filter-btn:hover {
-  background: #f5f5f5;
+  background: #fafafa;
 }
 
 .sp-filter-btn.active {
@@ -82,11 +84,10 @@
   color: #fff;
 }
 
-/* Table Styles - Minimalist Black & White */
+/* Table Styles */
 .sp-table-wrapper {
   background: white;
-  border-radius: 8px;
-  /* box-shadow removed for flat monochrome look, added border */
+  border-radius: 2px;
   border: 1px solid #000;
   overflow: hidden;
 }
@@ -99,21 +100,21 @@
 
 .sp-table th {
   background: #fff;
-  padding: 16px;
-  font-weight: 800;
+  padding: 8px 10px;
+  font-weight: 900;
   color: #000;
-  font-size: 0.8rem;
-  border-bottom: 2px solid #000;
+  font-size: 0.6rem;
+  border-bottom: 1px solid #000;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.05em;
 }
 
 .sp-table td {
-  padding: 16px;
-  border-bottom: 1px solid #ededed;
+  padding: 6px 10px;
+  border-bottom: 1px solid #eee;
   vertical-align: middle;
-  font-size: 0.9rem;
-  color: #333;
+  font-size: 0.7rem;
+  color: #000;
 }
 
 .sp-table tr:last-child td {
@@ -121,124 +122,92 @@
 }
 
 .sp-table tr:hover {
-  background: #fafafa;
+  background: #fcfcfc;
 }
 
 /* Product Info */
 .sp-product-cell {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 }
 
 .sp-product-img {
-  width: 56px;
-  height: 56px;
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
   object-fit: cover;
-  background: #f0f0f0;
-  border: 1px solid #e0e0e0;
+  background: #fff;
+  border: 1px solid #000;
 }
 
 .sp-product-name {
-  font-weight: 700;
+  font-weight: 800;
   color: #000;
-  font-size: 0.95rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
 }
 
 .sp-product-brand {
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   color: #666;
   text-transform: uppercase;
-  margin-top: 2px;
-  font-weight: 500;
+  font-weight: 700;
 }
 
-/* Badges - Monochrome */
+/* Badges */
 .sp-badge {
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 0.55rem;
+  font-weight: 900;
   display: inline-block;
   text-transform: uppercase;
-  border: 1px solid transparent;
+  border: 1px solid #000;
 }
 
-.sp-badge-success { 
-  background: #000; 
-  color: #fff; 
-}
-
-.sp-badge-warning { 
-  background: #fff; 
-  color: #000; 
-  border-color: #000; 
-}
-
-.sp-badge-danger { 
-  background: #fff; 
-  color: #000; 
-  border-color: #000;
-  text-decoration: line-through; 
-}
-
-.sp-badge-gray { 
-  background: #f5f5f5; 
-  color: #666; 
-  border-color: #ddd;
-}
+.sp-badge-success { background: #000; color: #fff; }
+.sp-badge-warning { background: #fff; color: #000; border-style: dashed; }
+.sp-badge-danger { background: #fff; color: #000; text-decoration: line-through; }
+.sp-badge-gray { background: #eee; color: #666; border-color: #ccc; }
 
 /* Actions */
 .sp-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
 }
 
 .sp-action-btn {
-  padding: 8px;
-  border: 1px solid #ccc;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #000;
   background: white;
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
   color: #000;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.1s;
 }
 
-.sp-action-btn:hover {
-  background: #000;
-  color: #fff;
-  border-color: #000;
-}
-
-.sp-action-btn.delete:hover {
-  background: #000;
-  color: #fff;
-  border-color: #000;
-}
+.sp-action-btn:hover { background: #000; color: #fff; }
 
 /* Empty State */
 .sp-empty {
-  padding: 80px 0;
+  padding: 20px;
   text-align: center;
   color: #000;
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  font-size: 0.65rem;
 }
 
 /* Modal Overlay */
 .sp-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.9); /* White overlay instead of black */
-  backdrop-filter: blur(2px);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -246,62 +215,54 @@
 }
 
 .sp-modal {
-  background: #000; /* Black modal */
-  color: #fff;
-  padding: 32px;
-  border-radius: 8px;
-  max-width: 440px;
+  background: #fff;
+  border: 1px solid #000;
+  padding: 1rem;
+  border-radius: 4px;
+  max-width: 300px;
   width: 100%;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-  text-align: center;
 }
 
 .sp-modal h3 {
-  color: #fff;
-  margin-bottom: 12px;
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 }
 
 .sp-modal p {
-  color: #ccc;
-  margin-bottom: 24px;
+  font-size: 0.75rem;
+  color: #444;
+  margin-bottom: 1rem;
 }
 
 .sp-modal-actions {
   display: flex;
-  gap: 16px;
-  justify-content: center;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .sp-btn-secondary {
-  padding: 10px 20px;
-  background: transparent;
-  border: 1px solid #fff;
-  color: #fff;
-  border-radius: 4px;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #000;
+  color: #000;
+  border-radius: 2px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
-  transition: all 0.2s;
-  font-size: 0.8rem;
-}
-
-.sp-btn-secondary:hover {
-  background: rgba(255,255,255,0.1);
+  font-size: 0.6rem;
 }
 
 .sp-btn-danger {
-  padding: 10px 24px;
-  background: #fff;
-  color: #000;
-  border: none; /* No border for primary action in modal */
-  border-radius: 4px;
+  padding: 4px 10px;
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
+  border-radius: 2px;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  transition: all 0.2s;
-  font-size: 0.8rem;
-}
-
-.sp-btn-danger:hover {
-  background: #e0e0e0;
+  font-size: 0.6rem;
 }

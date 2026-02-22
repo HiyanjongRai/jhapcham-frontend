@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./CustomerDashboard.css";
 import { API_BASE } from "../config/config";
 import { getCurrentUserId, apiGetOrdersForUser, apiCustomerCancelOrder } from "../AddCart/cartUtils";
 import { apiGetWishlist, apiRemoveFromWishlist } from "../WishlistPage/wishlistUtils";
 import api from "../../api/axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -12,10 +12,8 @@ import {
   Star,
   Settings,
   LogOut,
-  User,
   Package,
   Clock,
-  XCircle,
   Trash2,
   ChevronRight,
   MapPin,
@@ -26,7 +24,8 @@ import ConfirmModal from "../Common/ConfirmModal.jsx";
 import { apiGetAddresses, apiAddAddress, apiUpdateAddress, apiDeleteAddress } from "./addressUtils";
 
 export default function CustomerDashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
   const [userProfile, setUserProfile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
@@ -49,16 +48,13 @@ export default function CustomerDashboard() {
       return;
     }
     fetchData();
-  }, [userId]);
+  }, [userId, navigate, fetchData]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const profileRes = await api.get(`/api/users/${userId}`);
       setUserProfile(profileRes.data);
-      if (profileRes.data.email) {
-          localStorage.setItem("userEmail", profileRes.data.email);
-      }
     } catch (err) {
       console.error("Error fetching profile:", err);
     }
@@ -94,7 +90,7 @@ export default function CustomerDashboard() {
     }
 
     setLoading(false);
-  };
+  }, [userId]);
 
   const handleCancelOrder = (orderId) => {
     setConfirmConfig({
@@ -134,7 +130,7 @@ export default function CustomerDashboard() {
     setConfirmConfig({
         isOpen: true,
         title: "Sign Out",
-        message: "Are you sure you want to sign out from your Jhapcham account?",
+        message: "Are you sure you want to sign out?",
         type: "danger",
         onConfirm: () => {
             localStorage.clear();
@@ -143,14 +139,11 @@ export default function CustomerDashboard() {
     });
   };
 
-  if (loading) return <div className="cd-layout" style={{ justifyContent: 'center', alignItems: 'center', background: '#fff' }}>
-    <div style={{ textAlign: 'center' }}>
-      <div className="cd-stat-icon" style={{ margin: '0 auto 1rem auto', animation: 'pulse 1.5s infinite' }}>
-        <Clock size={24} />
-      </div>
-      <p style={{ fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loading Dashboard...</p>
+  if (loading) return (
+    <div className="cd-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <p style={{ fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem' }}>Loading Dashboard...</p>
     </div>
-  </div>;
+  );
 
   const renderContent = () => {
     const commonProps = { user: userProfile, orders, wishlist, onCancelOrder: handleCancelOrder, navigate, onRemove: handleRemoveWishlist };
@@ -178,33 +171,32 @@ export default function CustomerDashboard() {
               className="cd-avatar"
             />
           </div>
-          <div className="cd-user-name">{userProfile?.fullName || "User Account"}</div>
+          <div className="cd-user-name">{userProfile?.fullName || "User"}</div>
           <div className="cd-user-email">{userProfile?.email}</div>
         </div>
 
         <nav className="cd-nav">
           {[
             { id: "overview", icon: LayoutDashboard, label: "Overview" },
-            { id: "orders", icon: ShoppingBag, label: "Order History" },
-            { id: "wishlist", icon: Heart, label: "My Wishlist" },
+            { id: "orders", icon: ShoppingBag, label: "Orders" },
+            { id: "wishlist", icon: Heart, label: "Wishlist" },
             { id: "addresses", icon: MapPin, label: "Addresses" },
-            { id: "reviews", icon: Star, label: "Product Reviews" },
-            { id: "settings", icon: Settings, label: "Account Settings" },
+            { id: "reviews", icon: Star, label: "Reviews" },
+            { id: "settings", icon: Settings, label: "Settings" },
           ].map(tab => (
             <button
               key={tab.id}
               className={`cd-nav-item ${activeTab === tab.id ? "active" : ""}`}
               onClick={() => setActiveTab(tab.id)}
             >
-              <div className="cd-nav-indicator"></div>
-              <tab.icon size={16} /> {tab.label}
+              <tab.icon size={14} /> {tab.label}
             </button>
           ))}
         </nav>
 
         <div className="cd-logout">
           <button className="cd-logout-btn" onClick={handleLogout}>
-            <LogOut size={14} /> Sign Out
+            <LogOut size={12} /> Sign Out
           </button>
         </div>
       </aside>
@@ -233,25 +225,25 @@ const OverviewTab = ({ user, orders, wishlist }) => {
   return (
     <div className="fade-in">
       <div className="cd-header">
-        <h1 className="cd-welcome">Welcome, {user?.fullName?.split(' ')[0] || "User"}</h1>
-        <p className="cd-date">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+        <h1 className="cd-welcome">Hello, {user?.fullName?.split(' ')[0] || "User"}</h1>
+        <p className="cd-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
       </div>
 
       <div className="cd-stats-grid">
-        <StatCard type="orders" icon={<ShoppingBag size={20}/>} value={orders.length} label="Total Orders" />
-        <StatCard type="progress" icon={<Clock size={20}/>} value={pendingCount} label="In Progress" />
-        <StatCard type="wishlist" icon={<Heart size={20}/>} value={wishlist.length} label="Wishlist Items" />
+        <StatCard type="orders" icon={<ShoppingBag size={14}/>} value={orders.length} label="Orders" />
+        <StatCard type="progress" icon={<Clock size={14}/>} value={pendingCount} label="Pending" />
+        <StatCard type="wishlist" icon={<Heart size={14}/>} value={wishlist.length} label="Wishlist" />
       </div>
 
       <div className="cd-section-title">
-        <ShoppingBag size={18} /> Recent Tracked Orders
+        <ShoppingBag size={14} /> Recent Orders
       </div>
       
       <div className="cd-card" style={{ padding: '0' }}>
         {orders.slice(0, 3).map(order => (
           <OrderItem key={order.orderId || order.id} order={order} />
         ))}
-        {orders.length === 0 && <EmptyState icon={<ShoppingBag size={40}/>} text="No orders placed yet." />}
+        {orders.length === 0 && <EmptyState text="No orders yet." />}
       </div>
     </div>
   );
@@ -261,13 +253,13 @@ const OrdersTab = ({ orders, onCancelOrder }) => (
   <div className="fade-in">
     <div className="cd-header">
       <h1 className="cd-welcome">Order History</h1>
-      <p className="cd-date">Review and manage your purchases</p>
+      <p className="cd-date">Track and manage your purchases</p>
     </div>
     <div className="cd-card" style={{ padding: '0' }}>
       {orders.map(order => (
         <OrderItem key={order.orderId || order.id} order={order} showActions onCancel={onCancelOrder} />
       ))}
-      {orders.length === 0 && <EmptyState icon={<ShoppingBag size={40}/>} text="You haven't ordered anything yet." />}
+      {orders.length === 0 && <EmptyState text="You haven't ordered anything yet." />}
     </div>
   </div>
 );
@@ -275,7 +267,7 @@ const OrdersTab = ({ orders, onCancelOrder }) => (
 const WishlistTab = ({ wishlist, navigate, onRemove }) => (
   <div className="fade-in">
     <div className="cd-header">
-      <h1 className="cd-welcome">Your Wishlist</h1>
+      <h1 className="cd-welcome">Wishlist</h1>
       <p className="cd-date">{wishlist.length} items saved</p>
     </div>
     <div className="cd-wishlist-grid">
@@ -289,7 +281,7 @@ const WishlistTab = ({ wishlist, navigate, onRemove }) => (
               onClick={() => navigate(`/products/${item.productId}`)}
             />
             <button className="cd-wish-remove" onClick={() => onRemove(item.productId)}>
-              <Trash2 size={14} />
+              <Trash2 size={12} />
             </button>
           </div>
           <div className="cd-wish-info">
@@ -301,7 +293,7 @@ const WishlistTab = ({ wishlist, navigate, onRemove }) => (
           </div>
         </div>
       ))}
-      {wishlist.length === 0 && <EmptyState icon={<Heart size={40}/>} text="Your wishlist is empty." />}
+      {wishlist.length === 0 && <EmptyState text="Your wishlist is empty." />}
     </div>
   </div>
 );
@@ -312,8 +304,8 @@ const ReviewsTab = ({ orders, navigate }) => {
   return (
     <div className="fade-in">
       <div className="cd-header">
-        <h1 className="cd-welcome">Product Reviews</h1>
-        <p className="cd-date">Share feedback on items you've received</p>
+        <h1 className="cd-welcome">Reviews</h1>
+        <p className="cd-date">Feedback on received items</p>
       </div>
       <div className="cd-card" style={{ padding: '0' }}>
         {delivered.map(order => {
@@ -321,28 +313,26 @@ const ReviewsTab = ({ orders, navigate }) => {
           const productName = mainItem?.productName || mainItem?.name || mainItem?.productNameSnapshot || "Product";
           return (
             <div key={order.orderId || order.id} className="cd-review-item">
-               <img src={mainItem?.imagePath ? (mainItem.imagePath.startsWith('http') ? mainItem.imagePath : `${API_BASE}/${mainItem.imagePath}`) : "https://via.placeholder.com/80"} alt="Product" className="cd-review-img" />
-               <div className="cd-review-info">
-                 <div className="cd-review-name">{productName}</div>
-                 <div className="cd-review-meta">Delivered: {new Date(order.updateTime || order.orderDate).toLocaleDateString()}</div>
+               <img src={mainItem?.imagePath ? (mainItem.imagePath.startsWith('http') ? mainItem.imagePath : `${API_BASE}/${mainItem.imagePath}`) : "https://via.placeholder.com/60"} alt="Product" className="cd-review-img" />
+               <div className="cd-order-info">
+                 <div className="cd-order-title">{productName}</div>
+                 <div className="cd-order-meta">Delivered: {new Date(order.updateTime || order.orderDate).toLocaleDateString()}</div>
                </div>
                <button 
-                 className={`cd-action-btn ${order.review ? "outline" : "primary"}`}
+                 className="cd-buy-again-btn"
                  onClick={() => {
                    localStorage.setItem("reviewOrderId", order.orderId || order.id);
                    if (mainItem?.productId) localStorage.setItem("reviewProductId", mainItem.productId);
                    localStorage.setItem("reviewMode", order.review ? "edit" : "create");
-                   if (order.review) localStorage.setItem("reviewData", JSON.stringify(order.review));
                    navigate("/review");
                  }}
                >
-                 <Star size={14} fill={order.review ? "currentColor" : "none"} />
-                 {order.review ? "Edit" : "Rate Product"}
+                 {order.review ? "Update" : "Rate"}
                </button>
             </div>
           );
         })}
-        {delivered.length === 0 && <EmptyState icon={<Star size={40}/>} text="No delivered orders to review." />}
+        {delivered.length === 0 && <EmptyState text="No delivered orders to review." />}
       </div>
     </div>
   );
@@ -351,36 +341,19 @@ const ReviewsTab = ({ orders, navigate }) => {
 const AccountSettingsTab = ({ user, setUserProfile }) => (
   <div className="fade-in">
     <div className="cd-header">
-      <h1 className="cd-welcome">Account Settings</h1>
-      <p className="cd-date">Identity and login management</p>
+      <h1 className="cd-welcome">Settings</h1>
+      <p className="cd-date">Manage your profile</p>
     </div>
-    
-    <div className="cd-settings-grid">
-      <div className="cd-card cd-settings-form">
-         <h4 className="cd-settings-title">Profile Information</h4>
-         <UpdateAccount onUpdateSuccess={(data) => setUserProfile(prev => ({...prev, ...data}))} />
-      </div>
-      
-      <div className="cd-security-card">
-        <h4 className="cd-settings-title">Security & Privacy</h4>
-        <div className="cd-security-list">
-           <SecurityItem label="Email Verified" status={true} />
-           <SecurityItem label="Two-Factor Auth" status={false} />
-           <SecurityItem label="Secure Password" status={true} />
-           <SecurityItem label="Active Session" status={true} />
-        </div>
-        <div className="cd-security-footer">
-          <p>Protecting your data is our top priority.</p>
-        </div>
-      </div>
+    <div className="cd-card">
+       <UpdateAccount onUpdateSuccess={(data) => setUserProfile(prev => ({...prev, ...data}))} />
     </div>
   </div>
 );
 
-/* Small Sub-components */
+/* Sub-components */
 
-const StatCard = ({ icon, value, label, type }) => (
-  <div className={`cd-stat-card cd-stat-${type}`}>
+const StatCard = ({ icon, value, label }) => (
+  <div className="cd-stat-card">
     <div className="cd-stat-icon">{icon}</div>
     <div className="cd-stat-info">
       <h3>{value}</h3>
@@ -395,7 +368,6 @@ const OrderItem = ({ order, showActions, onCancel }) => {
   const status = (order.stage || order.status || 'PENDING').toUpperCase();
   const canCancel = ["NEW", "PENDING", "PROCESSING"].includes(status);
 
-  // Resilient product name mapping
   const productNames = order.items?.length > 0 
     ? order.items.map(i => i.productName || i.name || i.productNameSnapshot || i.productIdentifier).filter(Boolean)
     : [];
@@ -404,19 +376,18 @@ const OrderItem = ({ order, showActions, onCancel }) => {
     ? productNames.slice(0, 2).join(", ") + (productNames.length > 2 ? "..." : "")
     : `Order #${String(order.orderId || order.id).padStart(4, '0')}`;
 
-  // Stepper Logic
   const steps = ["NEW", "PROCESSING", "SHIPPED", "DELIVERED"];
   const currentStepIndex = steps.indexOf(status) === -1 
       ? (["SHIPPED_TO_BRANCH", "OUT_FOR_DELIVERY"].includes(status) ? 2 : (status === "CANCELED" ? -1 : 0)) 
       : steps.indexOf(status);
 
   return (
-    <div style={{ borderBottom: '1px solid #f1f1f1' }}>
+    <div className="cd-order-wrapper" style={{ borderBottom: '1px solid #f9fafb' }}>
       <div className="cd-order-item" onClick={() => setExpanded(!expanded)} style={{ cursor: 'pointer' }}>
         <img 
           src={order.items?.[0]?.imagePath 
             ? (order.items[0].imagePath.startsWith('http') ? order.items[0].imagePath : `${API_BASE}/${order.items[0].imagePath}`) 
-            : "https://via.placeholder.com/80"} 
+            : "https://via.placeholder.com/60"} 
           alt="Product" 
           className="cd-order-img" 
         />
@@ -428,96 +399,62 @@ const OrderItem = ({ order, showActions, onCancel }) => {
             <span>{order.items?.length || 0} Items</span>
           </div>
         </div>
-        <div className="cd-order-price" style={{ marginRight: '2rem' }}>
+        <div className="cd-order-price">
           Rs. {(order.totalAmount || order.grandTotal || 0).toLocaleString()}
         </div>
         <div className={`cd-status-badge status-${status.toLowerCase()}`}>{status.replace(/_/g, " ")}</div>
-        <ChevronRight size={20} style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: '0.2s', marginLeft: '1rem', color: '#ccc' }} />
+        <ChevronRight size={14} style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: '0.2s', marginLeft: '12px' }} />
       </div>
 
       {expanded && (
-        <div className="fade-in" style={{ padding: '2rem', background: '#fafafa', borderTop: '1px solid #eee' }}>
-           {/* Order Tracker Stepper */}
+        <div className="fade-in" style={{ padding: '16px', background: '#fdfdfd' }}>
            {status !== "CANCELED" && (
              <div className="cd-stepper">
-               {["Placed", "Processing", "Shipped", "Delivered"].map((step, idx) => (
+               {["Placed", "Processed", "Shipped", "Delivered"].map((step, idx) => (
                  <div key={step} className={`cd-step ${idx <= currentStepIndex ? "active" : ""}`}>
-                   <div className="cd-step-circle">{idx <= currentStepIndex ? <Package size={12}/> : idx + 1}</div>
-                   <div className="cd-step-line"></div>
+                   <div className="cd-step-circle">{idx <= currentStepIndex ? <Package size={10}/> : idx + 1}</div>
                    <span className="cd-step-label">{step}</span>
                  </div>
                ))}
              </div>
            )}
 
-           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '3rem', marginTop: '2rem' }}>
-             <div>
-                <h5 style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '900', color: '#999', margin: '0 0 1.5rem 0' }}>Order Items</h5>
+           <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '20px', marginTop: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {order.items?.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '1.25rem', marginBottom: '1.5rem', alignItems: 'center' }}>
+                  <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#fff', padding: '8px', borderRadius: '8px', border: '1px solid #f3f4f6' }}>
                     <img 
                       src={item.imagePath 
                         ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) 
-                        : "https://via.placeholder.com/50"} 
-                      alt="Product" 
-                      style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #eee' }} 
+                        : "https://via.placeholder.com/40"} 
+                      alt="" 
+                      style={{ width: '40px', height: '40px', objectFit: 'contain' }} 
                     />
                     <div style={{ flex: 1 }}>
-                       <div style={{ fontWeight: '800', fontSize: '1rem', color: '#000', marginBottom: '0.25rem' }}>
-                          {item.productName || item.name || item.productNameSnapshot || "Product Item"}
-                       </div>
-                       <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: '500' }}>
-                         {item.quantity} × Rs. {item.unitPrice?.toLocaleString()}
-                       </div>
+                       <div style={{ fontWeight: '700', fontSize: '0.75rem' }}>{item.productName || item.name}</div>
+                       <div style={{ fontSize: '0.65rem', color: '#666' }}>{item.quantity} × Rs. {item.unitPrice?.toLocaleString()}</div>
                     </div>
-                    {/* Buy Again Button */}
-                    <button 
-                        className="cd-buy-again-btn"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/products/${item.productId || item.productIdSnapshot}`);
-                        }}
-                    >
-                        Buy Again
-                    </button>
+                    <button className="cd-buy-again-btn" onClick={(e) => { e.stopPropagation(); navigate(`/products/${item.productId}`); }}>Buy Again</button>
                   </div>
                 ))}
-             </div>
-             
-             <div>
-                <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #eee', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem', color: '#666' }}><span>Subtotal</span><span>Rs. {order.itemsTotal?.toLocaleString()}</span></div>
-                   {order.discountTotal > 0 && (
-                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem', color: '#ff4d4f' }}><span>Discount</span><span>-Rs. {order.discountTotal.toLocaleString()}</span></div>
-                   )}
-                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.9rem', color: '#666', borderBottom: '1px dashed #eee', paddingBottom: '1rem' }}><span>Shipping</span><span>{order.shippingFee > 0 ? `Rs. ${order.shippingFee}` : "Free"}</span></div>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '1.2rem', color: '#000' }}><span>Total Paid</span><span>Rs. {(order.totalAmount || order.grandTotal || 0).toLocaleString()}</span></div>
-                </div>
-                
-                {showActions && canCancel && (
-                   <button 
-                     onClick={(e) => { e.stopPropagation(); onCancel(order.orderId || order.id); }}
-                     style={{ width: '100%', marginTop: '1rem', background: '#fff', border: '1px solid #ff4d4f', color: '#ff4d4f', padding: '0.85rem', fontWeight: '700', cursor: 'pointer', borderRadius: '8px', transition: 'all 0.2s' }}
-                     onMouseOver={(e) => {e.currentTarget.style.background = '#ff4d4f'; e.currentTarget.style.color = '#fff';}}
-                     onMouseOut={(e) => {e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#ff4d4f';}}
-                   >
-                     CANCEL ORDER
-                   </button>
-                )}
-             </div>
+              </div>
+              
+              <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', border: '1px solid #f3f4f6' }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.7rem' }}><span>Subtotal</span><span>Rs. {order.itemsTotal?.toLocaleString()}</span></div>
+                 {order.discountTotal > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.7rem', color: '#ef4444' }}><span>Discount</span><span>-Rs. {order.discountTotal.toLocaleString()}</span></div>}
+                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.7rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}><span>Shipping</span><span>{order.shippingFee > 0 ? `Rs. ${order.shippingFee}` : "Free"}</span></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '0.9rem' }}><span>Paid</span><span>Rs. {(order.totalAmount || order.grandTotal || 0).toLocaleString()}</span></div>
+                 
+                 {showActions && canCancel && (
+                    <button onClick={(e) => { e.stopPropagation(); onCancel(order.orderId || order.id); }} style={{ width: '100%', marginTop: '12px', background: '#fff', border: '1px solid #ef4444', color: '#ef4444', padding: '6px', fontSize: '0.65rem', fontWeight: '800', borderRadius: '4px', cursor: 'pointer' }}>CANCEL</button>
+                 )}
+              </div>
            </div>
         </div>
       )}
     </div>
   );
 };
-
-const EmptyState = ({ icon, text }) => (
-  <div style={{ textAlign: 'center', padding: '4rem', color: '#999' }}>
-    <div style={{ opacity: 0.2, marginBottom: '1rem' }}>{icon}</div>
-    <p style={{ fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem' }}>{text}</p>
-  </div>
-);
 
 const AddressesTab = ({ userId, addresses, setAddresses, setConfirmConfig }) => {
     const [showModal, setShowModal] = useState(false);
@@ -546,9 +483,7 @@ const AddressesTab = ({ userId, addresses, setAddresses, setConfirmConfig }) => 
                 try {
                    await apiDeleteAddress(id);
                    setAddresses(addresses.filter(a => a.id !== id));
-                } catch(e) {
-                   console.error("Delete failed", e);
-                }
+                } catch(e) { console.error("Delete failed", e); }
             }
         });
     }
@@ -561,82 +496,68 @@ const AddressesTab = ({ userId, addresses, setAddresses, setConfirmConfig }) => 
                 setAddresses(addresses.map(a => a.id === updated.id ? updated : (updated.isDefault ? {...a, isDefault: false} : a)));
             } else {
                 const added = await apiAddAddress(userId, formData);
-                if (added.isDefault) {
-                     setAddresses(addresses.map(a => ({...a, isDefault: false})).concat(added));
-                } else {
-                     setAddresses([...addresses, added]);
-                }
+                if (added.isDefault) setAddresses(addresses.map(a => ({...a, isDefault: false})).concat(added));
+                else setAddresses([...addresses, added]);
             }
             setShowModal(false);
-        } catch (err) {
-            alert("Failed to save address: " + (err.message || "Unknown error"));
-        }
+        } catch (err) { alert("Error: " + (err.message || "Unknown error")); }
     };
 
     return (
         <div className="fade-in">
              <div className="cd-header" style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
                 <div>
-                    <h1 className="cd-welcome">Address Book</h1>
-                    <p className="cd-date">Manage your shipping destinations</p>
+                    <h1 className="cd-welcome">Addresses</h1>
+                    <p className="cd-date">Manage your delivery spots</p>
                 </div>
-                <button className="cd-review-btn cd-review-btn-primary" onClick={openAdd}>
-                    <Plus size={16}/> Add New
+                <button className="cd-buy-again-btn" onClick={openAdd}>
+                    <Plus size={12}/> New Address
                 </button>
              </div>
              
              <div className="cd-address-grid">
                  {addresses.map(addr => (
                      <div key={addr.id} className={`cd-address-card ${addr.isDefault ? 'default' : ''}`}>
-                         <div className="cd-address-header">
-                             <div className="cd-address-label">
-                               <MapPin size={14} />
-                               <span>{addr.label}</span>
-                             </div>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                             <div className="cd-address-label"><MapPin size={12} /> {addr.label}</div>
                              {addr.isDefault && <span className="cd-badge-pro">DEFAULT</span>}
                          </div>
                          <div className="cd-address-content">
-                             <p className="cd-receiver">{addr.receiverName}</p>
-                             <p className="cd-street">{addr.street}, {addr.city}</p>
-                             <p className="cd-state-zip">{addr.state}</p>
-                             <p className="cd-phone">{addr.receiverPhone}</p>
+                             <p style={{ fontWeight: 800, fontSize: '0.85rem' }}>{addr.receiverName}</p>
+                             <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{addr.street}, {addr.city}</p>
+                             <p style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '4px' }}>{addr.receiverPhone}</p>
                          </div>
-                         <div className="cd-address-actions">
-                             <button className="cd-mini-btn" onClick={() => openEdit(addr)}>Edit</button>
-                             <button className="cd-mini-btn danger" onClick={() => handleDelete(addr.id)}><Trash2 size={12}/></button>
+                         <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                             <button className="cd-buy-again-btn" onClick={() => openEdit(addr)} style={{ flex: 1 }}>Edit</button>
+                             <button className="cd-buy-again-btn" onClick={() => handleDelete(addr.id)} style={{ color: '#ef4444', borderColor: '#ef4444' }}><Trash2 size={12}/></button>
                          </div>
                      </div>
                  ))}
              </div>
              
              {showModal && (
-                 <div className="cd-modal-overlay" style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center'}}>
-                     <div className="cd-modal" style={{background:'#fff', borderRadius:'12px', width:'100%', maxWidth:'500px', overflow:'hidden', boxShadow:'0 20px 50px rgba(0,0,0,0.2)'}}>
-                         <div className="cd-modal-header" style={{padding:'1.5rem', borderBottom:'1px solid #eee', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                            <h3 style={{margin:0, fontSize:'1.2rem', fontWeight:'800'}}>{isEditing ? 'Edit Address' : 'Add New Address'}</h3>
-                            <button onClick={() => setShowModal(false)} style={{background:'none', border:'none', cursor:'pointer'}}><XCircle size={24}/></button>
+                 <div style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding: '16px'}}>
+                     <div style={{background:'#fff', borderRadius:'12px', width:'100%', maxWidth:'400px', overflow:'hidden'}}>
+                         <div style={{padding:'16px', borderBottom:'1px solid #eee', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                            <h3 style={{margin:0, fontSize:'0.9rem', fontWeight:'900', textTransform: 'uppercase'}}>{isEditing ? 'Edit Address' : 'New Address'}</h3>
+                            <Plus size={20} style={{ transform: 'rotate(45deg)', cursor: 'pointer' }} onClick={() => setShowModal(false)} />
                          </div>
-                         <form onSubmit={handleSubmit} style={{display:'grid', gap:'1rem', padding:'1.5rem'}}>
-                             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem'}}>
-                                 <input placeholder="Label (e.g. Home)" value={formData.label || ''} onChange={e => setFormData({...formData, label: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
-                                 <input placeholder="Receiver Name" value={formData.receiverName || ''} onChange={e => setFormData({...formData, receiverName: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
+                         <form onSubmit={handleSubmit} style={{display:'grid', gap:'12px', padding:'16px'}}>
+                             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
+                                 <input placeholder="Label" value={formData.label || ''} onChange={e => setFormData({...formData, label: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
+                                 <input placeholder="Name" value={formData.receiverName || ''} onChange={e => setFormData({...formData, receiverName: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
                              </div>
-                             <input placeholder="Phone Number" value={formData.receiverPhone || ''} onChange={e => setFormData({...formData, receiverPhone: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
-                             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem'}}>
-                                 <input placeholder="City" value={formData.city || ''} onChange={e => setFormData({...formData, city: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
-                                 <input placeholder="State / Zone" value={formData.state || ''} onChange={e => setFormData({...formData, state: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
+                             <input placeholder="Phone" value={formData.receiverPhone || ''} onChange={e => setFormData({...formData, receiverPhone: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
+                             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
+                                 <input placeholder="City" value={formData.city || ''} onChange={e => setFormData({...formData, city: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
+                                 <input placeholder="State" value={formData.state || ''} onChange={e => setFormData({...formData, state: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
                              </div>
-                             <input placeholder="Street / Chowk" value={formData.street || ''} onChange={e => setFormData({...formData, street: e.target.value})} required className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
-                             <input placeholder="Landmark (Optional)" value={formData.landMark || ''} onChange={e => setFormData({...formData, landMark: e.target.value})} className="cd-input" style={{padding:'0.75rem', border:'1px solid #ddd', borderRadius:'8px'}} />
-                             
-                             <label style={{display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', userSelect:'none'}}>
-                                 <input type="checkbox" checked={formData.isDefault || false} onChange={e => setFormData({...formData, isDefault: e.target.checked})} style={{width:'18px', height:'18px'}} />
-                                 Set as default shipping address
+                             <input placeholder="Street Address" value={formData.street || ''} onChange={e => setFormData({...formData, street: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
+                             <label style={{display:'flex', alignItems:'center', gap:'8px', cursor:'pointer', fontSize: '0.75rem', fontWeight: 700}}>
+                                 <input type="checkbox" checked={formData.isDefault || false} onChange={e => setFormData({...formData, isDefault: e.target.checked})} />
+                                 Set as default
                              </label>
-                             
-                             <button type="submit" className="cd-review-btn cd-review-btn-primary" style={{width:'100%', marginTop:'1rem', height:'48px', fontSize:'1rem'}}>
-                                 {isEditing ? 'Save Changes' : 'Add Address'}
-                             </button>
+                             <button type="submit" className="continue-btn" style={{ height: '40px', fontSize: '0.75rem' }}>{isEditing ? 'Save' : 'Add'}</button>
                          </form>
                      </div>
                  </div>
@@ -645,9 +566,8 @@ const AddressesTab = ({ userId, addresses, setAddresses, setConfirmConfig }) => 
     );
 };
 
-const SecurityItem = ({ label, status }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: status ? '#fff' : '#444' }}></div>
-    <span style={{ fontSize: '0.85rem', fontWeight: '700', opacity: status ? 1 : 0.5 }}>{label}</span>
+const EmptyState = ({ text }) => (
+  <div style={{ textAlign: 'center', padding: '32px', color: '#999' }}>
+    <p style={{ fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.7rem' }}>{text}</p>
   </div>
 );

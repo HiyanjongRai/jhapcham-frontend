@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../../api/axios';
 import { getCurrentUserId } from '../../AddCart/cartUtils'; // Assuming utilities are shareable or duplicated
-import { Trash2, AlertCircle, CheckCircle, Tag, Copy, Calendar, DollarSign, Percent, Plus } from 'lucide-react';
+import { Tag, Copy, Calendar, DollarSign, Percent, Plus } from 'lucide-react';
 import './PromoCodeManager.css';
 
 const PromoCodeManager = () => {
@@ -21,11 +21,7 @@ const PromoCodeManager = () => {
 
   const userId = getCurrentUserId();
 
-  useEffect(() => {
-    fetchPromos();
-  }, []);
-
-  const fetchPromos = async () => {
+  const fetchPromos = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.get(`/api/promos/seller/${userId}`); // Updated path
@@ -35,7 +31,11 @@ const PromoCodeManager = () => {
       setError("Failed to load promo codes.");
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchPromos();
+  }, [fetchPromos]);
 
   const handleCreate = async () => {
     if (!newPromo.code || !newPromo.discountValue || !newPromo.startDate || !newPromo.endDate) {
@@ -86,7 +86,7 @@ const PromoCodeManager = () => {
           <p>Manage your discount coupons</p>
         </div>
         <button className="create-btn" onClick={() => setShowCreateModal(true)}>
-          <Plus size={18} /> Create New
+          <Plus size={14} /> Create New
         </button>
       </div>
 
@@ -139,7 +139,7 @@ const PromoCodeManager = () => {
           ))}
           {promos.length === 0 && (
              <div className="empty-state">
-                <Tag size={48} />
+                <Tag size={24} />
                 <p>No active promo codes found.</p>
              </div>
           )}

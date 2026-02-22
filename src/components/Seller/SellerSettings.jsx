@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { API_BASE } from "../config/config";
 import "./SellerProfilePage.css"; 
 import { 
@@ -8,7 +8,6 @@ import {
   MapPin, 
   Phone, 
   FileText, 
-  Info, 
   Truck, 
   CreditCard,
   Image as ImageIcon,
@@ -39,17 +38,11 @@ export default function SellerSettings() {
         ? window.atob(localStorage.getItem("userId"))
         : null;
 
-    useEffect(() => {
-        if (userId) {
-            fetchProfile();
-        }
-    }, [userId]);
-
     const showToast = (message, type) => {
         setToast({ show: true, message, type });
     };
 
-    const fetchProfile = async () => {
+    const fetchProfile = useCallback(async () => {
         try {
             const res = await api.get(`/api/seller/${userId}`);
             const data = res.data;
@@ -72,7 +65,13 @@ export default function SellerSettings() {
             console.error("Failed to fetch profile", err);
             showToast("Failed to load settings.", "error");
         }
-    };
+    }, [userId]);
+
+    useEffect(() => {
+        if (userId) {
+            fetchProfile();
+        }
+    }, [userId, fetchProfile]);
 
     const buildImageUrl = (path) => {
         if (!path) return null;
@@ -148,49 +147,46 @@ export default function SellerSettings() {
                 />
             )}
             
-            <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-                    <div style={{ background: '#000', color: '#fff', padding: '12px', borderRadius: '16px' }}>
-                        <Settings size={28} />
+            <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', borderBottom: '1px solid #000', paddingBottom: '0.5rem' }}>
+                    <div style={{ background: '#000', color: '#fff', padding: '6px', borderRadius: '4px' }}>
+                        <Settings size={14} />
                     </div>
                     <div>
-                        <h1 className="spp-title" style={{ margin: 0, fontSize: '2.5rem' }}>Store Settings</h1>
-                        <p style={{ color: '#64748b', margin: 0, fontWeight: '600' }}>Manage your brand identity and shipping preferences</p>
+                        <h1 className="spp-title" style={{ margin: 0, fontSize: '1.1rem', textTransform: 'uppercase' }}>Store Settings</h1>
+                        <p style={{ color: '#666', margin: 0, fontWeight: '700', fontSize: '0.65rem', textTransform: 'uppercase' }}>Manage brand & logistics</p>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="spp-main-layout" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
+                <form onSubmit={handleSubmit} className="spp-main-layout" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem' }}>
                     
                     {/* LEFT COLUMN */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div className="spp-card">
-                            <h3 className="spp-card-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <Store size={20} className="spp-icon-accent" /> Identity & Branding
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="spp-card" style={{ padding: '0.75rem' }}>
+                            <h3 className="spp-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', marginBottom: '1rem' }}>
+                                <Store size={14} className="spp-icon-accent" /> Identity
                             </h3>
                             
                             {/* Logo Upload */}
-                            <div style={{ padding: '24px', background: '#f8fafc', borderRadius: '24px', marginBottom: '24px', textAlign: 'center', border: '2px dashed #e2e8f0' }}>
+                            <div style={{ padding: '1rem', background: '#fafafa', borderRadius: '4px', marginBottom: '1rem', textAlign: 'center', border: '1px solid #eee' }}>
                                 <div style={{ 
-                                    width: "140px", height: "140px", borderRadius: "32px",
-                                    overflow: "hidden", margin: "0 auto 1.5rem", border: "4px solid #fff",
-                                    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+                                    width: "60px", height: "60px", borderRadius: "2px",
+                                    overflow: "hidden", margin: "0 auto 0.75rem", border: "1px solid #000",
                                     display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#fff"
                                 }}>
                                     {previewUrl ? (
                                         <img src={previewUrl} alt="Store Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                     ) : (
-                                        <ImageIcon size={48} color="#cbd5e1" />
+                                        <ImageIcon size={20} color="#ccc" />
                                     )}
                                 </div>
                                 
                                 <label htmlFor="logo-upload" style={{
-                                    cursor: "pointer", padding: "12px 24px", background: "#000", color: '#fff',
-                                    borderRadius: "14px", display: 'inline-flex', alignItems: 'center', gap: '10px', fontWeight: '700',
-                                    transition: 'all 0.3s'
-                                }}
-                                className="spp-action-btn"
-                                >
-                                    <Upload size={18} /> Update Store Logo
+                                    cursor: "pointer", padding: "6px 12px", background: "#000", color: '#fff',
+                                    borderRadius: "2px", display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: '800',
+                                    fontSize: '0.65rem', textTransform: 'uppercase'
+                                }}>
+                                    <Upload size={12} /> Upload Logo
                                 </label>
                                 <input
                                     id="logo-upload"
@@ -199,124 +195,123 @@ export default function SellerSettings() {
                                     onChange={handleFileChange}
                                     style={{ display: "none" }}
                                 />
-                                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '12px' }}>Recommended: Square PNG/JPG (Min 512x512px)</p>
                             </div>
 
-                            <div className="report-form-group" style={{ marginBottom: "1.5rem" }}>
-                                <label className="spp-subtitle">Store Name</label>
+                            <div className="report-form-group" style={{ marginBottom: "0.75rem" }}>
+                                <label className="spp-subtitle" style={{ fontSize: '0.55rem', fontWeight: '900' }}>Store Name</label>
                                 <input
                                     type="text"
                                     name="storeName"
                                     value={formData.storeName}
                                     onChange={handleChange}
                                     className="report-textarea"
-                                    style={{ minHeight: 'auto', padding: '16px' }}
+                                    style={{ minHeight: 'auto', padding: '8px', fontSize: '0.75rem', borderRadius: '2px', border: '1px solid #000' }}
                                     required
                                 />
                             </div>
 
-                            <div className="report-form-group" style={{ marginBottom: "1.5rem" }}>
-                                <label className="spp-subtitle">Official Contact Number</label>
+                            <div className="report-form-group" style={{ marginBottom: "0.75rem" }}>
+                                <label className="spp-subtitle" style={{ fontSize: '0.55rem', fontWeight: '900' }}>Contact Number</label>
                                 <div style={{ position: 'relative' }}>
-                                    <Phone size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                    <Phone size={12} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
                                     <input
                                         type="text"
                                         name="contactNumber"
                                         value={formData.contactNumber}
                                         onChange={handleChange}
                                         className="report-textarea"
-                                        style={{ minHeight: 'auto', padding: '16px 16px 16px 48px' }}
+                                        style={{ minHeight: 'auto', padding: '8px 8px 8px 32px', fontSize: '0.75rem', borderRadius: '2px', border: '1px solid #000' }}
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="spp-card">
-                            <h3 className="spp-card-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <FileText size={20} className="spp-icon-accent" /> Descriptions
+                        <div className="spp-card" style={{ padding: '0.75rem' }}>
+                            <h3 className="spp-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', marginBottom: '1rem' }}>
+                                <FileText size={14} className="spp-icon-accent" /> Descriptions
                             </h3>
                             
-                            <div className="report-form-group" style={{ marginBottom: "1.5rem" }}>
-                                <label className="spp-subtitle">Short Tagline/Description</label>
+                            <div className="report-form-group" style={{ marginBottom: "0.75rem" }}>
+                                <label className="spp-subtitle" style={{ fontSize: '0.55rem', fontWeight: '900' }}>Short Tagline</label>
                                 <textarea
                                     name="description"
                                     value={formData.description}
                                     onChange={handleChange}
                                     className="report-textarea"
-                                    placeholder="Briefly describe what your store offers..."
+                                    style={{ padding: '8px', fontSize: '0.75rem', minHeight: '60px', borderRadius: '2px', border: '1px solid #000' }}
+                                    placeholder="Brief tagline..."
                                 />
                             </div>
 
                             <div className="report-form-group">
-                                <label className="spp-subtitle">Detailed About Section</label>
+                                <label className="spp-subtitle" style={{ fontSize: '0.55rem', fontWeight: '900' }}>Detailed About</label>
                                 <textarea
                                     name="about"
                                     value={formData.about}
                                     onChange={handleChange}
                                     className="report-textarea"
-                                    style={{ minHeight: '180px' }}
-                                    placeholder="Tell customers about your brand journey and values..."
+                                    style={{ minHeight: '100px', padding: '8px', fontSize: '0.75rem', borderRadius: '2px', border: '1px solid #000' }}
+                                    placeholder="Story and values..."
                                 />
                             </div>
                         </div>
                     </div>
 
                     {/* RIGHT COLUMN */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div className="spp-card">
-                            <h3 className="spp-card-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <Truck size={20} className="spp-icon-accent" /> Shipping Logistics
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="spp-card" style={{ padding: '0.75rem' }}>
+                            <h3 className="spp-card-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', marginBottom: '1rem' }}>
+                                <Truck size={14} className="spp-icon-accent" /> Logistics
                             </h3>
                             
-                            <div className="report-form-group" style={{ marginBottom: "1.5rem" }}>
-                                <label className="spp-subtitle">Business Address</label>
+                            <div className="report-form-group" style={{ marginBottom: "0.75rem" }}>
+                                <label className="spp-subtitle" style={{ fontSize: '0.55rem', fontWeight: '900' }}>Address</label>
                                 <div style={{ position: 'relative' }}>
-                                    <MapPin size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                    <MapPin size={12} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
                                     <input
                                         type="text"
                                         name="address"
                                         value={formData.address}
                                         onChange={handleChange}
                                         className="report-textarea"
-                                        style={{ minHeight: 'auto', padding: '16px 16px 16px 48px' }}
+                                        style={{ minHeight: 'auto', padding: '8px 8px 8px 32px', fontSize: '0.75rem', borderRadius: '2px', border: '1px solid #000' }}
                                     />
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '1.5rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '0.75rem' }}>
                                 <div className="report-form-group">
-                                    <label className="spp-subtitle">Inside Valley (₹)</label>
+                                    <label className="spp-subtitle" style={{ fontSize: '0.55rem', fontWeight: '900' }}>Inside (₹)</label>
                                     <input
                                         type="number"
                                         name="insideValleyDeliveryFee"
                                         value={formData.insideValleyDeliveryFee}
                                         onChange={handleChange}
                                         className="report-textarea"
-                                        style={{ minHeight: 'auto', padding: '16px' }}
+                                        style={{ minHeight: 'auto', padding: '8px', fontSize: '0.75rem', borderRadius: '2px', border: '1px solid #000' }}
                                     />
                                 </div>
                                 <div className="report-form-group">
-                                    <label className="spp-subtitle">Outside Valley (₹)</label>
+                                    <label className="spp-subtitle" style={{ fontSize: '0.55rem', fontWeight: '900' }}>Outside (₹)</label>
                                     <input
                                         type="number"
                                         name="outsideValleyDeliveryFee"
                                         value={formData.outsideValleyDeliveryFee}
                                         onChange={handleChange}
                                         className="report-textarea"
-                                        style={{ minHeight: 'auto', padding: '16px' }}
+                                        style={{ minHeight: 'auto', padding: '8px', fontSize: '0.75rem', borderRadius: '2px', border: '1px solid #000' }}
                                     />
                                 </div>
                             </div>
 
-                            <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: formData.freeShippingEnabled ? '16px' : '0' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{ background: '#ecfdf5', color: '#10b981', padding: '8px', borderRadius: '10px' }}>
-                                            <CreditCard size={18} />
+                            <div style={{ background: '#fafafa', padding: '10px', borderRadius: '4px', border: '1px solid #eee' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: formData.freeShippingEnabled ? '8px' : '0' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ background: '#000', color: '#fff', padding: '4px', borderRadius: '2px' }}>
+                                            <CreditCard size={12} />
                                         </div>
                                         <div>
-                                            <div style={{ fontWeight: '800', fontSize: '0.9rem' }}>Free Shipping</div>
-                                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Over custom amount</div>
+                                            <div style={{ fontWeight: '900', fontSize: '0.7rem', textTransform: 'uppercase' }}>Free Ship</div>
                                         </div>
                                     </div>
                                     <input
@@ -324,34 +319,34 @@ export default function SellerSettings() {
                                         name="freeShippingEnabled"
                                         checked={formData.freeShippingEnabled}
                                         onChange={handleChange}
-                                        style={{ width: '24px', height: '24px', accentColor: '#000', cursor: 'pointer' }}
+                                        style={{ width: '16px', height: '16px', accentColor: '#000', cursor: 'pointer' }}
                                     />
                                 </div>
                                 
                                 {formData.freeShippingEnabled && (
                                     <div className="fade-in">
-                                        <label className="spp-subtitle" style={{ fontSize: '0.75rem' }}>Threshold Amount (₹)</label>
+                                        <label className="spp-subtitle" style={{ fontSize: '0.55rem', fontWeight: '900' }}>Min Order (₹)</label>
                                         <input
                                             type="number"
                                             name="freeShippingMinOrder"
                                             value={formData.freeShippingMinOrder}
                                             onChange={handleChange}
                                             className="report-textarea"
-                                            style={{ minHeight: 'auto', padding: '12px', background: '#fff' }}
+                                            style={{ minHeight: 'auto', padding: '6px', background: '#fff', fontSize: '0.75rem', borderRadius: '2px', border: '1px solid #000' }}
                                         />
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="spp-card" style={{ background: '#000', border: 'none' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#fff' }}>
-                                <div style={{ background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '14px' }}>
-                                    <CheckCircle size={24} color="#10b981" />
+                        <div className="spp-card" style={{ background: '#000', border: 'none', padding: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.1)', padding: '6px', borderRadius: '4px' }}>
+                                    <CheckCircle size={14} />
                                 </div>
                                 <div>
-                                    <h4 style={{ margin: 0, fontWeight: '800' }}>Save Progress</h4>
-                                    <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.7 }}>Changes go live instantly</p>
+                                    <h4 style={{ margin: 0, fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase' }}>Commit</h4>
+                                    <p style={{ margin: 0, fontSize: '0.55rem', opacity: 0.7, textTransform: 'uppercase' }}>Update live profile</p>
                                 </div>
                             </div>
                             
@@ -360,27 +355,27 @@ export default function SellerSettings() {
                                 disabled={loading}
                                 style={{
                                     width: "100%",
-                                    marginTop: '24px',
-                                    padding: "18px",
+                                    marginTop: '0.75rem',
+                                    padding: "10px",
                                     backgroundColor: "#fff",
                                     color: "#000",
                                     border: "none",
-                                    borderRadius: "16px",
-                                    fontSize: "1rem",
-                                    fontWeight: '800',
+                                    borderRadius: "2px",
+                                    fontSize: "0.75rem",
+                                    fontWeight: '900',
                                     cursor: loading ? "not-allowed" : "pointer",
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    gap: '12px',
-                                    transition: 'all 0.3s'
+                                    gap: '6px',
+                                    textTransform: 'uppercase'
                                 }}
                             >
                                 {loading ? (
-                                    "Saving Changes..."
+                                    "Saving..."
                                 ) : (
                                     <>
-                                        <Save size={20} /> Update Profile
+                                        <Save size={14} /> Update Settings
                                     </>
                                 )}
                             </button>

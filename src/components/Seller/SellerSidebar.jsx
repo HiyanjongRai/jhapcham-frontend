@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   LayoutDashboard,
   PlusCircle,
@@ -17,7 +17,6 @@ import {
   Tag
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getCurrentUserId } from "../config/authUtils";
 import { API_BASE } from "../config/config";
 import ConfirmModal from "../Common/ConfirmModal";
 
@@ -30,35 +29,35 @@ export default function SellerSidebar({ storeInfo }) {
     {
       title: "Main",
       items: [
-        { icon: <LayoutDashboard size={18} />, label: "Overview", path: "/seller/dashboard" },
-        { icon: <PlusCircle size={18} />, label: "Add Products", path: "/seller/add-product" },
-        { icon: <Package size={18} />, label: "Products", path: "/seller/products" },
+        { icon: <LayoutDashboard size={14} />, label: "Overview", path: "/seller/dashboard" },
+        { icon: <PlusCircle size={14} />, label: "Add Products", path: "/seller/add-product" },
+        { icon: <Package size={14} />, label: "Products", path: "/seller/products" },
       ]
     },
     {
       title: "Sales & CRM",
       items: [
-        { icon: <ShoppingBag size={18} />, label: "Orders", path: "/seller/orders" },
-        { icon: <Truck size={18} />, label: "Shipment", path: "/seller/shipment" },
-        { icon: <Users size={18} />, label: "Customers", path: "/seller/customers" },
-        { icon: <Calendar size={18} />, label: "Campaigns", path: "/seller/dashboard", tab: "campaigns" },
+        { icon: <ShoppingBag size={14} />, label: "Orders", path: "/seller/orders" },
+        { icon: <Truck size={14} />, label: "Shipment", path: "/seller/shipment" },
+        { icon: <Users size={14} />, label: "Customers", path: "/seller/customers" },
+        { icon: <Calendar size={14} />, label: "Campaigns", path: "/seller/dashboard", tab: "campaigns" },
       ]
     },
     {
       title: "Management",
       items: [
-        { icon: <Settings size={18} />, label: "Store Setting", path: "/seller/dashboard", tab: "settings" },
-        { icon: <Tag size={18} />, label: "Promo Codes", path: "/seller/promos" }, // New Item
-        { icon: <Users size={18} />, label: "Account Setting", path: "/seller/dashboard", tab: "account" },
-        { icon: <Flag size={18} />, label: "Reports", path: "/seller/dashboard", tab: "reports" },
+        { icon: <Settings size={14} />, label: "Store Setting", path: "/seller/dashboard", tab: "settings" },
+        { icon: <Tag size={14} />, label: "Promo Codes", path: "/seller/promos" }, // New Item
+        { icon: <Users size={14} />, label: "Account Setting", path: "/seller/dashboard", tab: "account" },
+        { icon: <Flag size={14} />, label: "Reports", path: "/seller/dashboard", tab: "reports" },
       ]
     },
     {
       title: "Others",
       items: [
-        { icon: <Share2 size={18} />, label: "Platform Partner", path: "/seller/partners" },
-        { icon: <MessageCircle size={18} />, label: "Feedback", path: "/seller/feedback" },
-        { icon: <HelpCircle size={18} />, label: "Help & Support", path: "/seller/help" },
+        { icon: <Share2 size={14} />, label: "Platform Partner", path: "/seller/partners" },
+        { icon: <MessageCircle size={14} />, label: "Feedback", path: "/seller/feedback" },
+        { icon: <HelpCircle size={14} />, label: "Help & Support", path: "/seller/help" },
       ]
     }
   ];
@@ -81,13 +80,13 @@ export default function SellerSidebar({ storeInfo }) {
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-brand-img">
-          {storeInfo?.logoImagePath || storeInfo?.profileImagePath ? (
+          {storeInfo && (storeInfo.logoImagePath || storeInfo.profileImagePath) ? (
             <img 
               src={`${API_BASE}/${storeInfo.logoImagePath || storeInfo.profileImagePath}`} 
               alt="Store Logo"
             />
           ) : (
-            <Store size={32} color="#0f172a" />
+            <Store size={14} color="#000" />
           )}
         </div>
         <div style={{ textAlign: 'center' }}>
@@ -124,9 +123,9 @@ export default function SellerSidebar({ storeInfo }) {
 
       <div className="sidebar-divider"></div>
       
-      <div className="sidebar-footer" style={{ padding: '0 8px' }}>
+      <div className="sidebar-footer" style={{ padding: '0 4px' }}>
            <button className="sidebar-menu-item logout-btn" onClick={() => setShowLogoutModal(true)}>
-              <LogOut size={18} />
+              <LogOut size={14} />
               <span>Sign Out</span>
            </button>
       </div>

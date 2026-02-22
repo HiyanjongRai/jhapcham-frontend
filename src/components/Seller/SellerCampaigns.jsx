@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "../../api/axios";
 import { API_BASE } from "../config/config";
-import { getCurrentUserId } from "../config/authUtils";
-import { Calendar, Tag, Check, AlertCircle, Plus, ChevronRight, X } from "lucide-react";
+import { getCurrentUserId } from "../../utils/authUtils";
+import { Calendar, Tag, ChevronRight, X } from "lucide-react";
 import "./SellerCampaigns.css";
 import Toast from "../Toast/Toast";
 
@@ -18,15 +18,7 @@ const SellerCampaigns = () => {
     
     const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
 
-    useEffect(() => {
-        fetchUpcomingCampaigns();
-    }, []);
-
-    const showToast = (message, type) => {
-        setToast({ visible: true, message, type });
-    };
-
-    const fetchUpcomingCampaigns = async () => {
+    const fetchUpcomingCampaigns = useCallback(async () => {
         try {
             setLoading(true);
             const res = await axios.get(`${API_BASE}/api/seller/campaigns/upcoming`);
@@ -37,6 +29,14 @@ const SellerCampaigns = () => {
         } finally {
             setLoading(false);
         }
+    }, []);
+
+    useEffect(() => {
+        fetchUpcomingCampaigns();
+    }, [fetchUpcomingCampaigns]);
+
+    const showToast = (message, type) => {
+        setToast({ visible: true, message, type });
     };
 
     const handleJoinClick = async (campaign) => {
@@ -134,7 +134,7 @@ const SellerCampaigns = () => {
                         
                         <div className="sc-dates">
                             <span>
-                                <Calendar size={13} strokeWidth={2.5} />
+                                <Calendar size={12} strokeWidth={2.5} />
                                 {new Date(c.startTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - {new Date(c.endTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             </span>
                             <span className="sc-full-dates">
@@ -143,13 +143,13 @@ const SellerCampaigns = () => {
                         </div>
 
                         <div className="sc-discount-info">
-                            <Tag size={13} className="text-emerald" />
+                            <Tag size={12} className="text-emerald" />
                             <span>{c.discountType?.replace('_',' ')} Discount</span>
                         </div>
 
                         <button className="sc-btn-join" onClick={() => handleJoinClick(c)}>
                             Join Campaign
-                            <ChevronRight size={16} />
+                            <ChevronRight size={14} />
                         </button>
                     </div>
                 ))}
@@ -164,7 +164,7 @@ const SellerCampaigns = () => {
                     <div className="sc-modal">
                         <div className="sc-modal-header">
                             <h3>Join: {selectedCampaign.name}</h3>
-                            <button className="sc-close-btn" onClick={() => setSelectedCampaign(null)}><X size={20}/></button>
+                            <button className="sc-close-btn" onClick={() => setSelectedCampaign(null)}><X size={14}/></button>
                         </div>
                         <div className="sc-modal-body">
                             <p className="sc-modal-instruction">Select products to add to this sale.</p>

@@ -165,7 +165,7 @@ export default function EditProductDrawer({
            setSaleMode("fixed");
        }
     }
-  }, [product?.id]);
+  }, [product?.id, product?.salePercentage]);
 
   function handlePercentageChange(e) {
     const pct = e.target.value;
@@ -241,7 +241,7 @@ export default function EditProductDrawer({
                   <select
                       value={product.category || ""}
                       onChange={e => handleFieldChange("category", e.target.value)}
-                       style={{padding: '10px', borderRadius: '8px', border: '1px solid #ccc', width: '100%'}}
+                       style={{padding: '6px', borderRadius: '2px', border: '1px solid #000', width: '100%', fontSize: '0.7rem'}}
                   >
                     <option value="">Select a category</option>
                     {categories.map(cat => (
@@ -257,7 +257,7 @@ export default function EditProductDrawer({
                     value={product.shortDescription || ""}
                     onChange={e => handleFieldChange("shortDescription", e.target.value)}
                     placeholder="Brief overview for cards and lists..."
-                    style={{height: '80px'}}
+                    style={{height: '60px', borderRadius: '2px', border: '1px solid #000', padding: '6px', fontSize: '0.7rem'}}
                 />
             </div>
 
@@ -267,7 +267,7 @@ export default function EditProductDrawer({
                     value={product.description || ""}
                     onChange={e => handleFieldChange("description", e.target.value)}
                     placeholder="Detailed product information..."
-                    style={{height: '150px'}}
+                    style={{height: '100px', borderRadius: '2px', border: '1px solid #000', padding: '6px', fontSize: '0.7rem'}}
                 />
             </div>
           </div>
