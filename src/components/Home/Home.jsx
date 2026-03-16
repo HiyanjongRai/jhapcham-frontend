@@ -32,6 +32,8 @@ function Home() {
   const [campaigns, setCampaigns] = useState([]);
   const [campaignProducts, setCampaignProducts] = useState([]);
   const [activeCampaign, setActiveCampaign] = useState(null);
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [recLoading, setRecLoading] = useState(false);
 
   // Icon Mapping Helper
   const getCategoryIcon = (name) => {
@@ -116,6 +118,30 @@ function Home() {
             }
         } catch (err) {
             console.warn("Campaign fetch error", err);
+        }
+
+        // Fetch Personalized Recommendations (IBCF)
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+            setRecLoading(true);
+            try {
+                const recRes = await api.get(`/api/activity/recommendations/${userId}`, {
+                    params: { limit: 12 }
+                });
+                if (recRes.data && recRes.data.length > 0) {
+                    const mappedRec = recRes.data.map(dto => ({
+                        ...dto,
+                        imagePath: (dto.imagePaths && dto.imagePaths.length > 0) ? dto.imagePaths[0] : (dto.imagePath || ""),
+                        rating: dto.averageRating || 0,
+                        stock: dto.stockQuantity ?? dto.stock ?? 0,
+                    }));
+                    setRecommendedProducts(mappedRec);
+                }
+            } catch (err) {
+                console.warn("Recommendations fetch error", err);
+            } finally {
+                setRecLoading(false);
+            }
         }
     };
     
@@ -359,6 +385,35 @@ function Home() {
                     <ProductCard product={product} />
                   </div>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {/* Recommended For You Section (IBCF Personalized) */}
+          {recommendedProducts.length > 0 && (
+            <section className="featured-items-section">
+              <div className="section-header-with-nav">
+                <h2 className="section-title">Recommended For You</h2>
+                <div className="section-nav-arrows">
+                  <button className="nav-arrow-btn" aria-label="Previous">
+                    <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} />
+                  </button>
+                  <button className="nav-arrow-btn" aria-label="Next">
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="featured-products-grid-v2">
+                {recLoading ? (
+                  Array(6).fill(0).map((_, i) => <ProductSkeleton key={i} />)
+                ) : (
+                  recommendedProducts.map(product => (
+                    <div key={product.id} className="featured-product-wrapper">
+                      <ProductCard product={product} />
+                    </div>
+                  ))
+                )}
               </div>
             </section>
           )}

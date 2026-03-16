@@ -42,14 +42,6 @@ export default function CustomerDashboard() {
   const userId = getCurrentUserId();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!userId) {
-      navigate("/login");
-      return;
-    }
-    fetchData();
-  }, [userId, navigate, fetchData]);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -91,6 +83,14 @@ export default function CustomerDashboard() {
 
     setLoading(false);
   }, [userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      navigate("/login");
+      return;
+    }
+    fetchData();
+  }, [userId, navigate, fetchData]);
 
   const handleCancelOrder = (orderId) => {
     setConfirmConfig({

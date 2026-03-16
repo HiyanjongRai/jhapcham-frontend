@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import "./CartPage.css";
 import Toast from "../Toast/Toast";
+import ProductCard from "../productCard/ProductCard";
+import api from "../../api/axios";
 
 function CartPage() {
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ function CartPage() {
 
   const userId = getCurrentUserId();
   const isLoggedIn = !!userId;
+  const [crossSellProducts, setCrossSellProducts] = useState([]);
 
   const [shippingLocation, setShippingLocation] = useState('INSIDE');
   const [shippingCost, setShippingCost] = useState(0);
@@ -79,6 +82,49 @@ function CartPage() {
 
     loadCart();
   }, [isLoggedIn, userId]);
+
+  // Fetch cross-sell products based on cart items
+  useEffect(() => {
+    const fetchCrossSell = async () => {
+      if (items.length === 0) {
+        setCrossSellProducts([]);
+        return;
+      }
+      try {
+        const productIds = items.map(i => i.productId).filter(Boolean);
+        const allSimilar = [];
+        
+        // Fetch similar items for each cart product (limit to first 3 to avoid too many calls)
+        for (const pid of productIds.slice(0, 3)) {
+          try {
+            const res = await api.get(`/api/activity/similar/${pid}`, { params: { limit: 4 } });
+            if (res.data) allSimilar.push(...res.data);
+          } catch { /* skip */ }
+        }
+        
+        // Deduplicate and remove items already in cart
+        const cartProductIds = new Set(productIds);
+        const seen = new Set();
+        const unique = allSimilar.filter(p => {
+          if (cartProductIds.has(p.id) || seen.has(p.id)) return false;
+          seen.add(p.id);
+          return true;
+        });
+        
+        // Map to ProductCard format
+        const mapped = unique.slice(0, 6).map(dto => ({
+          ...dto,
+          imagePath: (dto.imagePaths && dto.imagePaths.length > 0) ? dto.imagePaths[0] : (dto.imagePath || ""),
+          rating: dto.averageRating || 0,
+          stock: dto.stockQuantity ?? dto.stock ?? 0,
+        }));
+        setCrossSellProducts(mapped);
+      } catch (err) {
+        console.warn("Cross-sell fetch failed", err);
+      }
+    };
+    fetchCrossSell();
+  }, [items]);
 
   useEffect(() => {
     const calculateShipping = async () => {
@@ -392,6 +438,18 @@ function CartPage() {
           </button>
         </div>
       </div>
+
+      {/* Cross-sell Recommendations */}
+      {crossSellProducts.length > 0 && (
+        <div className="cart-cross-sell" style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '20px' }}>Frequently Bought Together</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+            {crossSellProducts.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

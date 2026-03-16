@@ -185,7 +185,7 @@
   padding: 6px 12px;
   background: rgba(239, 68, 68, 0.95);
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
 }
 
 /* Body Content */
@@ -458,37 +458,48 @@
 
 @media (max-width: 480px) {
   .modern-pc-card {
-    border-radius: 10px;
+    border-radius: 8px;
   }
   
   .modern-pc-img-box {
-    height: 140px;
-    padding: 10px;
+    height: 120px;
+    padding: 8px;
   }
   
   .modern-pc-body {
-    padding: 10px;
-    gap: 6px;
+    padding: 8px;
+    gap: 4px;
   }
   
   .modern-pc-title {
-    font-size: 0.8rem;
-    min-height: 2.1rem;
+    font-size: 0.75rem;
+    min-height: 2rem;
+    margin-bottom: 2px;
   }
+  
+  .modern-pc-brand { font-size: 0.6rem; }
+
+  .modern-pc-meta { gap: 4px; margin-top: 0; }
+  .rating-value { font-size: 0.7rem; margin-left: 2px; }
+  .modern-pc-views { font-size: 0.6rem; }
   
   .modern-pc-price .amount {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
+  .modern-pc-price .currency { font-size: 0.65rem; }
   
   .modern-pc-btn {
-    padding: 7px 12px;
-    font-size: 0.7rem;
-    flex: 1;
+    padding: 6px 8px;
+    font-size: 0.65rem;
+    border-radius: 6px;
+    gap: 4px;
   }
+
+  .modern-pc-btn svg { width: 12px !important; height: 12px !important; }
   
   .modern-pc-wishlist {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     top: 6px;
     right: 6px;
   }
@@ -496,17 +507,20 @@
   .modern-pc-badge {
     top: 6px;
     left: 6px;
-    padding: 3px 7px;
-    font-size: 0.6rem;
+    padding: 2px 6px;
+    font-size: 0.55rem;
   }
   
   .modern-pc-footer {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 8px;
+    gap: 6px;
   }
   
   .modern-pc-price-box {
     width: 100%;
-    margin-bottom: 6px;
+    margin-bottom: 0;
   }
   
   .modern-pc-card:hover {

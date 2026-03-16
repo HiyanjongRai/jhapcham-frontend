@@ -11,6 +11,7 @@ import { apiGetAddresses } from "../Customer/addressUtils";
 import api from "../../api/axios";
 import { API_BASE } from "../config/config";
 import ErrorToast from "../ErrorToast/ErrorToast";
+import ProductCard from "../productCard/ProductCard";
 import "./CheckoutPage.css";
 import { 
   Truck, 
@@ -53,6 +54,7 @@ function CheckoutPage() {
   const [error, setError] = useState(null);
   const [activeStep, setActiveStep] = useState(1);
   const [success, setSuccess] = useState(false);
+  const [lastMinuteProducts, setLastMinuteProducts] = useState([]);
   
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState("");
@@ -144,6 +146,43 @@ function CheckoutPage() {
       fetchPreview();
     }
   }, [items, insideValley, appliedPromo, fetchPreview]);
+
+  // Fetch last-minute add-ons based on cart items  
+  useEffect(() => {
+    const fetchLastMinute = async () => {
+      if (items.length === 0) return;
+      try {
+        const productIds = items.map(i => i.productId).filter(Boolean);
+        const allSimilar = [];
+        
+        for (const pid of productIds.slice(0, 2)) {
+          try {
+            const res = await api.get(`/api/activity/similar/${pid}`, { params: { limit: 3 } });
+            if (res.data) allSimilar.push(...res.data);
+          } catch { /* skip */ }
+        }
+        
+        const cartProductIds = new Set(productIds);
+        const seen = new Set();
+        const unique = allSimilar.filter(p => {
+          if (cartProductIds.has(p.id) || seen.has(p.id)) return false;
+          seen.add(p.id);
+          return true;
+        });
+        
+        const mapped = unique.slice(0, 3).map(dto => ({
+          ...dto,
+          imagePath: (dto.imagePaths && dto.imagePaths.length > 0) ? dto.imagePaths[0] : (dto.imagePath || ""),
+          rating: dto.averageRating || 0,
+          stock: dto.stockQuantity ?? dto.stock ?? 0,
+        }));
+        setLastMinuteProducts(mapped);
+      } catch (err) {
+        console.warn("Last-minute recommendations failed", err);
+      }
+    };
+    fetchLastMinute();
+  }, [items]);
 
   const handleApplyPromo = () => {
     if (!promoCode.trim()) return;
@@ -423,6 +462,24 @@ function CheckoutPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.7rem', color: '#9ca3af' }}><Truck size={14} /> {previewData?.estimatedDelivery || "Standard Delivery"}</div>
             </div>
           </div>
+
+          {/* Last-minute Add-ons */}
+          {lastMinuteProducts.length > 0 && (
+            <div style={{ marginTop: '24px' }}>
+              <h3 style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', color: '#374151' }}>You Might Also Need</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {lastMinuteProducts.map(product => (
+                  <div key={product.id} onClick={() => navigate(`/products/${product.id}`)} style={{ display: 'flex', gap: '12px', padding: '10px', background: '#f9fafb', borderRadius: '8px', cursor: 'pointer', border: '1px solid #f1f5f9', transition: 'all 0.2s' }}>
+                    <img src={product.imagePath ? `${API_BASE}/${product.imagePath}` : "https://via.placeholder.com/50"} alt={product.name} style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '6px' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</div>
+                      <div style={{ fontSize: '0.7rem', color: '#6b7280', marginTop: '2px' }}>Rs. {(product.salePrice || product.price || 0).toLocaleString()}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

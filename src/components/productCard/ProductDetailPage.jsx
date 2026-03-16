@@ -182,7 +182,9 @@ export default function ProductDetailPage() {
         
         setProduct(mappedProduct);
         setMainImage(`${API_BASE}/${mappedProduct.imagePath}`);
-        if (mappedProduct.category) fetchRelated(mappedProduct.category);
+        
+        // Fetch similarity-based related products
+        fetchRelated(mappedProduct.id, mappedProduct.category);
 
 
         if (mappedProduct.colors?.length) setSelectedColor(mappedProduct.colors[0]);
@@ -221,15 +223,40 @@ export default function ProductDetailPage() {
       }
     };
 
-    const fetchRelated = async (category) => {
+    const fetchRelated = async (productId, category) => {
       try {
-        const res = await api.get(`/api/products/filter`, {
+        // 1. Try fetching from IBCF Similarity API
+        const simRes = await api.get(`/api/activity/similar/${productId}`, {
+          params: { limit: 8 }
+        });
+        
+        let list = Array.isArray(simRes.data) ? simRes.data : [];
+        
+        // 2. If we have enough items, use them
+        if (list.length >= 4) {
+          setRelatedProducts(list.slice(0, 8));
+          return;
+        }
+
+        // 3. Fallback/Augment with category-based filtering
+        const catRes = await api.get(`/api/products/filter`, {
           params: { category: category }
         });
-        const list = Array.isArray(res.data) ? res.data : [];
-        setRelatedProducts(list.filter(p => p.id !== parseInt(id)).slice(0, 4));
+        const catList = Array.isArray(catRes.data) ? catRes.data.filter(p => !list.some(s => s.id === p.id) && p.id !== parseInt(id)) : [];
+        
+        const combined = [...list, ...catList];
+        setRelatedProducts(combined.slice(0, 8));
+
       } catch (err) {
-        console.error("Related products failed", err);
+        console.warn("Similarity fetch failed, falling back to category search", err);
+        // Basic fallback
+        try {
+          const res = await api.get(`/api/products/filter`, { params: { category } });
+          const list = Array.isArray(res.data) ? res.data : [];
+          setRelatedProducts(list.filter(p => p.id !== parseInt(id)).slice(0, 8));
+        } catch (fallbackErr) {
+          console.error("Related products completely failed", fallbackErr);
+        }
       }
     };
 
