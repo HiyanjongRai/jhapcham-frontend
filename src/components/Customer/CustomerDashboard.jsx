@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./CustomerDashboard.css";
 import { API_BASE } from "../config/config";
-import { getCurrentUserId, apiGetOrdersForUser, apiCustomerCancelOrder } from "../AddCart/cartUtils";
+import { getCurrentUserId, apiGetOrdersForUser, apiCustomerCancelOrder, apiAddToCart, addToGuestCart } from "../AddCart/cartUtils";
 import { apiGetWishlist, apiRemoveFromWishlist } from "../WishlistPage/wishlistUtils";
 import api from "../../api/axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import Toast from "../Toast/Toast.jsx";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -17,11 +18,24 @@ import {
   Trash2,
   ChevronRight,
   MapPin,
-  Plus
+  Plus,
+  User,
+  Eye,
+  Check,
+  CheckCircle,
+  MessageCircle,
+  Flag,
+  CreditCard,
+  Truck,
+  Zap,
+  ShieldCheck
 } from "lucide-react";
 import UpdateAccount from "../Profile/UpdateAccount.jsx";
 import ConfirmModal from "../Common/ConfirmModal.jsx";
+import ReportModal from "../Report/ReportModal.jsx";
 import { apiGetAddresses, apiAddAddress, apiUpdateAddress, apiDeleteAddress } from "./addressUtils";
+import CustomerSidebar from "./CustomerSidebar.jsx";
+import DashboardNavbar from "../Admin/DashboardNavbar.jsx";
 
 export default function CustomerDashboard() {
   const [searchParams] = useSearchParams();
@@ -31,6 +45,7 @@ export default function CustomerDashboard() {
   const [wishlist, setWishlist] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
   const [confirmConfig, setConfirmConfig] = useState({
     isOpen: false,
     title: "",
@@ -126,6 +141,25 @@ export default function CustomerDashboard() {
     });
   };
 
+  const handleAddToCart = async (item) => {
+    try {
+      if (userId) {
+        await apiAddToCart(userId, item.productId, 1, null, null);
+      } else {
+        addToGuestCart({
+          id: item.productId,
+          name: item.productName || item.name,
+          imagePath: item.imagePath,
+          price: item.price
+        }, 1, null, null);
+      }
+      setToast({ show: true, message: "Item added to cart!", type: "success" });
+    } catch (err) {
+      console.error("Add to cart error:", err);
+      setToast({ show: true, message: "Failed to add item to cart.", type: "error" });
+    }
+  };
+
   const handleLogout = () => {
     setConfirmConfig({
         isOpen: true,
@@ -140,13 +174,15 @@ export default function CustomerDashboard() {
   };
 
   if (loading) return (
-    <div className="cd-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
-      <p style={{ fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.8rem' }}>Loading Dashboard...</p>
+    <div className="cd-layout" style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ width: 30, height: 30, border: '3px solid #e7e7e7', borderTopColor: '#0088cc', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <p style={{ fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.62rem', color: '#999' }}>Loading Account...</p>
     </div>
   );
 
   const renderContent = () => {
-    const commonProps = { user: userProfile, orders, wishlist, onCancelOrder: handleCancelOrder, navigate, onRemove: handleRemoveWishlist };
+    const commonProps = { user: userProfile, orders, wishlist, addresses, onCancelOrder: handleCancelOrder, navigate, onRemove: handleRemoveWishlist, setActiveTab, onLogout: handleLogout, onAddToCart: handleAddToCart };
     switch (activeTab) {
       case "overview": return <OverviewTab {...commonProps} />;
       case "orders": return <OrdersTab {...commonProps} />;
@@ -160,52 +196,35 @@ export default function CustomerDashboard() {
 
   return (
     <div className="cd-layout">
-      <aside className="cd-sidebar">
-        <div className="cd-profile-summary">
-          <div className="cd-avatar-wrapper">
-            <img
-              src={userProfile?.profileImagePath 
-                ? (userProfile.profileImagePath.startsWith('http') ? userProfile.profileImagePath : `${API_BASE}/uploads/${userProfile.profileImagePath}`)
-                : "https://via.placeholder.com/150"}
-              alt="Profile"
-              className="cd-avatar"
-            />
-          </div>
-          <div className="cd-user-name">{userProfile?.fullName || "User"}</div>
-          <div className="cd-user-email">{userProfile?.email}</div>
-        </div>
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
+      {/* Sidebar — Professional Pro Style */}
+      <CustomerSidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onLogout={handleLogout}
+        userProfile={userProfile}
+      />
 
-        <nav className="cd-nav">
-          {[
-            { id: "overview", icon: LayoutDashboard, label: "Overview" },
-            { id: "orders", icon: ShoppingBag, label: "Orders" },
-            { id: "wishlist", icon: Heart, label: "Wishlist" },
-            { id: "addresses", icon: MapPin, label: "Addresses" },
-            { id: "reviews", icon: Star, label: "Reviews" },
-            { id: "settings", icon: Settings, label: "Settings" },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              className={`cd-nav-item ${activeTab === tab.id ? "active" : ""}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <tab.icon size={14} /> {tab.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="cd-logout">
-          <button className="cd-logout-btn" onClick={handleLogout}>
-            <LogOut size={12} /> Sign Out
-          </button>
-        </div>
-      </aside>
-
+      {/* Main */}
       <main className="cd-main">
-        {renderContent()}
+        <DashboardNavbar 
+          title="My Account" 
+          role="CUSTOMER" 
+          showSearch={false} 
+          customUserName={userProfile?.fullName}
+        />
+        <div className="cd-main-inner">
+          {renderContent()}
+        </div>
       </main>
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={confirmConfig.isOpen}
         onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
         onConfirm={confirmConfig.onConfirm}
@@ -219,120 +238,388 @@ export default function CustomerDashboard() {
 
 /* Tab Components */
 
-const OverviewTab = ({ user, orders, wishlist }) => {
-  const pendingCount = orders.filter(o => !["DELIVERED", "CANCELED"].includes((o.stage || o.status || "").toUpperCase())).length;
+const OverviewTab = ({ user, orders, wishlist, addresses, setActiveTab, onAddToCart, navigate }) => {
+  const totalSpent = orders.reduce((sum, o) => sum + (Number(o.grandTotal || o.totalAmount || o.total) || 0), 0);
+  
+  // Loyalty Logic
+  const loyaltyPoints = Math.floor(totalSpent / 100);
+  const nextTarget = totalSpent < 10000 ? 10000 : (totalSpent < 50000 ? 50000 : 100000);
+  const tier = totalSpent < 10000 ? 'SILVER' : (totalSpent < 50000 ? 'GOLD' : 'PLATINUM');
+  const progress = Math.min((totalSpent / nextTarget) * 100, 100);
 
   return (
     <div className="fade-in">
-      <div className="cd-header">
-        <h1 className="cd-welcome">Hello, {user?.fullName?.split(' ')[0] || "User"}</h1>
-        <p className="cd-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+      {/* Premium Executive Header */}
+      <div className="cd-overview-header-v2 lux-fade-in">
+        <div className="cd-loyalty-card lux-glass-card">
+           <div className="cd-lc-glow" />
+           <div className="cd-lc-content">
+              <div className="cd-lc-top">
+                 <div className="cd-lc-badge lux-pill">
+                    <ShieldCheck size={14} />
+                    <span>{tier} MEMBER</span>
+                 </div>
+                 <div className="cd-lc-points lux-pill">
+                    <Zap size={14} fill="#fbbf24" color="#fbbf24" />
+                    <span>{loyaltyPoints.toLocaleString()} PTS</span>
+                 </div>
+              </div>
+              <div className="cd-lc-user">
+                 <h3 className="lux-greeting-h1 gt-h2">{user?.fullName || 'Valued Member'}</h3>
+                 <p className="lux-meta-sub gt-note">Premium Member since {user?.createdAt ? new Date(user.createdAt).getFullYear() : '2024'}</p>
+              </div>
+              <div className="cd-lc-footer">
+                 <div className="cd-lc-progress-info">
+                    <span>Next Tier Reward: Rs. {nextTarget.toLocaleString()}</span>
+                    <span>{Math.round(progress)}%</span>
+                 </div>
+                 <div className="cd-lc-progress-bar">
+                    <div className="cd-lc-progress-fill" style={{ width: `${progress}%`, background: 'var(--porto-primary)' }} />
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        <div className="cd-quick-actions-grid">
+           {[
+             { id: 'orders', label: 'All Orders', icon: <Package size={20} />, sub: 'View status' },
+             { id: 'track', label: 'Track Order', icon: <Truck size={20} />, sub: 'Real-time' },
+             { id: 'payment', label: 'Payments', icon: <CreditCard size={20} />, sub: 'Transactions' },
+             { id: 'wishlist', label: 'Wishlist', icon: <Heart size={20} />, sub: 'Saved items' },
+           ].map(action => (
+             <button key={action.id} className="cd-qa-card lux-glass-card" onClick={() => action.id === 'track' ? setActiveTab('orders') : setActiveTab(action.id)}>
+                <div className="cd-qa-icon" style={{ background: 'var(--porto-primary-fade)', color: 'var(--porto-primary)' }}>{action.icon}</div>
+                <div className="cd-qa-text">
+                   <span className="cd-qa-label gt-caption">{action.label}</span>
+                   <span className="cd-qa-sub gt-note">{action.sub}</span>
+                </div>
+             </button>
+           ))}
+        </div>
       </div>
 
-      <div className="cd-stats-grid">
-        <StatCard type="orders" icon={<ShoppingBag size={14}/>} value={orders.length} label="Orders" />
-        <StatCard type="progress" icon={<Clock size={14}/>} value={pendingCount} label="Pending" />
-        <StatCard type="wishlist" icon={<Heart size={14}/>} value={wishlist.length} label="Wishlist" />
+      {/* Modern Stat Cards */}
+      <div className="cd-stats-row">
+        <StatCard 
+          icon={<ShoppingBag size={24} />} 
+          value={orders.length} 
+          label="Orders" 
+          color="#000000"
+        />
+        <StatCard 
+          icon={<Heart size={24} />} 
+          value={wishlist.length} 
+          label="Wishlist" 
+          color="#000000"
+        />
+        <StatCard 
+          icon={<Star size={24} />} 
+          value={`Rs. ${totalSpent.toLocaleString()}`} 
+          label="Total Spent" 
+          color="#000000"
+        />
+        <StatCard 
+          icon={<MapPin size={24} />} 
+          value={addresses.length || '0'} 
+          label="Addresses" 
+          color="#000000"
+        />
       </div>
 
-      <div className="cd-section-title">
-        <ShoppingBag size={14} /> Recent Orders
-      </div>
-      
-      <div className="cd-card" style={{ padding: '0' }}>
-        {orders.slice(0, 3).map(order => (
-          <OrderItem key={order.orderId || order.id} order={order} />
-        ))}
-        {orders.length === 0 && <EmptyState text="No orders yet." />}
+      {/* Activity Grid */}
+      <div className="cd-dashboard-grid">
+        <div className="cd-grid-card cd-recent-orders">
+          <div className="cd-grid-header">
+            <h3 className="gt-caption">Recent Orders</h3>
+            <button onClick={() => setActiveTab('orders')} className="gt-note">View Pipeline</button>
+          </div>
+          <div className="cd-grid-content">
+            {orders.length > 0 ? (
+              <div className="cd-compact-list">
+                {orders.slice(0, 5).map(order => {
+                  const oid = order.orderId || order.id || "000000";
+                  const oidDisplay = isNaN(oid) ? oid : `ORD-${String(oid).padStart(5, '0')}`;
+                  const date = order.createdAt || order.orderDate || order.updateTime;
+                  const price = order.grandTotal || order.totalAmount || 0;
+                  const status = (order.status || 'PENDING').toUpperCase();
+                  
+                  const productNames = order.productNames || (order.items?.length > 0 
+                    ? order.items.map(i => i.productName || i.name || i.productNameSnapshot).filter(Boolean).join(", ")
+                    : `Order #${String(oid).slice(-6)}`);
+                  
+                  const firstImage = order.productImage || order.items?.[0]?.imagePath || order.items?.[0]?.imagePathSnapshot;
+                  
+                  return (
+                    <div key={oid} className="cd-compact-row" onClick={() => navigate(`/customer/order/${oid}`)}>
+                      <div className="cd-cr-visual">
+                         <img 
+                           src={firstImage ? (firstImage.startsWith('http') ? firstImage : `${API_BASE}/${firstImage}`) : "https://via.placeholder.com/50"} 
+                           alt="" 
+                           className="cd-cr-img"
+                         />
+                      </div>
+                      <div className="cd-cr-main">
+                         <div className="cd-cr-title" title={productNames}>
+                            {productNames.length > 35 ? productNames.slice(0, 35) + "..." : productNames}
+                         </div>
+                         <div className="cd-cr-meta">
+                            <span className="cd-cr-id">{oidDisplay}</span>
+                            <span className="cd-cr-dot">•</span>
+                            <span className="cd-cr-date">{date ? new Date(date).toLocaleDateString() : 'N/A'}</span>
+                         </div>
+                      </div>
+                      <div className="cd-cr-end">
+                         <div className="cd-cr-price">Rs. {Number(price).toLocaleString()}</div>
+                         <button className="cd-track-btn" onClick={(e) => { e.stopPropagation(); navigate(`/customer/order/${oid}`); }}>
+                            TRACK <ChevronRight size={10} strokeWidth={3} />
+                         </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="cd-empty-mini">No recent orders found.</div>
+            )}
+          </div>
+        </div>
+
+        <div className="cd-grid-card cd-wishlist-spotlight">
+          <div className="cd-grid-header">
+            <h3>Saved For Later</h3>
+            <button onClick={() => setActiveTab('wishlist')}>View All</button>
+          </div>
+          <div className="cd-grid-content">
+            {wishlist.length > 0 ? (
+              <div className="cd-spotlight-list">
+                {wishlist.slice(0, 3).map(item => (
+                  <div key={item.productId} className="cd-spotlight-item" onClick={() => navigate(`/products/${item.productId}`)}>
+                     <img src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : "https://via.placeholder.com/50"} alt="" />
+                     <div className="cd-si-text">
+                        <span className="cd-si-name">{item.productName}</span>
+                        <span className="cd-si-price">Rs. {Number(item.price).toLocaleString()}</span>
+                     </div>
+                     <ChevronRight size={14} className="cd-si-arrow" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="cd-empty-mini">Your wishlist is empty.</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-const OrdersTab = ({ orders, onCancelOrder }) => (
+const OrdersTab = ({ orders, onCancelOrder, onAddToCart }) => (
   <div className="fade-in">
     <div className="cd-header">
-      <h1 className="cd-welcome">Order History</h1>
-      <p className="cd-date">Track and manage your purchases</p>
+      <h2 className="cd-welcome gt-h3">Order History</h2>
+      <p className="cd-date gt-note">Track and manage your purchases</p>
     </div>
-    <div className="cd-card" style={{ padding: '0' }}>
+    <div className="cd-card">
       {orders.map(order => (
-        <OrderItem key={order.orderId || order.id} order={order} showActions onCancel={onCancelOrder} />
+        <OrderItem key={order.orderId || order.id} order={order} showActions onCancel={onCancelOrder} onAddToCart={onAddToCart} />
       ))}
       {orders.length === 0 && <EmptyState text="You haven't ordered anything yet." />}
     </div>
   </div>
 );
 
-const WishlistTab = ({ wishlist, navigate, onRemove }) => (
+const WishlistTab = ({ wishlist, navigate, onRemove, onAddToCart }) => (
   <div className="fade-in">
     <div className="cd-header">
-      <h1 className="cd-welcome">Wishlist</h1>
-      <p className="cd-date">{wishlist.length} items saved</p>
+      <h2 className="cd-welcome">My Wishlist</h2>
+      <p className="cd-date">{wishlist.length} item{wishlist.length !== 1 ? 's' : ''} saved</p>
     </div>
-    <div className="cd-wishlist-grid">
-      {wishlist.map(item => (
-        <div key={item.productId} className="cd-wish-card">
-          <div className="cd-wish-img-container">
-            <img 
-              src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : "https://via.placeholder.com/240"}
-              alt={item.productName}
-              className="cd-wish-img"
-              onClick={() => navigate(`/products/${item.productId}`)}
-            />
-            <button className="cd-wish-remove" onClick={() => onRemove(item.productId)}>
-              <Trash2 size={12} />
-            </button>
-          </div>
-          <div className="cd-wish-info">
-            <h4 className="cd-wish-title">{item.productName}</h4>
-            <div className="cd-wish-footer">
-              <span className="cd-wish-price">Rs. {Number(item.price || 0).toLocaleString()}</span>
-              <button className="cd-wish-btn" onClick={() => navigate(`/products/${item.productId}`)}>Buy Now</button>
-            </div>
-          </div>
-        </div>
-      ))}
-      {wishlist.length === 0 && <EmptyState text="Your wishlist is empty." />}
-    </div>
+
+    {wishlist.length === 0 ? (
+      <div className="cd-empty-mini">Your wishlist is empty.</div>
+    ) : (
+      <div className="cd-wishlist-table-wrap">
+        <table className="cd-wishlist-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Stock Status</th>
+              <th>Actions</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {wishlist.map(item => (
+              <tr key={item.productId}>
+                <td>
+                  <div className="cd-wt-product-cell">
+                    <img
+                      src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : 'https://via.placeholder.com/70'}
+                      alt={item.productName}
+                      className="cd-wt-img"
+                    />
+                    <span className="cd-wt-name" onClick={() => navigate(`/product/${item.productId}`)}>{item.productName}</span>
+                  </div>
+                </td>
+                <td><span className="cd-wt-price">Rs. {Number(item.price || 0).toLocaleString()}</span></td>
+                <td><span className="cd-wt-stock-in">In Stock</span></td>
+                <td>
+                   <div className="cd-wt-actions">
+                      <button className="cd-wt-btn-solid" onClick={() => onAddToCart(item)}>Add To Cart</button>
+                      <button className="cd-wt-btn-outline" onClick={() => navigate(`/products/${item.productId}`)}>Quick View</button>
+                   </div>
+                </td>
+                <td>
+                  <button className="cd-wt-remove" onClick={() => onRemove(item.productId)} title="Remove item">
+                    <Trash2 size={18} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
   </div>
 );
 
 const ReviewsTab = ({ orders, navigate }) => {
-  const delivered = orders.filter(o => (o.stage || o.status || "").toUpperCase() === "DELIVERED");
+  const [userReviews, setUserReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const userId = getCurrentUserId();
+
+  useEffect(() => {
+    const fetchUserReviews = async () => {
+      try {
+        setReviewsLoading(true);
+        const res = await api.get(`/api/reviews/user/${userId}`);
+        setUserReviews(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch user reviews:", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+    if (userId) fetchUserReviews();
+  }, [userId]);
+
+  const delivered = orders.filter(o => 
+    (o.stage || o.status || "").toUpperCase() === "DELIVERED"
+  );
+
+  // Filter delivered items that don't have a review yet
+  // This logic assumes we can match by productId easily or we just show all delivered as potential review candidates
+  // Let's check delivered items and see if they exist in userReviews
+  const unreviewedItems = delivered.filter(order => {
+    const productId = order.items?.[0]?.productId;
+    return !userReviews.some(rev => rev.productId === productId);
+  });
 
   return (
-    <div className="fade-in">
-      <div className="cd-header">
-        <h1 className="cd-welcome">Reviews</h1>
-        <p className="cd-date">Feedback on received items</p>
+    <div className="fade-in cd-reviews-section">
+      <div className="cd-header" style={{ marginBottom: '30px' }}>
+        <div className="cd-header-stack">
+          <h2 className="cd-welcome">Product Reviews</h2>
+          <p className="cd-date">Your shared experiences and pending feedback</p>
+        </div>
       </div>
-      <div className="cd-card" style={{ padding: '0' }}>
-        {delivered.map(order => {
-          const mainItem = order.items?.[0];
-          const productName = mainItem?.productName || mainItem?.name || mainItem?.productNameSnapshot || "Product";
-          return (
-            <div key={order.orderId || order.id} className="cd-review-item">
-               <img src={mainItem?.imagePath ? (mainItem.imagePath.startsWith('http') ? mainItem.imagePath : `${API_BASE}/${mainItem.imagePath}`) : "https://via.placeholder.com/60"} alt="Product" className="cd-review-img" />
-               <div className="cd-order-info">
-                 <div className="cd-order-title">{productName}</div>
-                 <div className="cd-order-meta">Delivered: {new Date(order.updateTime || order.orderDate).toLocaleDateString()}</div>
-               </div>
-               <button 
-                 className="cd-buy-again-btn"
-                 onClick={() => {
-                   localStorage.setItem("reviewOrderId", order.orderId || order.id);
-                   if (mainItem?.productId) localStorage.setItem("reviewProductId", mainItem.productId);
-                   localStorage.setItem("reviewMode", order.review ? "edit" : "create");
-                   navigate("/review");
-                 }}
-               >
-                 {order.review ? "Update" : "Rate"}
-               </button>
+
+      {unreviewedItems.length > 0 && (
+        <div className="cd-review-group">
+          <div className="cd-group-label">
+            <Star size={14} fill="#f59e0b" color="#f59e0b" />
+            <span>Pending Reviews ({unreviewedItems.length})</span>
+          </div>
+          <div className="cd-grid-card">
+            <div className="cd-compact-list" style={{ padding: '0px' }}>
+              {unreviewedItems.map(order => {
+                const mainItem = order.items?.[0];
+                const productName = mainItem?.productName || mainItem?.name || mainItem?.productNameSnapshot || "Product";
+                const firstImage = mainItem?.imagePath || mainItem?.imagePathSnapshot;
+
+                return (
+                  <div key={order.orderId || order.id} className="cd-review-item">
+                    <div className="cd-review-media">
+                       <img 
+                          src={firstImage ? (firstImage.startsWith('http') ? firstImage : `${API_BASE}/${firstImage}`) : "https://via.placeholder.com/60"} 
+                          alt="" 
+                          className="cd-review-img" 
+                       />
+                       <div className="cd-badge-pro">UNREVIEWED</div>
+                    </div>
+                    <div className="cd-review-main">
+                      <div className="cd-review-product-name">{productName}</div>
+                      <div className="cd-review-order-info">Ordered on {new Date(order.orderDate || order.createdAt).toLocaleDateString()}</div>
+                      <div className="cd-review-cta-text">Share your thoughts with other shoppers!</div>
+                    </div>
+                    <div className="cd-review-actions">
+                      <button 
+                        className="cd-wt-btn-solid"
+                        onClick={() => {
+                          localStorage.setItem("reviewOrderId", order.orderId || order.id);
+                          if (mainItem?.productId) localStorage.setItem("reviewProductId", mainItem.productId);
+                          localStorage.setItem("reviewMode", "create");
+                          navigate("/review");
+                        }}
+                      >
+                         RATE PRODUCT
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-        {delivered.length === 0 && <EmptyState text="No delivered orders to review." />}
+          </div>
+        </div>
+      )}
+
+      <div className="cd-review-group" style={{ marginTop: '40px' }}>
+        <div className="cd-group-label">
+          <CheckCircle size={14} color="#10b981" />
+          <span>My Published Reviews ({userReviews.length})</span>
+        </div>
+        
+        {reviewsLoading ? (
+           <div className="cd-empty-mini">Loading your reviews...</div>
+        ) : userReviews.length > 0 ? (
+          <div className="cd-review-archive-grid">
+            {userReviews.map(review => (
+              <div key={review.id} className="cd-review-card-modern">
+                <div className="cd-rev-card-header">
+                   <div className="cd-rev-stars">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star key={s} size={12} fill={s <= review.rating ? "#f59e0b" : "none"} color="#f59e0b" />
+                      ))}
+                   </div>
+                   <span className="cd-rev-date">{new Date(review.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="cd-rev-product-strip">
+                   <img src={review.productImage ? (review.productImage.startsWith('http') ? review.productImage : `${API_BASE}/${review.productImage}`) : "https://via.placeholder.com/40"} alt="" />
+                   <span>{review.productName}</span>
+                </div>
+                <p className="cd-rev-comment">"{review.comment}"</p>
+                {review.imagePath && (
+                   <div className="cd-rev-attachment">
+                      <img src={`${API_BASE}/${review.imagePath}`} alt="review proof" />
+                   </div>
+                )}
+                <div className="cd-rev-footer">
+                   <button className="cd-rev-edit-btn" onClick={() => {
+                      localStorage.setItem("reviewMode", "edit");
+                      localStorage.setItem("reviewData", JSON.stringify(review));
+                      localStorage.setItem("reviewProductId", review.productId);
+                      navigate("/review");
+                   }}>Update Review</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="cd-card cd-empty-reviews" style={{ background: '#fff', border: '1px dashed #e2e8f0', borderRadius:'16px' }}>
+            <EmptyState text="You haven't written any reviews yet." />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -341,8 +628,8 @@ const ReviewsTab = ({ orders, navigate }) => {
 const AccountSettingsTab = ({ user, setUserProfile }) => (
   <div className="fade-in">
     <div className="cd-header">
-      <h1 className="cd-welcome">Settings</h1>
-      <p className="cd-date">Manage your profile</p>
+      <h1 className="cd-welcome gt-h3">Settings</h1>
+      <p className="cd-date gt-note">Manage your profile</p>
     </div>
     <div className="cd-card">
        <UpdateAccount onUpdateSuccess={(data) => setUserProfile(prev => ({...prev, ...data}))} />
@@ -352,105 +639,156 @@ const AccountSettingsTab = ({ user, setUserProfile }) => (
 
 /* Sub-components */
 
-const StatCard = ({ icon, value, label }) => (
+const StatCard = ({ icon, value, label, color }) => (
   <div className="cd-stat-card">
-    <div className="cd-stat-icon">{icon}</div>
+    <div className="cd-stat-icon" style={{ backgroundColor: `${color}15`, color: color }}>
+      {icon}
+    </div>
     <div className="cd-stat-info">
-      <h3>{value}</h3>
-      <p>{label}</p>
+      <span className="cd-stat-label gt-note">{label}</span>
+      <h3 className="cd-stat-value gt-h3">{value}</h3>
     </div>
   </div>
 );
 
-const OrderItem = ({ order, showActions, onCancel }) => {
+const OrderItem = ({ order, showActions, onCancel, onAddToCart }) => {
   const [expanded, setExpanded] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const navigate = useNavigate();
-  const status = (order.stage || order.status || 'PENDING').toUpperCase();
-  const canCancel = ["NEW", "PENDING", "PROCESSING"].includes(status);
+  const rawStatus = (order.stage || order.status || 'PENDING').toUpperCase();
+  
+  // Normalize status for badges and stepper
+  const status = rawStatus === 'NEW' ? 'PLACED' : rawStatus;
+  const canCancel = ["PLACED", "PENDING", "PROCESSING"].includes(status);
 
+  const oid = order.orderId || order.id;
+  const oidDisplay = isNaN(oid) ? oid : `ORD-${String(oid).padStart(5, '0')}`;
+  
   const productNames = order.items?.length > 0 
-    ? order.items.map(i => i.productName || i.name || i.productNameSnapshot || i.productIdentifier).filter(Boolean)
+    ? order.items.map(i => i.productName || i.name || i.productNameSnapshot).filter(Boolean)
     : [];
   
   const title = productNames.length > 0 
     ? productNames.slice(0, 2).join(", ") + (productNames.length > 2 ? "..." : "")
-    : `Order #${String(order.orderId || order.id).padStart(4, '0')}`;
+    : oidDisplay;
 
-  const steps = ["NEW", "PROCESSING", "SHIPPED", "DELIVERED"];
+  const steps = ["PLACED", "PROCESSING", "SHIPPED", "DELIVERED"];
   const currentStepIndex = steps.indexOf(status) === -1 
       ? (["SHIPPED_TO_BRANCH", "OUT_FOR_DELIVERY"].includes(status) ? 2 : (status === "CANCELED" ? -1 : 0)) 
       : steps.indexOf(status);
 
   return (
-    <div className="cd-order-wrapper" style={{ borderBottom: '1px solid #f9fafb' }}>
+    <div className={`cd-order-wrapper ${expanded ? 'expanded' : ''}`} style={{ borderBottom: '1px solid #f1f5f9' }}>
       <div className="cd-order-item" onClick={() => setExpanded(!expanded)} style={{ cursor: 'pointer' }}>
         <img 
           src={order.items?.[0]?.imagePath 
             ? (order.items[0].imagePath.startsWith('http') ? order.items[0].imagePath : `${API_BASE}/${order.items[0].imagePath}`) 
-            : "https://via.placeholder.com/60"} 
+            : "https://via.placeholder.com/100"} 
           alt="Product" 
           className="cd-order-img" 
         />
         <div className="cd-order-info">
           <div className="cd-order-title">{title}</div>
           <div className="cd-order-meta">
-            <span>{new Date(order.orderDate || order.createdAt).toLocaleDateString()}</span>
+            <span>{oidDisplay}</span>
+            <span>•</span>
+            <span>{new Date(order.orderDate || order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
             <span>•</span>
             <span>{order.items?.length || 0} Items</span>
           </div>
         </div>
         <div className="cd-order-price">
-          Rs. {(order.totalAmount || order.grandTotal || 0).toLocaleString()}
+          Rs. {Number(order.grandTotal || order.totalAmount || 0).toLocaleString()}
         </div>
         <div className={`cd-status-badge status-${status.toLowerCase()}`}>{status.replace(/_/g, " ")}</div>
-        <ChevronRight size={14} style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: '0.2s', marginLeft: '12px' }} />
+        <ChevronRight size={16} style={{ 
+          transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', 
+          transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+          marginLeft: '20px',
+          color: '#cbd5e1'
+        }} />
       </div>
 
       {expanded && (
-        <div className="fade-in" style={{ padding: '16px', background: '#fdfdfd' }}>
+        <div className="cd-order-expanded fade-in">
            {status !== "CANCELED" && (
              <div className="cd-stepper">
                {["Placed", "Processed", "Shipped", "Delivered"].map((step, idx) => (
                  <div key={step} className={`cd-step ${idx <= currentStepIndex ? "active" : ""}`}>
-                   <div className="cd-step-circle">{idx <= currentStepIndex ? <Package size={10}/> : idx + 1}</div>
+                   <div className="cd-step-circle">{idx <= currentStepIndex ? <Check size={18}/> : idx + 1}</div>
                    <span className="cd-step-label">{step}</span>
                  </div>
                ))}
              </div>
            )}
 
-           <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '20px', marginTop: '16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+           <div className="cd-order-grid">
+              <div className="cd-order-items-list">
                 {order.items?.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#fff', padding: '8px', borderRadius: '8px', border: '1px solid #f3f4f6' }}>
+                  <div key={idx} className="cd-compact-row" onClick={() => navigate(`/product/${item.productId}`)}>
                     <img 
-                      src={item.imagePath 
-                        ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) 
-                        : "https://via.placeholder.com/40"} 
+                      src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : "https://via.placeholder.com/50"} 
                       alt="" 
-                      style={{ width: '40px', height: '40px', objectFit: 'contain' }} 
+                      className="cd-order-img-mini"
                     />
-                    <div style={{ flex: 1 }}>
-                       <div style={{ fontWeight: '700', fontSize: '0.75rem' }}>{item.productName || item.name}</div>
-                       <div style={{ fontSize: '0.65rem', color: '#666' }}>{item.quantity} × Rs. {item.unitPrice?.toLocaleString()}</div>
+                    <div className="cd-cr-info" style={{ marginLeft: '12px' }}>
+                       <div className="cd-cr-id">{item.productName || item.name}</div>
+                       <div className="cd-cr-date">Quantity: {item.quantity} · Rs. {item.unitPrice?.toLocaleString()}</div>
                     </div>
-                    <button className="cd-buy-again-btn" onClick={(e) => { e.stopPropagation(); navigate(`/products/${item.productId}`); }}>Buy Again</button>
+                    <button className="cd-buy-again-btn" onClick={(e) => { 
+                      e.stopPropagation(); 
+                      if (onAddToCart) {
+                        onAddToCart({
+                          productId: item.productId,
+                          productName: item.productName || item.name,
+                          imagePath: item.imagePath,
+                          price: item.unitPrice
+                        });
+                      } else {
+                        navigate(`/products/${item.productId}`);
+                      }
+                    }}>Buy Again</button>
                   </div>
                 ))}
               </div>
               
-              <div style={{ background: '#fff', padding: '12px', borderRadius: '8px', border: '1px solid #f3f4f6' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.7rem' }}><span>Subtotal</span><span>Rs. {order.itemsTotal?.toLocaleString()}</span></div>
-                 {order.discountTotal > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.7rem', color: '#ef4444' }}><span>Discount</span><span>-Rs. {order.discountTotal.toLocaleString()}</span></div>}
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.7rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}><span>Shipping</span><span>{order.shippingFee > 0 ? `Rs. ${order.shippingFee}` : "Free"}</span></div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '0.9rem' }}><span>Paid</span><span>Rs. {(order.totalAmount || order.grandTotal || 0).toLocaleString()}</span></div>
+            <div className="cd-order-summary-box">
+                  <div className="cd-summary-row"><span>Subtotal</span><span>Rs. {Number(order.itemsTotal || 0).toLocaleString()}</span></div>
+                  {(order.discountTotal || 0) > 0 && <div className="cd-summary-row" style={{ color: '#ef4444' }}><span>Discount</span><span>-Rs. {Number(order.discountTotal).toLocaleString()}</span></div>}
+                  <div className="cd-summary-row"><span>Shipping</span><span>{Number(order.shippingFee || 0) > 0 ? `Rs. ${Number(order.shippingFee).toLocaleString()}` : "Free"}</span></div>
+                  <div className="cd-summary-row cd-summary-total"><span>Total</span><span>Rs. {Number(order.grandTotal || order.totalAmount || 0).toLocaleString()}</span></div>
+                 
+                 <div className={`cd-payment-info ${order.paymentReference ? 'paid' : 'pending'}`}>
+                    {order.paymentMethod === 'ESEWA' ? (
+                      order.paymentReference ? <><Check size={16}/> Paid via eSewa</> : (status === 'CANCELED' ? '❌ Cancelled' : '⏳ Pending eSewa Payment')
+                    ) : order.paymentMethod === 'KHALTI' ? (
+                      order.paymentReference ? <><Check size={16}/> Paid via Khalti</> : (status === 'CANCELED' ? '❌ Cancelled' : '⏳ Pending Khalti Payment')
+                    ) : (
+                      <><Package size={16}/> Cash on Delivery</>
+                    )}
+                 </div>
                  
                  {showActions && canCancel && (
-                    <button onClick={(e) => { e.stopPropagation(); onCancel(order.orderId || order.id); }} style={{ width: '100%', marginTop: '12px', background: '#fff', border: '1px solid #ef4444', color: '#ef4444', padding: '6px', fontSize: '0.65rem', fontWeight: '800', borderRadius: '4px', cursor: 'pointer' }}>CANCEL</button>
+                    <button className="ua-primary-btn" onClick={(e) => { e.stopPropagation(); onCancel(order.orderId || order.id); }} style={{ background: '#fff', border: '2px solid #ef4444', color: '#ef4444', padding: '12px', fontSize: '0.8rem', marginTop: '20px' }}>CANCEL ORDER</button>
+                 )}
+                 {showActions && !canCancel && (
+                    <button className="ua-primary-btn" onClick={(e) => { e.stopPropagation(); setShowReport(true); }} style={{ background: '#fff', border: '1px solid #94A3B8', color: '#64748B', padding: '12px', fontSize: '0.8rem', marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                       <Flag size={14} /> REPORT ISSUE
+                    </button>
                  )}
               </div>
            </div>
         </div>
+      )}
+
+      {showReport && order.items?.[0] && (
+         <ReportModal
+           isOpen={showReport}
+           onClose={() => setShowReport(false)}
+           type="PRODUCT"
+           reportedEntityId={order.items[0].productId}
+           entityName={title}
+         />
       )}
     </div>
   );
@@ -505,63 +843,85 @@ const AddressesTab = ({ userId, addresses, setAddresses, setConfirmConfig }) => 
 
     return (
         <div className="fade-in">
-             <div className="cd-header" style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
-                <div>
-                    <h1 className="cd-welcome">Addresses</h1>
-                    <p className="cd-date">Manage your delivery spots</p>
+            <div className="cd-header" style={{ borderBottom: 'none', marginBottom: '10px' }}>
+              <div>
+                <h2 className="cd-welcome">Address Book</h2>
+                <p className="cd-date">Manage your delivery locations</p>
+              </div>
+              <button className="cd-wt-btn-solid" onClick={openAdd} style={{ padding: '10px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Plus size={18} />
+                Add Address
+              </button>
+            </div>
+
+            <div className="cd-address-grid">
+               {addresses.map(addr => (
+                  <div key={addr.id} className={`cd-address-card ${addr.isDefault ? 'default' : ''}`}>
+                    <div className="cd-address-label">
+                       <MapPin size={14} />
+                       {addr.label} {addr.isDefault && "(Default)"}
+                    </div>
+                    <div className="cd-address-content">
+                       <h4>{addr.receiverName || "Delivery Location"}</h4>
+                       <p>{addr.street}, {addr.city}</p>
+                       <p>{addr.state} {addr.zipCode}</p>
+                       <p className="cd-address-phone">{addr.receiverPhone}</p>
+                    </div>
+                    <div className="cd-address-actions">
+                       <button className="cd-address-edit-btn cd-wt-btn-outline" onClick={() => openEdit(addr)}>Edit Address</button>
+                       <button className="cd-address-delete-btn cd-wt-btn-outline" onClick={() => handleDelete(addr.id)}><Trash2 size={16} /></button>
+                    </div>
+                  </div>
+               ))}
+               {addresses.length === 0 && <div className="cd-empty-mini">No addresses saved.</div>}
+            </div>
+
+            {showModal && (
+                <div className="cd-modal-overlay" style={{ zIndex: 2000 }}>
+                    <div className="cd-modal-card">
+                        <div className="cd-modal-header">
+                           <h3>{isEditing ? 'Edit Address' : 'New Physical Address'}</h3>
+                           <button onClick={() => setShowModal(false)}>✕</button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="cd-modal-form" style={{ padding: '24px', display: 'grid', gap: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                              <div className="ua-form-group">
+                                  <label className="ua-label">Address Label</label>
+                                  <input className="ua-input" value={formData.label || ''} onChange={e => setFormData({...formData, label: e.target.value})} placeholder="e.g. Home" required />
+                              </div>
+                              <div className="ua-form-group">
+                                  <label className="ua-label">Recipient Name</label>
+                                  <input className="ua-input" value={formData.receiverName || ''} onChange={e => setFormData({...formData, receiverName: e.target.value})} placeholder="Full Name" required />
+                              </div>
+                            </div>
+
+                            <div className="ua-form-group">
+                                <label className="ua-label">Phone Number</label>
+                                <input className="ua-input" value={formData.receiverPhone || ''} onChange={e => setFormData({...formData, receiverPhone: e.target.value})} placeholder="98XXXXXXXX" required />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div className="ua-form-group"><label className="ua-label">City</label><input className="ua-input" value={formData.city || ''} onChange={e => setFormData({...formData, city: e.target.value})} required /></div>
+                                <div className="ua-form-group"><label className="ua-label">State</label><input className="ua-input" value={formData.state || ''} onChange={e => setFormData({...formData, state: e.target.value})} required /></div>
+                            </div>
+                            
+                            <div className="ua-form-group">
+                                <label className="ua-label">Street Address</label>
+                                <input className="ua-input" value={formData.street || ''} onChange={e => setFormData({...formData, street: e.target.value})} placeholder="Tole, House No." required />
+                            </div>
+
+                            <div className="cd-checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                <input type="checkbox" checked={formData.isDefault || false} onChange={e => setFormData({...formData, isDefault: e.target.checked})} id="isDefault" />
+                                <label htmlFor="isDefault" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Set as primary shipping address</label>
+                            </div>
+
+                            <button type="submit" className="ua-primary-btn" style={{ marginTop: '10px' }}>
+                                {isEditing ? 'UPDATE ADDRESS' : 'SAVE ADDRESS'}
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <button className="cd-buy-again-btn" onClick={openAdd}>
-                    <Plus size={12}/> New Address
-                </button>
-             </div>
-             
-             <div className="cd-address-grid">
-                 {addresses.map(addr => (
-                     <div key={addr.id} className={`cd-address-card ${addr.isDefault ? 'default' : ''}`}>
-                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                             <div className="cd-address-label"><MapPin size={12} /> {addr.label}</div>
-                             {addr.isDefault && <span className="cd-badge-pro">DEFAULT</span>}
-                         </div>
-                         <div className="cd-address-content">
-                             <p style={{ fontWeight: 800, fontSize: '0.85rem' }}>{addr.receiverName}</p>
-                             <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{addr.street}, {addr.city}</p>
-                             <p style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '4px' }}>{addr.receiverPhone}</p>
-                         </div>
-                         <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                             <button className="cd-buy-again-btn" onClick={() => openEdit(addr)} style={{ flex: 1 }}>Edit</button>
-                             <button className="cd-buy-again-btn" onClick={() => handleDelete(addr.id)} style={{ color: '#ef4444', borderColor: '#ef4444' }}><Trash2 size={12}/></button>
-                         </div>
-                     </div>
-                 ))}
-             </div>
-             
-             {showModal && (
-                 <div style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding: '16px'}}>
-                     <div style={{background:'#fff', borderRadius:'12px', width:'100%', maxWidth:'400px', overflow:'hidden'}}>
-                         <div style={{padding:'16px', borderBottom:'1px solid #eee', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                            <h3 style={{margin:0, fontSize:'0.9rem', fontWeight:'900', textTransform: 'uppercase'}}>{isEditing ? 'Edit Address' : 'New Address'}</h3>
-                            <Plus size={20} style={{ transform: 'rotate(45deg)', cursor: 'pointer' }} onClick={() => setShowModal(false)} />
-                         </div>
-                         <form onSubmit={handleSubmit} style={{display:'grid', gap:'12px', padding:'16px'}}>
-                             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
-                                 <input placeholder="Label" value={formData.label || ''} onChange={e => setFormData({...formData, label: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
-                                 <input placeholder="Name" value={formData.receiverName || ''} onChange={e => setFormData({...formData, receiverName: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
-                             </div>
-                             <input placeholder="Phone" value={formData.receiverPhone || ''} onChange={e => setFormData({...formData, receiverPhone: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
-                             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px'}}>
-                                 <input placeholder="City" value={formData.city || ''} onChange={e => setFormData({...formData, city: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
-                                 <input placeholder="State" value={formData.state || ''} onChange={e => setFormData({...formData, state: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
-                             </div>
-                             <input placeholder="Street Address" value={formData.street || ''} onChange={e => setFormData({...formData, street: e.target.value})} required style={{padding:'10px', border:'1px solid #ddd', borderRadius:'8px', fontSize: '0.8rem'}} />
-                             <label style={{display:'flex', alignItems:'center', gap:'8px', cursor:'pointer', fontSize: '0.75rem', fontWeight: 700}}>
-                                 <input type="checkbox" checked={formData.isDefault || false} onChange={e => setFormData({...formData, isDefault: e.target.checked})} />
-                                 Set as default
-                             </label>
-                             <button type="submit" className="continue-btn" style={{ height: '40px', fontSize: '0.75rem' }}>{isEditing ? 'Save' : 'Add'}</button>
-                         </form>
-                     </div>
-                 </div>
-             )}
+            )}
         </div>
     );
 };

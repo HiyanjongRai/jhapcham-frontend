@@ -119,7 +119,14 @@ function OrderSuccess() {
                     )}
                     <div className="os-row"><span>Logistics</span><span>{shippingFee === 0 ? "Free" : `Rs. ${shippingFee.toLocaleString()}`}</span></div>
                     <div className="os-row total"><span>Total</span><span>Rs. {grandTotal.toLocaleString()}</span></div>
-                    <p className="os-payment-note">Charged via {paymentMethod}</p>
+                    <p className="os-payment-note">
+                      Charged via {
+                        paymentMethod === 'ESEWA' ? 'eSewa (Online)' : 
+                        paymentMethod === 'KHALTI' ? 'Khalti (Online)' : 
+                        paymentMethod === 'COD' ? 'Cash on Delivery' : 
+                        paymentMethod
+                      }
+                    </p>
                 </div>
 
                 <Link to="/" className="os-btn primary">Continue Exploring</Link>

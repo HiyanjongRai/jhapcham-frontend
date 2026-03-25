@@ -9,62 +9,67 @@ import {
   Calendar,
   Settings,
   Flag,
-  Share2,
   MessageCircle,
   HelpCircle,
   LogOut,
   Store,
-  Tag
+  Tag,
+  ChevronRight,
+  ExternalLink,
+  Eye,
+  FileText
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { API_BASE } from "../config/config";
 import ConfirmModal from "../Common/ConfirmModal";
+import "./seller.css";
+import { getCurrentUserId } from "../../utils/authUtils";
 
 export default function SellerSidebar({ storeInfo }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  const sellerId = getCurrentUserId();
+
   const menuGroups = [
     {
-      title: "Main",
+      title: "Navigation",
       items: [
-        { icon: <LayoutDashboard size={14} />, label: "Overview", path: "/seller/dashboard" },
-        { icon: <PlusCircle size={14} />, label: "Add Products", path: "/seller/add-product" },
-        { icon: <Package size={14} />, label: "Products", path: "/seller/products" },
+        { icon: <LayoutDashboard size={16} />, label: "Dashboard", path: "/seller/dashboard" },
+        { icon: <PlusCircle size={16} />, label: "Add Product", path: "/seller/add-product" },
+        { icon: <Package size={16} />, label: "My Inventory", path: "/seller/products" },
+        { icon: <Eye size={16} />, label: "View Shop", path: `/seller/${sellerId}` },
       ]
     },
     {
-      title: "Sales & CRM",
+      title: "Sales & Logistics",
       items: [
-        { icon: <ShoppingBag size={14} />, label: "Orders", path: "/seller/orders" },
-        { icon: <Truck size={14} />, label: "Shipment", path: "/seller/shipment" },
-        { icon: <Users size={14} />, label: "Customers", path: "/seller/customers" },
-        { icon: <Calendar size={14} />, label: "Campaigns", path: "/seller/dashboard", tab: "campaigns" },
+        { icon: <FileText size={16} />, label: "Order Manager", path: "/seller/orders" },
+        { icon: <Truck size={16} />, label: "Shipments", path: "/seller/shipment" },
+        { icon: <Calendar size={16} />, label: "Campaigns", path: "/seller/dashboard", tab: "campaigns" },
       ]
     },
     {
-      title: "Management",
+      title: "Store Management",
       items: [
-        { icon: <Settings size={14} />, label: "Store Setting", path: "/seller/dashboard", tab: "settings" },
-        { icon: <Tag size={14} />, label: "Promo Codes", path: "/seller/promos" }, // New Item
-        { icon: <Users size={14} />, label: "Account Setting", path: "/seller/dashboard", tab: "account" },
-        { icon: <Flag size={14} />, label: "Reports", path: "/seller/dashboard", tab: "reports" },
+        { icon: <Store size={16} />, label: "Store Profile", path: "/seller/dashboard", tab: "settings" },
+        { icon: <Tag size={16} />, label: "Coupons/Promo", path: "/seller/promos" },
+        { icon: <Flag size={16} />, label: "Reports", path: "/seller/dashboard", tab: "reports" },
+        { icon: <Users size={16} />, label: "Account Info", path: "/seller/dashboard", tab: "account" },
       ]
     },
     {
-      title: "Others",
+      title: "Support",
       items: [
-        { icon: <Share2 size={14} />, label: "Platform Partner", path: "/seller/partners" },
-        { icon: <MessageCircle size={14} />, label: "Feedback", path: "/seller/feedback" },
-        { icon: <HelpCircle size={14} />, label: "Help & Support", path: "/seller/help" },
+        { icon: <MessageCircle size={16} />, label: "Messages", path: "/messages" },
+        { icon: <HelpCircle size={16} />, label: "Support Center", path: "/seller/help" },
       ]
     }
   ];
 
   const handleMenuClick = (item) => {
     if (item.tab) {
-      // If it's a tab inside the main dashboard
        navigate(item.path, { state: { activeTab: item.tab } });
     } else {
       navigate(item.path);
@@ -77,39 +82,29 @@ export default function SellerSidebar({ storeInfo }) {
   };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <div className="sidebar-brand-img">
-          {storeInfo && (storeInfo.logoImagePath || storeInfo.profileImagePath) ? (
-            <img 
-              src={`${API_BASE}/${storeInfo.logoImagePath || storeInfo.profileImagePath}`} 
-              alt="Store Logo"
-            />
-          ) : (
-            <Store size={14} color="#000" />
-          )}
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <span className="sidebar-brand-name">{storeInfo?.storeName || "Seller Panel"}</span>
-          <span className="sidebar-brand-sub">Official Store</span>
-        </div>
+    <aside className="cd-sidebar">
+      <div className="cd-sidebar-header">
+         <div className="cd-sidebar-logo" onClick={() => navigate('/')}>Jhapcham</div>
+         {storeInfo?.storeName && (
+           <div className="gt-note" style={{ color: 'var(--porto-text-muted)', fontSize: '0.75rem', marginTop: '4px' }}>
+             {storeInfo.storeName}
+           </div>
+         )}
       </div>
 
-      <div className="sidebar-divider"></div>
-
-      <nav className="sidebar-menu" style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+      <nav className="cd-nav">
         {menuGroups.map((group) => (
-          <div key={group.title} className="menu-group">
-            <h4 className="menu-group-title">{group.title}</h4>
+          <div key={group.title} className="cd-nav-group">
+            <div className="cd-nav-label">{group.title}</div>
             {group.items.map((item) => {
               const isActive = item.tab 
-                ? location.pathname === item.path && (location.state?.activeTab === item.tab)
+                ? location.state?.activeTab === item.tab
                 : location.pathname === item.path && (!location.state?.activeTab || location.state.activeTab === 'overview');
               
               return (
                 <button
                   key={item.label}
-                  className={"sidebar-menu-item" + (isActive ? " active" : "")}
+                  className={`cd-nav-item ${isActive ? 'active' : ''}`}
                   onClick={() => handleMenuClick(item)}
                 >
                   {item.icon}
@@ -121,13 +116,11 @@ export default function SellerSidebar({ storeInfo }) {
         ))}
       </nav>
 
-      <div className="sidebar-divider"></div>
-      
-      <div className="sidebar-footer" style={{ padding: '0 4px' }}>
-           <button className="sidebar-menu-item logout-btn" onClick={() => setShowLogoutModal(true)}>
-              <LogOut size={14} />
-              <span>Sign Out</span>
-           </button>
+      <div className="cd-sidebar-footer">
+        <button className="cd-nav-item cd-logout-item" onClick={() => setShowLogoutModal(true)}>
+          <LogOut size={18} />
+          <span>Sign Out</span>
+        </button>
       </div>
 
       {showLogoutModal && (

@@ -1,1077 +1,714 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+/* ── Geist Font (Vercel / Google Fonts 2024) with system-ui fallback ── */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
 
-/* =============================================
-   MINAGO-STYLE E-COMMERCE HOME PAGE - PREMIUM B&W EDITION
-   ============================================= */
+/* ── Geist Typography Scale ──────────────────────────────────────────────
+   Seven canonical styles straight from the design brief.
+   Use these classes wherever the matching role applies.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* 1. Main heading  — 48px / 57.6px */
+.gt-h1 {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 48px;
+  line-height: 57.6px;
+  font-weight: 400;
+  color: #1f2937;
+}
+
+/* 2. Section heading — 32px / 48px */
+.gt-h2 {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 32px;
+  line-height: 48px;
+  font-weight: 400;
+  color: #1f2937;
+}
+
+/* 3. Subheading — 20px / 30px */
+.gt-h3 {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 30px;
+  font-weight: 400;
+  color: #1f2937;
+}
+
+/* 4. Body text — 17px / 20.995px */
+.gt-body {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 20.995px;
+  font-weight: 400;
+  color: #1f2937;
+}
+
+/* 5. Small body — 16px / 16px */
+.gt-small {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 16px;
+  font-weight: 400;
+  color: #1f2937;
+}
+
+/* 6. Caption — 14px / 22.4px */
+.gt-caption {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 22.4px;
+  font-weight: 400;
+  color: #1f2937;
+}
+
+/* 7. Note / secondary — 14px / 21px */
+.gt-note {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 400;
+  color: #1f2937;
+}
 
 :root {
-  --home-bg: #f9fafb;
-  --home-card-bg: #ffffff;
-  --home-text-main: #111827;
-  --home-text-muted: #6b7280;
-  --home-accent: #000000;
-  --home-border: #e5e7eb;
-  --home-radius: 16px;
-  --home-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --home-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  /* Customer UI Palette Applied to Home */
+  --porto-blue: #2E7DFF; /* Primary Brand / CTA */
+  --porto-primary: #FF6F3C; /* Secondary Accent / Promotions */
+  --porto-blue-dark: #1A5FCC; /* Hover States */
+  --porto-blue-light: #e6f3f9;
+  
+  --porto-dark: #212529; /* Product price / dark elements */
+  --porto-text: #777777; /* Secondary Text */
+  --porto-text-main: #333333; /* Primary Text */
+  --porto-text-muted: #AAAAAA; /* Muted Text */
+  
+  --porto-border: #E0E0E0; /* Borders / Dividers */
+  --porto-bg: #FFFFFF; /* Page Background */
+  --porto-bg-card: #F5F5F5; /* Section Background */
+  --porto-nav-bg: #F8F9FA; /* Navigation */
+  --porto-sidebar-bg: #F1F3F5; /* Sidebar Background */
+  
+  --porto-success: #28A745;
+  --porto-error: #FF4C4C;
+  --porto-info: #17A2B8;
+  
+  --porto-badge-bg: #FFF3CD;
+  --porto-badge-text: #856404;
+  --porto-btn-sec: #6C757D;
+  --porto-cart-accent: #FFB800;
+  
+  /* ── Geist is the single font family for all roles ── */
+  --home-font-head: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --home-font-body: 'Geist', ui-sans-serif, system-ui, sans-serif;
 }
 
 .home-wrapper-v2 {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--home-bg);
+  font-family: var(--home-font-body);
+  background: var(--porto-bg);
   min-height: 100vh;
-  color: var(--home-text-main);
+  color: var(--porto-text-main);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* =============================================
-   MAIN CONTENT WRAPPER - SIDEBAR + CONTENT
-   ============================================= */
-
-.main-content-wrapper {
-  width: 100%;
+/* ============================================================
+   HERO WRAPPER — Sidebar + Hero side by side
+   ============================================================ */
+.home-main-layout {
+  display: flex;
   max-width: 100%;
-  margin: 0;
-  padding: 20px 24px 0 24px;
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 20px;
-  align-items: start;
+  margin: 0 auto;
+  align-items: flex-start;
+  position: relative;
 }
 
-.full-width-content-wrapper {
-  width: 100%;
-  max-width: 100%;
-  padding: 24px;
+.home-scrollable-content {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
 }
 
-/* =============================================
-   LEFT SIDEBAR - CATEGORIES
-   ============================================= */
-
-.categories-sidebar {
-  background: var(--home-card-bg);
-  border-radius: var(--home-radius);
-  overflow: hidden;
-  box-shadow: var(--home-shadow-sm);
-  position: sticky;
-  top: 80px;
-  border: 1px solid var(--home-border);
-}
-
-.browse-categories-btn {
-  width: 100%;
-  padding: 12px 16px;
-  background: #000;
-  color: white;
-  border: none;
-  font-size: 0.85rem;
-  font-weight: 700;
+.porto-cat-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid #e1e1e1;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
+  flex-direction: column;
+  z-index: 100;
+  height: fit-content;
+  min-height: 440px;
+}
+
+/* ============================================================
+   CATEGORY SIDEBAR
+   ============================================================ */
+/* Sidebar Internal Styles */
+.porto-cat-title {
+  width: 100%;
+  background: #f4f4f4;
+  color: #222;
+  border-bottom: 2px solid #eee;
+  padding: 18px 20px;
+  font-family: var(--home-font-body);
+  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.browse-categories-btn:hover {
-  background: #1f2937;
+.porto-cat-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 0;
 }
 
-.sidebar-nav {
-  padding: 0;
-}
-
-.sidebar-category-item {
+.porto-cat-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 12px 20px;
   text-decoration: none;
-  color: #334155;
+  color: #555;
   font-size: 0.85rem;
-  font-weight: 500;
-  border-bottom: 1px solid #f3f4f6;
-  transition: all 0.2s;
-  background: white;
-}
-
-.sidebar-category-item:last-child {
-  border-bottom: none;
-}
-
-.sidebar-category-item:hover {
-  background: #f9fafb;
-  color: #000;
-  padding-left: 28px;
   font-weight: 600;
+  border-bottom: 1px solid #eaeaea;
+  transition: padding-left 0.2s;
 }
 
-.sidebar-section-header {
-  padding: 12px 16px 8px;
+.porto-cat-item:hover {
+  background: #fdfdfd;
+  color: #222;
+  padding-left: 22px;
+}
+
+.porto-cat-item-left {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #94a3b8;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 1px solid #f3f4f6;
-  background: #fff;
+  gap: 15px;
 }
 
-.sidebar-loading-text {
+.porto-cat-item svg { color: #222; opacity: 0.7; }
+
+.porto-cat-view-all {
+  color: var(--porto-blue);
+  background: #fdfdfd;
+}
+
+.porto-cat-skeleton {
+  height: 38px;
+  margin: 2px 10px;
+  background: #f4f4f4;
+  border-radius: 2px;
+}
+
+.porto-cat-sale-banner {
+  background: #232529;
+  color: #fff;
   padding: 20px;
-  text-align: center;
-  color: #9ca3af;
-  font-size: 0.85rem;
-  font-style: italic;
-}
-
-.sidebar-category-item svg {
-  opacity: 0.4;
-  transition: opacity 0.2s;
-  color: #000;
-}
-
-.sidebar-category-item:hover svg {
-  opacity: 1;
-}
-
-.view-all-categories {
-  color: #000;
-  font-weight: 700;
-  border-bottom: none;
-  background: #f9fafb;
-}
-
-/* Sidebar Features */
-.sidebar-features {
-  padding: 16px;
-  background: white;
-  border-top: 1px solid var(--home-border);
-}
-
-.feature-item {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-}
-
-.feature-item:not(:last-child) {
-  border-bottom: 1px dashed #e2e8f0;
-}
-
-.feature-icon {
-  width: 36px;
-  height: 36px;
-  background: #f4f4f5;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  color: #000;
-  flex-shrink: 0;
-  border: 1px solid #e5e7eb;
+  align-items: center;
+  gap: 10px;
+  margin: auto 15px 15px;
+  cursor: pointer;
+  text-align: center;
 }
 
-.feature-text h4 {
-  margin: 0 0 3px 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #000;
+.sale-text {
+  font-family: var(--home-font-head);
+  font-size: 1.1rem;
+  font-weight: 850;
   text-transform: uppercase;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.sub-text {
+  font-size: 0.7rem;
+  color: #999;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.sale-buy-btn {
+  background: #ffcc00;
+  color: #222;
+  border: none;
+  padding: 10px;
+  font-weight: 800;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+
+
+/* ============================================================
+   HERO BANNER
+   ============================================================ */
+.porto-hero {
+  background: #5db0ea;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  margin-left: 20px;
+  margin-bottom: 20px;
+}
+
+.porto-hero-inner {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  height: 440px;
+  overflow: hidden;
+}
+
+.porto-hero-text {
+  flex: 0.8;
+  padding: 60px 40px 60px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+}
+
+.porto-hero-eyebrow {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: -5px;
   letter-spacing: 0.5px;
 }
 
-.feature-text p {
-  margin: 0;
-  font-size: 0.7rem;
-  color: #64748b;
-  font-weight: 500;
+.porto-hero-title {
+    font-family: var(--home-font-head);
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+    animation: textFadeIn 0.6s ease-out;
 }
 
-/* =============================================
-   RIGHT CONTENT AREA
-   ============================================= */
+.porto-hero-title-line {
+    font-family: 'Dancing Script', cursive;
+    font-size: 5rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: -15px;
+}
 
-.main-content-area {
+.porto-hero-title-large {
+    font-size: 5.5rem;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+}
+
+.porto-hero-price-display {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* =============================================
-   HERO BANNER SECTION
-   ============================================= */
-
-.hero-banner-section {
-  background: #000;
-  border-radius: 20px;
-  overflow: hidden;
-  position: relative;
-  min-height: 320px;
-  color: white;
-  margin-bottom: 16px;
-}
-
-.hero-banner-content {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
   align-items: center;
-  padding: 32px 40px;
-  gap: 24px;
+  gap: 12px;
+  margin: 15px 0 0;
+}
+
+.starting-at {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 0.5px;
+  margin-top: 10px;
+}
+
+.price-tag-row {
+  display: inline-flex;
+  background: #fff;
+  padding: 4px 10px 6px;
+  align-items: flex-start;
+  transform: rotate(-3deg);
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+}
+
+.price-red {
+  color: #ef4444;
+  font-size: 2.2rem;
+  font-weight: 900;
+  font-family: var(--home-font-head);
+  display: flex;
+  line-height: 1;
+}
+
+.price-currency { font-size: 1rem; margin-top: 5px; margin-right: 2px; }
+.price-cents { font-size: 1rem; margin-top: 5px; }
+
+.porto-hero-actions {
+  display: flex;
+  margin-top: 12px;
+  margin-left: 10px;
+}
+
+.porto-shop-btn-primary {
+  background: #222;
+  color: #fff;
+  border: none;
+  padding: 16px 20px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s;
+}
+
+.porto-shop-btn-primary:hover {
+  background: #444;
+}
+
+.porto-collection-btn {
+  background: #fff;
+  color: #222;
+  border: 1px solid #222;
+  padding: 15px 35px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.porto-collection-btn:hover {
+  background: #222;
+  color: #fff;
+}
+
+.porto-hero-price-row {
+  margin-top: 25px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.porto-starting-at {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #999;
+}
+
+.porto-price-chip {
+  background: #cc2200;
+  color: #fff;
+  padding: 8px 15px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-family: var(--home-font-head);
+  border-radius: 3px;
+}
+
+.porto-shop-btn {
+  background: var(--porto-dark);
+  color: #fff;
+  border: none;
+  padding: 14px 35px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 2px;
+}
+
+.porto-shop-btn:hover {
+  background: var(--porto-blue);
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 136, 204, 0.3);
+}
+
+.porto-hero-img-area {
+  flex: 1.4;
+  height: 100%; /* Fill the 520px box */
   position: relative;
+  display: flex;
+  overflow: hidden;
+  background: #1a202c; /* Specialized dark background for full-bleed look */
   z-index: 1;
 }
 
-.hero-text-area {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.hero-discount-badge {
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: #fff;
-  margin: 0;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  background: rgba(255,255,255,0.1);
-  padding: 6px 14px;
-  width: fit-content;
-  border-radius: 100px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
-}
-
-.hero-main-title {
-  font-size: 3rem;
-  font-weight: 900;
-  color: white;
-  line-height: 0.95;
-  letter-spacing: -2px;
-  margin: 0;
-  text-transform: uppercase;
-}
-
-.hero-cta-button {
-  padding: 12px 32px;
-  background: white;
-  color: black;
-  border: none;
-  border-radius: 100px;
-  font-size: 0.85rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  width: fit-content;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.hero-cta-button:hover {
-  background: #2563eb;
-  color: white;
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(37, 99, 235, 0.3);
-}
-
-.hero-image-area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.hero-model-image {
-  width: 100%;
-  max-width: 350px;
-  height: auto;
-  object-fit: contain;
-  /* Removed grayscale and animation as per user request */
-}
-
-@keyframes floatImage {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
-}
-
-/* =============================================
-   ENHANCED PROMOTIONAL CARDS - REDESIGN (HORIZONTAL)
-   ============================================= */
-
-/* =============================================
-   ENHANCED PROMOTIONAL CARDS - REDESIGN (HORIZONTAL)
-   ============================================= */
-
-/* =============================================
-   ENHANCED PROMOTIONAL CARDS - REDESIGN (VERTICAL LIST / TRENDY BANNERS)
-   ============================================= */
-
-/* =============================================
-   ENHANCED PROMOTIONAL CARDS - REDESIGN (GRID BANNERS)
-   ============================================= */
-
-/* =============================================
-   ENHANCED PROMOTIONAL CARDS - HORIZONTAL SLIDER
-   ============================================= */
-
-.promo-cards-grid {
-  display: flex;
-  overflow-x: auto;
-  gap: 1.5rem;
-  padding: 8px 4px 24px 4px; /* Space for shadow/scroll */
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  margin-top: 20px;
-  
-  /* Hide scrollbar for cleaner look, but imply scroll */
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
-}
-
-.promo-cards-grid::-webkit-scrollbar {
-  height: 6px;
-}
-.promo-cards-grid::-webkit-scrollbar-track {
-  background: transparent;
-}
-.promo-cards-grid::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
-  border-radius: 20px;
-}
-
-.promo-card {
-  min-width: 280px; /* Fixed width for slider items */
-  flex: 0 0 280px;
-  background: #ffffff;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  overflow: hidden;
-  height: 120px; /* More compact 'Ticket' height */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f1f5f9;
-  position: relative;
-  cursor: pointer;
-  scroll-snap-align: start;
-}
-
-.promo-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
-  border-color: #e2e8f0;
-}
-
-/* Left Content Side */
-.promo-content {
-  flex: 1.1; /* Give text slightly more space */
-  padding: 1rem;
+.img-glow-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 100%);
   z-index: 2;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  min-width: 0; /* Prevent text overflow issues */
+  pointer-events: none;
 }
 
-.promo-type-label {
-    font-size: 0.6rem;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 4px;
-    display: block;
+.porto-hero-img-hero {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Prevents clipping 'removing parts' */
+  z-index: 1;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.promo-title {
+.porto-hero-dots {
+    position: absolute;
+    bottom: 25px;
+    left: 60px; /* Align with text padding */
+    display: flex;
+    gap: 8px;
+    z-index: 20;
+}
+
+.hero-dot {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: transparent;
+    opacity: 1;
+    border: 2px solid #fff;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.hero-dot:hover {
+    transform: scale(1.1);
+}
+
+.hero-dot.active {
+    border-color: #222;
+}
+
+.hero-dot.active::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #222;
+}
+
+@keyframes floatCircle {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(20px, -20px) scale(1.1); }
+}
+
+.porto-hero-badge {
+  display: inline-block;
+  background: #cc2200;
+  color: #fff;
   font-size: 1rem;
   font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 4px 0;
-  font-family: 'Outfit', sans-serif;
-  line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
+  padding: 6px 15px;
+  border-radius: 4px;
+  margin-top: 15px;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(204, 34, 0, 0.3);
 }
 
-.promo-date {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    margin-bottom: 12px;
-    font-weight: 500;
+/* ============================================================
+   FEATURES BAR
+   ============================================================ */
+.porto-features-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #fff;
+  margin: 0 0 30px 20px;
+  border: 1px solid #eee;
 }
 
-.promo-btn {
-  display: inline-flex;
+.porto-feature-item {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0.4rem 0.8rem;
-  background: #0f172a;
-  color: white;
+  justify-content: center;
+  gap: 20px;
+  padding: 25px 30px;
+  border-right: 1px solid #eee;
+}
+
+.porto-feature-item:last-child { border-right: none; }
+
+.porto-feature-icon { 
+  color: #222; 
+  display: flex;
+}
+
+.porto-feature-text strong {
+  font-family: var(--home-font-head);
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--porto-dark);
+}
+
+.porto-feature-text span {
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 2px;
+}
+
+.porto-promo-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  padding: 0 40px 40px;
+}
+
+.porto-promo-card {
+  position: relative;
+  height: 220px;
+  background: #eee;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.porto-promo-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.porto-promo-card:hover .porto-promo-img {
+  transform: scale(1.1);
+}
+
+
+.porto-promo-text {
+  position: absolute;
+  top: 50%;
+  left: 30px;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.porto-promo-dark .porto-promo-text {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.porto-promo-featured .porto-promo-text {
+  background: rgba(0, 136, 204, 0.2);
+}
+
+.porto-promo-title {
+  font-family: var(--home-font-head);
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.porto-promo-sub {
+  font-size: 0.8rem;
+  color: #777;
+  margin: 5px 0 15px;
+}
+
+.porto-promo-btn {
+  background: var(--porto-dark);
+  color: #fff;
   border: none;
-  border-radius: 100px;
+  padding: 7px 15px;
   font-size: 0.65rem;
   font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  width: fit-content;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.promo-btn:hover {
-  background: #334155;
-  padding-right: 1.2rem;
-}
-
-/* Right Image Side Wrapper */
-.promo-image-wrapper {
-  width: 40%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-  background: #f8fafc; /* Slight bg distinction */
-}
-
-.promo-image-wrapper img {
+.porto-promo-img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* contain usually safer for logos/products banners to not cut off */
-  padding: 10px;
-  transition: transform 0.5s ease;
-  mix-blend-mode: multiply; /* Blends white bg images into the grey wrapper */
+  object-fit: cover;
+  transition: transform 0.6s ease;
 }
 
-.promo-card:hover .promo-image-wrapper img {
-  transform: scale(1.1) rotate(2deg);
+.porto-promo-featured { background: var(--porto-blue); color: #fff; }
+.porto-promo-featured .porto-promo-sub { color: #fff; opacity: 0.8; }
+.porto-promo-featured .porto-promo-btn { background: #fff; color: var(--porto-blue); }
+
+.porto-promo-dark { background: var(--porto-dark); color: #fff; }
+.porto-promo-dark .porto-promo-sub { color: #aaa; }
+.porto-promo-dark .porto-promo-btn { background: var(--porto-blue); }
+
+/* ============================================================
+   PRODUCT CONTENT
+   ============================================================ */
+.porto-content-wrapper {
+  padding: 0 2% 40px;
 }
 
-/* =============================================
-   FEATURED ITEMS SECTION
-   ============================================= */
-
-.featured-items-section {
-  background: white;
-  border-radius: var(--home-radius);
-  padding: 24px;
-  box-shadow: var(--home-shadow-sm);
-  border: 1px solid var(--home-border);
+.porto-section {
+  margin-bottom: 50px;
 }
 
-.section-header-with-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #f3f4f6;
-  padding-bottom: 12px;
-}
-
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: #000;
-  margin: 0;
-  letter-spacing: -0.5px;
-  text-transform: uppercase;
-}
-
-.section-nav-arrows {
-  display: flex;
-  gap: 12px;
-}
-
-.nav-arrow-btn {
-  width: 36px;
-  height: 36px;
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
+.porto-section-title-centered {
+  text-align: center;
+  font-family: var(--home-font-head);
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 25px 0 20px;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  color: #000;
-}
-
-.nav-arrow-btn:hover {
-  background: #000;
-  border-color: #000;
-  color: white;
-}
-
-.featured-products-grid-v2 {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
-}
-
-.featured-product-wrapper {
-  width: 100%;
-}
-
-/* =============================================
-   PRODUCT SKELETON LOADER - Minimal
-   ============================================= */
-
-.product-skeleton {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  border: 1px solid #f3f4f6;
-}
-
-.skeleton-image {
-  width: 100%;
-  height: 220px;
-  background: #f4f4f5;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.skeleton-text {
-  height: 16px;
-  background: #f4f4f5;
-  border-radius: 4px;
-  margin-bottom: 12px;
-}
-
-.skeleton-title { width: 80%; }
-.skeleton-price { width: 40%; }
-.skeleton-rating { width: 60%; }
-
-/* =============================================
-   EMPTY STATES
-   ============================================= */
-
-.no-products-message {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 60px 20px;
-  color: #9ca3af;
-}
-
-.no-products-message svg {
-  margin-bottom: 16px;
-  opacity: 0.5;
-  color: #000;
-}
-
-.no-products-message p {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0;
-  color: #000;
-}
-
-/* =============================================
-   RESPONSIVE DESIGN
-   ============================================= */
-
-@media (max-width: 1400px) {
-  .featured-products-grid-v2 { grid-template-columns: repeat(4, 1fr); gap: 16px; }
-}
-
-@media (max-width: 1200px) {
-  .main-content-wrapper {
-    grid-template-columns: 220px 1fr;
-    gap: 16px;
-  }
-  .promo-cards-grid { grid-template-columns: repeat(2, 1fr); }
-  .featured-products-grid-v2 { grid-template-columns: repeat(3, 1fr); }
-  .hero-main-title { font-size: 2.5rem; }
-}
-
-@media (max-width: 968px) {
-  .main-content-wrapper {
-    grid-template-columns: 1fr;
-    padding: 16px;
-  }
-  .categories-sidebar {
-    position: relative;
-    top: 0;
-  }
-  .sidebar-features {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  .feature-item {
-    padding: 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    border-bottom: 1px solid #e5e7eb !important;
-  }
-  .hero-banner-content {
-    grid-template-columns: 1fr;
-    padding: 24px 20px;
-    text-align: center;
-  }
-  .hero-text-area { align-items: center; }
-  .hero-cta-button { margin: 0 auto; }
-  .hero-main-title { font-size: 2rem; }
-  .featured-products-grid-v2 { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 640px) {
-  .main-content-wrapper { padding: 6px 8px; gap: 8px; }
-  .full-width-content-wrapper { padding: 6px; gap: 8px; }
-  .sidebar-features { display: none; }
-  
-  /* Compact & Elegant Categories */
-  .categories-sidebar { 
-    border-radius: 10px; 
-    border: 1px solid #edf2f7;
-    background: #fff;
-  }
-  .browse-categories-btn { 
-    padding: 6px 10px; 
-    font-size: 0.65rem; 
-    border-bottom: 1px solid #f7fafc;
-  }
-  .sidebar-nav { padding: 2px 0; }
-  .sidebar-category-item { 
-    padding: 5px 12px; 
-    font-size: 0.65rem; 
-    border-bottom: 1px solid #f8fafc; 
-  }
-  .sidebar-section-header { padding: 5px 12px 2px; font-size: 0.5rem; }
-  .sidebar-category-item svg { width: 12px; height: 12px; }
-  
-  /* Premium Hero Banner - Compact */
-  .hero-banner-section { 
-    min-height: 140px; 
-    margin-bottom: 0px; 
-    border-radius: 10px;
-    background: #000;
-  }
-  .hero-banner-content { 
-    padding: 15px; 
-    grid-template-columns: 1fr;
-    align-items: center;
-  }
-  .hero-text-area { 
-    max-width: 65%; 
-    gap: 4px;
-    z-index: 5;
-  }
-  .hero-main-title { 
-    font-size: 1.1rem; 
-    letter-spacing: -0.4px; 
-    line-height: 1;
-    margin: 4px 0 8px 0;
-  }
-  .hero-discount-badge { 
-    font-size: 0.45rem; 
-    padding: 2px 6px; 
-    border-radius: 4px;
-  }
-  .hero-cta-button { 
-    padding: 6px 14px; 
-    font-size: 0.6rem; 
-    border-radius: 6px;
-  }
-  .hero-image-area {
-    width: 110px;
-    right: -10px;
-    bottom: -10px;
-  }
-  .hero-model-image { 
-    filter: drop-shadow(-5px 0 10px rgba(0,0,0,0.4));
-  }
-
-  /* High-End Promo Cards (Small Cards) */
-  .promo-cards-grid { gap: 6px; padding-bottom: 6px; margin-top: 4px; }
-  .promo-card { 
-    flex: 0 0 180px; 
-    height: 90px; 
-    border-radius: 8px; 
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    flex-direction: column;
-    padding: 12px;
-    align-items: center;
-    background: #fff;
-  }
-  .promo-image-wrapper { display: none; } /* Hide image to keep it clean on small screens */
-  .promo-content { 
-    padding: 0; 
-    text-align: center; 
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  .promo-title { font-size: 0.75rem; font-weight: 700; color: #000; margin: 0; }
-  .promo-offer { font-size: 0.7rem; color: #4a5568; margin: 0; font-weight: 500; }
-  .promo-type-label { display: none; }
-  .promo-btn { 
-    padding: 4px 10px; 
-    font-size: 0.55rem; 
-    background: #000;
-    color: #fff;
-    border-radius: 100px;
-    margin-top: 4px;
-    font-weight: 700;
-    width: fit-content;
-  }
-
-  /* 2-Column Grid Optimization */
-  .featured-products-grid-v2 { 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 6px; 
-  }
-  .section-header-with-nav { margin-bottom: 8px; padding-bottom: 4px; }
-  .section-title { font-size: 0.9rem; }
-  .nav-arrow-btn { width: 24px; height: 24px; border-width: 1px; }
-  .nav-arrow-btn svg { width: 14px; height: 14px; }
-  
-  .featured-items-section, 
-  .campaign-products-section { 
-    padding: 10px; 
-    border-radius: 10px; 
-    border-color: #f7fafc;
-  }
-  
-  .campaign-section-title { font-size: 0.9rem; }
-}
-
-
-/* =============================================
-   BEST SELLERS SECTION - HORIZONTAL SCROLLER
-   ============================================= */
-
-.best-sellers-section {
-  background: white;
-  border-radius: var(--home-radius);
-  padding: 40px;
-  box-shadow: var(--home-shadow-sm);
-  border: 1px solid var(--home-border);
-  margin-bottom: 40px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.view-all-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #000;
-  font-weight: 700;
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.view-all-link:hover {
-  gap: 12px;
-  color: #3b82f6;
-}
-
-.best-sellers-scroller {
-  display: flex;
   gap: 20px;
-  overflow-x: auto;
-  padding: 10px 0 20px 0;
-  scrollbar-width: thin;
-  scrollbar-color: #000 #f1f1f1;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
 }
 
-.best-sellers-scroller::-webkit-scrollbar {
-  height: 6px;
+.porto-section-title-centered::before,
+.porto-section-title-centered::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #eee;
 }
 
-.best-sellers-scroller::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+.porto-product-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 5 columns for better density */
+  gap: 20px; /* Slightly tighter gap for 5 cols */
+  padding-bottom: 20px;
 }
 
-.best-sellers-scroller::-webkit-scrollbar-thumb {
-  background: #000;
-  border-radius: 10px;
+.porto-product-wrapper {
+  transition: transform 0.2s;
 }
 
-.best-seller-item {
-  min-width: 250px;
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
-}
-
-.best-seller-item:hover {
+.porto-product-wrapper:hover {
   transform: translateY(-5px);
 }
 
-/* Specific overrides for Best Seller cards to match image */
-.best-sellers-section .modern-pc-card {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-}
-
-.best-sellers-section .modern-pc-img-box {
-    border-bottom: none !important;
-    background: #fff !important;
-    padding: 0 !important;
-}
-
-.best-sellers-section .modern-pc-body {
-    padding: 12px 0 !important;
-    background: transparent !important;
-}
-
-.best-sellers-section .modern-pc-title {
-    font-size: 0.85rem !important;
-    font-weight: 500 !important;
-    min-height: auto !important;
-    margin-bottom: 4px !important;
-}
-
-.best-sellers-section .modern-pc-footer {
-    display: flex !important;
-    border-top: none !important;
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-
-.best-sellers-section .modern-pc-meta,
-.best-sellers-section .modern-pc-wishlist,
-.best-sellers-section .modern-pc-btn {
-    display: none !important; /* Extremely minimalist as per image */
-}
-
-.best-sellers-section .modern-pc-price .amount {
-    font-size: 1rem !important;
-    font-weight: 700 !important;
-}
-
-/* Add back the price cleanly */
-.best-sellers-section .best-seller-item::after {
-    display: none;
-}
-
-@media (max-width: 768px) {
-  .best-sellers-section {
-    padding: 24px 16px;
-  }
-  .best-seller-item {
-    min-width: 200px;
-  }
-}
-
-/* Campaign Hero Styles */
-.campaign-badge-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.live-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #ef4444;
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.blink-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #ef4444;
-  border-radius: 50%;
-  animation: blink 1.5s infinite;
-}
-
-@keyframes blink {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.2); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.hero-countdown-container {
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.countdown-label {
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
-}
-
-/* Adjust CountdownTimer Component Styles if needed */
-.countdown-timer {
-  display: flex;
-  gap: 12px;
-}
-
-.timer-segment {
-  background: white;
-  padding: 10px 16px;
-  border-radius: 12px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 1rem;
-  color: #0f172a;
-  min-width: 50px;
+.porto-empty {
   text-align: center;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  padding: 40px;
+  color: #bbb;
+  grid-column: 1 / -1;
 }
 
-.timer-segment strong {
-  display: block;
-  font-size: 1.5rem;
-  line-height: 1;
-  font-weight: 800;
-  color: #000;
-  margin-bottom: 2px;
+@media (max-width: 1300px) {
+  .porto-product-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
-/* Specific Hero Overrides for Campaign Mode */
-.hero-banner-section.campaign-hero-mode .hero-main-title {
-    color: #0f172a; /* Dark text on light gradient */
+@media (max-width: 900px) {
+  .porto-hero-wrapper { grid-template-columns: 1fr; }
+  .porto-cat-sidebar { display: none; }
+  .porto-features-bar { grid-template-columns: 1fr; }
+  .porto-promo-row { grid-template-columns: 1fr; }
+  .porto-product-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-.hero-banner-section.campaign-hero-mode {
-    border: 1px solid #e2e8f0;
+@media (max-width: 900px) {
+  .porto-hero-wrapper { grid-template-columns: 1fr; }
+  .porto-cat-sidebar { display: none; }
+  .porto-features-bar { grid-template-columns: 1fr; }
+  .porto-promo-row { grid-template-columns: 1fr; }
+  .porto-product-grid { grid-template-columns: repeat(2, 1fr); }
 }
-
-/* Campaign Products Section */
-.campaign-products-section {
-  background: white;
-  border-radius: var(--home-radius);
-  padding: 24px;
-  box-shadow: var(--home-shadow-sm);
-  border: 1px solid var(--home-border);
-  margin-bottom: 24px;
-}
-
-.campaign-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #f3f4f6;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.campaign-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.campaign-header-right {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.campaign-type-badge {
-  background: #ef4444;
-  color: white;
-  padding: 6px 16px;
-  border-radius: 100px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.campaign-section-title {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: #000;
-  margin: 0;
-  letter-spacing: -0.5px;
-  text-transform: uppercase;
-}
-
-.campaign-countdown-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-}
-
-.view-all-campaign-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  background: #000;
-  color: white;
-  border: none;
-  border-radius: 100px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.view-all-campaign-btn:hover {
-  background: #1a1a1a;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-}
-
-/* Responsive adjustments for campaign section */
-@media (max-width: 768px) {
-  .campaign-section-header {
-    flex-direction: column;
-  }
-  
-  .campaign-header-right {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .view-all-campaign-btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-

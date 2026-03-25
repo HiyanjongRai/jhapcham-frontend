@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "../../api/axios";
 import { API_BASE } from "../config/config";
 import { Calendar, Tag, Clock, AlertCircle, Plus, Trash2, CheckCircle2, ChevronRight, X, Eye } from "lucide-react";
-import "./CreateCampaign.css"; 
+import "./AdminDashboard.css"; 
 
 const CreateCampaign = ({ showToast, confirmConfig, setConfirmConfig }) => {
     const [campaigns, setCampaigns] = useState([]);
@@ -147,260 +147,261 @@ const CreateCampaign = ({ showToast, confirmConfig, setConfirmConfig }) => {
     };
 
     const renderList = () => (
-        <div className="campaign-list-container">
-            <div className="campaign-header-action">
-                <h2>All Campaigns</h2>
-                <button className="btn-create-campaign" onClick={() => setView("create")}>
-                    <Plus size={18} /> Create New Campaign
+        <div className="adm-campaign-list">
+            <div className="adm-header">
+                <div>
+                    <h1 className="adm-page-title">Campaign Manager</h1>
+                    <p className="adm-page-sub">Create and moderate sitewide sales, festivals, and flash deals</p>
+                </div>
+                <button className="adm-panel-btn primary" onClick={() => setView("create")}>
+                    <Plus size={18} /> New Campaign
                 </button>
             </div>
             
-            <div className="campaign-grid">
+            <div className="adm-charts-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
                 {Array.isArray(campaigns) && campaigns.map(campaign => (
-                    <div key={campaign.id} className={`ad-campaign-card status-${campaign.status.toLowerCase()}`}>
-                        <div className="ad-campaign-card-header">
-                            <span className="ad-campaign-type-badge">{campaign.type.replace('_', ' ')}</span>
-                            <span className={`ad-campaign-status-pill ${campaign.status.toLowerCase()}`}>
-                                {campaign.status}
-                            </span>
-                        </div>
-                        <h3 className="ad-campaign-title">{campaign.name}</h3>
-                        
-                        <div className="ad-campaign-details">
-                            <div className="ad-campaign-detail-item" title="Start Time">
-                                <Calendar size={14} />
-                                <span>{new Date(campaign.startTime).toLocaleDateString()}</span>
+                    <div key={campaign.id} className="adm-chart-card" style={{ padding: '0', overflow: 'hidden' }}>
+                        <div style={{ padding: '20px', borderBottom: '1px solid var(--adm-border)' }}>
+                            <div className="adm-chart-header" style={{ marginBottom: '8px' }}>
+                                <h3 style={{ textTransform: 'capitalize', fontSize: '1rem' }}>{campaign.name}</h3>
+                                <span className={`adm-badge badge-${campaign.status.toLowerCase()}`}>
+                                    {campaign.status}
+                                </span>
                             </div>
-                            <div className="ad-campaign-detail-item" title="End Time">
-                                <Clock size={14} />
-                                <span>{new Date(campaign.endTime).toLocaleDateString()}</span>
-                            </div>
-                            <div className="ad-campaign-detail-item" title="Discount Type">
-                                <Tag size={14} />
-                                <span>{campaign.discountType === 'PERCENTAGE' ? '%' : 'Rs'} Off</span>
-                            </div>
-                            <div className="ad-campaign-detail-item" title="Priority">
-                                <AlertCircle size={14} />
-                                <span>P-{campaign.priority}</span>
+                            <div className="adm-mini-stats-row" style={{ marginTop: '4px', marginBottom: '0', display: 'flex', gap: '8px' }}>
+                                <span className="adm-report-type-badge">
+                                    <Tag size={10} style={{ marginRight: '4px' }} /> {campaign.type.replace('_', ' ')}
+                                </span>
+                                <span className="adm-report-type-badge" style={{ background: '#e0f2fe', color: '#0369a1', borderColor: '#bae6fd' }}>
+                                    Priority {campaign.priority}
+                                </span>
                             </div>
                         </div>
 
-                        <div className="ad-campaign-footer-actions">
-                             <button className="btn-manage" onClick={() => handleManage(campaign)}>
-                                <Eye size={16} /> Manage Items
+                        <div style={{ padding: '16px 20px', background: '#f8fafc' }}>
+                            <div className="adm-detail-row">
+                                <span className="adm-detail-label">Start</span>
+                                <span className="adm-detail-val" style={{ fontSize: '0.75rem' }}>{new Date(campaign.startTime).toLocaleDateString()}</span>
+                            </div>
+                            <div className="adm-detail-row">
+                                <span className="adm-detail-label">End</span>
+                                <span className="adm-detail-val" style={{ fontSize: '0.75rem' }}>{new Date(campaign.endTime).toLocaleDateString()}</span>
+                            </div>
+                            <div className="adm-detail-row">
+                                <span className="adm-detail-label">Discount</span>
+                                <span className="adm-detail-val" style={{ color: 'var(--adm-blue)' }}>{campaign.discountType === 'PERCENTAGE' ? '%' : 'Rs'} Off</span>
+                            </div>
+                        </div>
+
+                        <div className="adm-row-actions" style={{ padding: '16px 20px', borderTop: '1px solid var(--adm-border)', justifyContent: 'flex-start' }}>
+                             <button className="adm-action-btn" onClick={() => handleManage(campaign)}>
+                                <Eye size={16} /> Manage
                              </button>
                              <button 
-                                className="btn-delete-campaign" 
+                                className="adm-icon-btn danger" 
                                 onClick={() => handleDeleteCampaign(campaign.id)} 
                                 title="Delete Campaign"
                              >
-                                <Trash2 size={16} /> Delete
+                                <Trash2 size={16} />
                              </button>
                         </div>
                     </div>
                 ))}
+                
+                {campaigns.length === 0 && (
+                    <div className="adm-empty-state" style={{ gridColumn: '1 / -1' }}>
+                        <h3>No Active Campaigns</h3>
+                        <p>Launch your first promotion to boost platform sales.</p>
+                    </div>
+                )}
             </div>
         </div>
     );
 
     const renderForm = () => (
-        <div className="create-campaign-form-container">
-            <button className="btn-back" onClick={() => setView("list")}>&larr; Back to List</button>
-            <h2>Create New Campaign</h2>
-            <form onSubmit={handleSubmit} className="campaign-form">
-                <div className="form-group">
-                    <label>Campaign Name</label>
-                    <input 
-                        type="text" 
-                        name="name" 
-                        value={formData.name} 
-                        onChange={handleInputChange} 
-                        required 
-                        placeholder="e.g. Winter Clearance 2025"
-                    />
+        <div className="adm-campaign-form">
+            <div className="adm-header">
+                <div>
+                    <h1 className="adm-page-title">Create Campaign</h1>
+                    <p className="adm-page-sub">Configure duration, exclusivity, and discount rules</p>
                 </div>
+                <button className="adm-panel-btn warn" onClick={() => setView("list")}>Cancel</button>
+            </div>
 
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Campaign Type</label>
-                        <select name="type" value={formData.type} onChange={handleInputChange}>
-                            <option value="FLASH_SALE">Flash Sale</option>
-                            <option value="FESTIVAL">Festival</option>
-                            <option value="SEASONAL">Seasonal</option>
-                            <option value="CLEARANCE">Clearance</option>
-                            <option value="OTHER">Other</option>
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Discount Type</label>
-                        <select name="discountType" value={formData.discountType} onChange={handleInputChange}>
-                            <option value="PERCENTAGE">Percentage</option>
-                            <option value="FIXED_AMOUNT">Fixed Amount</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Start Time</label>
+            <div className="adm-chart-card">
+                <form onSubmit={handleSubmit} className="adm-panel-actions">
+                    <div className="form-group" style={{ marginBottom: '20px' }}>
+                        <label className="adm-form-label">Campaign Name</label>
                         <input 
-                            type="datetime-local" 
-                            name="startTime" 
-                            value={formData.startTime} 
+                            className="adm-select"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                            type="text" 
+                            name="name" 
+                            value={formData.name} 
                             onChange={handleInputChange} 
                             required 
+                            placeholder="e.g. Winter Clearance 2025"
                         />
                     </div>
-                    <div className="form-group">
-                        <label>End Time</label>
-                        <input 
-                            type="datetime-local" 
-                            name="endTime" 
-                            value={formData.endTime} 
-                            onChange={handleInputChange} 
-                            required 
-                        />
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                        <div>
+                            <label className="adm-form-label">Campaign Type</label>
+                            <select className="adm-select" style={{ width: '100%' }} name="type" value={formData.type} onChange={handleInputChange}>
+                                <option value="FLASH_SALE">Flash Sale</option>
+                                <option value="FESTIVAL">Festival</option>
+                                <option value="SEASONAL">Seasonal</option>
+                                <option value="CLEARANCE">Clearance</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="adm-form-label">Discount Type</label>
+                            <select className="adm-select" style={{ width: '100%' }} name="discountType" value={formData.discountType} onChange={handleInputChange}>
+                                <option value="PERCENTAGE">Percentage</option>
+                                <option value="FIXED_AMOUNT">Fixed Amount</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
 
-                <div className="form-group">
-                    <label>Priority (Higher value overrides overlaps)</label>
-                    <input 
-                        type="number" 
-                        name="priority" 
-                        value={formData.priority} 
-                        onChange={handleInputChange} 
-                        min="1"
-                        required 
-                    />
-                </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                        <div>
+                            <label className="adm-form-label">Start Time</label>
+                            <input 
+                                className="adm-select"
+                                style={{ width: '100%', boxSizing: 'border-box' }}
+                                type="datetime-local" 
+                                name="startTime" 
+                                value={formData.startTime} 
+                                onChange={handleInputChange} 
+                                required 
+                            />
+                        </div>
+                        <div>
+                            <label className="adm-form-label">End Time</label>
+                            <input 
+                                className="adm-select"
+                                style={{ width: '100%', boxSizing: 'border-box' }}
+                                type="datetime-local" 
+                                name="endTime" 
+                                value={formData.endTime} 
+                                onChange={handleInputChange} 
+                                required 
+                            />
+                        </div>
+                    </div>
 
-                <div className="form-group">
-                    <label>Campaign Banner Image</label>
-                    <input 
-                        type="file" 
-                        name="image" 
-                        onChange={handleInputChange} 
-                        accept="image/*"
-                    />
-                    <small style={{ color: '#64748b' }}>Upload a horizontal banner for the home page (Recommended: 800x400px)</small>
-                </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                        <div>
+                            <label className="adm-form-label">Priority (Higher overrides overlaps)</label>
+                            <input 
+                                className="adm-select"
+                                style={{ width: '100%', boxSizing: 'border-box' }}
+                                type="number" 
+                                name="priority" 
+                                value={formData.priority} 
+                                onChange={handleInputChange} 
+                                min="1"
+                                required 
+                            />
+                        </div>
+                        <div>
+                            <label className="adm-form-label">Banner Image</label>
+                            <input 
+                                className="adm-select"
+                                style={{ width: '100%', boxSizing: 'border-box' }}
+                                type="file" 
+                                name="image" 
+                                onChange={handleInputChange} 
+                                accept="image/*"
+                            />
+                        </div>
+                    </div>
 
-                <div className="form-actions">
-                    <button type="button" className="btn-cancel" onClick={() => setView("list")}>Cancel</button>
-                    <button type="submit" className="btn-submit" disabled={loading}>
-                        {loading ? "Creating..." : "Create Campaign"}
-                    </button>
-                </div>
-            </form>
+                    <div style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
+                        <button type="submit" className="adm-submit-btn" style={{ width: 'auto', padding: '12px 32px' }} disabled={loading}>
+                            {loading ? "Creating..." : "Create Campaign"}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 
     return (
-        <div className="campaign-manager">
+        <div className="adm-campaign-manager">
             {view === 'list' ? renderList() : renderForm()}
 
             {showManageModal && selectedCampaign && (
-                <div className="ad-modal-overlay">
-                    <div className="ad-modal-content" style={{ maxWidth: '800px' }}>
-                        <div className="ad-modal-header">
-                            <h2>Manage Products: {selectedCampaign.name}</h2>
-                            <div className="ad-modal-header-actions" style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
-                                <button 
-                                    className="btn-delete-campaign"
-                                    style={{padding: '6px 12px', fontSize: '0.8rem'}}
-                                    onClick={() => { handleDeleteCampaign(selectedCampaign.id); setShowManageModal(false); }}
-                                    title="Delete this campaign"
-                                >
-                                    <Trash2 size={14} /> Delete
-                                </button>
-                                <button className="ad-modal-close" onClick={() => setShowManageModal(false)}><X size={20}/></button>
+                <div className="adm-overlay" onClick={() => setShowManageModal(false)}>
+                    <div className="adm-glass-modal" onClick={e => e.stopPropagation()}>
+                        <div className="adm-modal-header-hero">
+                            <div className="adm-modal-hero-title">
+                                <h2>{selectedCampaign.name}</h2>
+                                <p>Operational Moderation Hub · {selectedCampaign.type.replace('_', ' ')}</p>
                             </div>
+                            <button className="adm-close-btn" style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }} onClick={() => setShowManageModal(false)}>
+                                <X size={24}/>
+                            </button>
                         </div>
-                        <div className="ad-modal-body" style={{ maxHeight: '65vh', overflowY: 'auto', padding: '0' }}>
-                            <div className="modal-tabs" style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                                {["PENDING", "APPROVED", "REJECTED", "ALL"].map(tab => (
-                                    <button 
-                                        key={tab}
-                                        onClick={() => setModalTab(tab)}
-                                        style={{
-                                            padding: '12px 24px',
-                                            border: 'none',
-                                            background: modalTab === tab ? '#fff' : 'transparent',
-                                            borderBottom: modalTab === tab ? '2px solid #3b82f6' : 'none',
-                                            color: modalTab === tab ? '#3b82f6' : '#64748b',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            flex: 1,
-                                            transition: 'all 0.2s'
-                                        }}
-                                    >
-                                        {tab} ({tab === 'ALL' ? campaignProducts.length : campaignProducts.filter(p => p.status === tab).length})
-                                    </button>
-                                ))}
-                            </div>
+                        
+                        <div className="adm-glass-tabs">
+                            {["PENDING", "APPROVED", "REJECTED", "ALL"].map(tab => (
+                                <button 
+                                    key={tab}
+                                    onClick={() => setModalTab(tab)}
+                                    className={`adm-glass-tab ${modalTab === tab ? 'active' : ''}`}
+                                >
+                                    {tab} ({tab === 'ALL' ? campaignProducts.length : campaignProducts.filter(p => p.status === tab).length})
+                                </button>
+                            ))}
+                        </div>
 
-                            <div style={{ padding: '20px' }}>
-                                {campaignProducts.filter(p => modalTab === 'ALL' || p.status === modalTab).length === 0 ? (
-                                    <p style={{ textAlign: 'center', color: '#64748b', padding: '40px' }}>No {modalTab.toLowerCase()} products for this campaign.</p>
-                                ) : (
-                                    <table className="ad-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Product / Seller</th>
-                                                <th>Original</th>
-                                                <th>Sale Price</th>
-                                                <th>Stock Limit</th>
-                                                <th>Status</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {campaignProducts.filter(p => modalTab === 'ALL' || p.status === modalTab).map(cp => (
-                                                <tr key={cp.id}>
-                                                    <td>
-                                                        <div className="ad-user-name">{cp.productName}</div>
-                                                        <div className="ad-user-email">{cp.sellerName} (ID: {cp.productId})</div>
-                                                    </td>
-                                                    <td>Rs. {cp.originalPrice}</td>
-                                                    <td style={{ color: '#dc2626', fontWeight: 'bold' }}>Rs. {cp.salePrice}</td>
-                                                    <td>{cp.stockLimit}</td>
-                                                    <td>
-                                                        <span className={`ad-badge badge-${cp.status.toLowerCase()}`}>
-                                                            {cp.status}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <div className="ad-action-buttons">
-                                                            {cp.status === 'PENDING' && (
-                                                                <>
-                                                                    <button 
-                                                                        className="ad-action-btn action-approve" 
-                                                                        title="Approve"
-                                                                        onClick={() => handleApproveProduct(cp.id)}
-                                                                    >
-                                                                        <CheckCircle2 size={18} />
-                                                                    </button>
-                                                                    <button 
-                                                                        className="ad-action-btn action-reject" 
-                                                                        title="Reject"
-                                                                        onClick={() => handleRejectProduct(cp.id)}
-                                                                    >
-                                                                        <Trash2 size={18} />
-                                                                    </button>
-                                                                </>
-                                                            )}
-                                                            {cp.status !== 'PENDING' && (
-                                                                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Processed</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                )}
-                            </div>
+                        <div className="adm-panel-body" style={{ background: '#f8fafc', padding: '30px', overflowY: 'auto' }}>
+
+                            {campaignProducts.filter(p => modalTab === 'ALL' || p.status === modalTab).length === 0 ? (
+                                <div className="adm-empty-state">
+                                    <p>No {modalTab.toLowerCase()} products found.</p>
+                                </div>
+                            ) : (
+                                campaignProducts.filter(p => modalTab === 'ALL' || p.status === modalTab).map(cp => (
+                                    <div key={cp.id} className="adm-row">
+                                        <div className="adm-row-avatar">
+                                            {cp.productName.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="adm-row-info">
+                                            <h4 className="adm-row-title">{cp.productName}</h4>
+                                            <p className="adm-row-sub">{cp.sellerName}</p>
+                                            <div style={{ marginTop: '6px', display: 'flex', gap: '8px' }}>
+                                                <span className="adm-report-type-badge">Limit: {cp.stockLimit}</span>
+                                                <span className={`adm-badge badge-${cp.status.toLowerCase()}`}>{cp.status}</span>
+                                            </div>
+                                        </div>
+                                        <div className="adm-price-block" style={{ minWidth: '100px', marginRight: '20px' }}>
+                                            <span className="adm-price" style={{ color: 'var(--adm-danger)' }}>Rs. {cp.salePrice}</span>
+                                            <span className="adm-price-old">Rs. {cp.originalPrice}</span>
+                                        </div>
+                                        <div className="adm-row-actions">
+                                            {cp.status === 'PENDING' && (
+                                                <>
+                                                    <button 
+                                                        className="adm-icon-btn success" 
+                                                        onClick={() => handleApproveProduct(cp.id)}
+                                                    >
+                                                        <CheckCircle2 size={18} />
+                                                    </button>
+                                                    <button 
+                                                        className="adm-icon-btn danger" 
+                                                        onClick={() => handleRejectProduct(cp.id)}
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>

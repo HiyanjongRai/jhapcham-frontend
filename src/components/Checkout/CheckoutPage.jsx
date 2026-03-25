@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   getCurrentUserId,
@@ -6,6 +6,8 @@ import {
   apiPlaceOrder,
   apiPlaceOrderFromCart,
   apiPreviewOrder,
+  saveGuestCart,
+  updateGlobalCartCount
 } from "../AddCart/cartUtils";
 import { apiGetAddresses } from "../Customer/addressUtils";
 import api from "../../api/axios";
@@ -58,6 +60,10 @@ function CheckoutPage() {
   
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState("");
+  const [promoError, setPromoError] = useState(null);
+
+  // Bug Fix #2: prevent double-submission on slow networks
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (location.state?.preselectedZone) {
@@ -116,10 +122,22 @@ function CheckoutPage() {
   }, [userId]);
 
   useEffect(() => {
+    // ── GHOST ORDER DETECTION ────────────────────────────
+    // If the user lands here but has an eSewa payment "in flight",
+    // they probably hit 'Back' after getting to eSewa.
+    const pendingId = sessionStorage.getItem("pendingEsewaOrderId");
+    if (pendingId && (!items || items.length === 0)) {
+       console.info("Detected pending eSewa order, checking status...");
+       // Redirect to callback page without data, which triggers the 'restore' flow
+       // We only do this if the cart is empty (meaning placeOrder already cleared it)
+       navigate("/payment/esewa-callback");
+       return;
+    }
+
     if (!userId) return;
     loadCart();
     loadUser();
-  }, [userId, loadCart, loadUser]);
+  }, [userId, loadCart, loadUser, navigate, items]);
 
   const fetchPreview = useCallback(async () => {
     try {
@@ -136,8 +154,18 @@ function CheckoutPage() {
       };
       const data = await apiPreviewOrder(payload);
       setPreviewData(data);
+      // Clear any previous promo error on successful preview
+      setPromoError(null);
     } catch (e) {
       console.warn("Preview calculation failed", e);
+      // Bug Fix #1: if the preview failed because of a bad promo code, clear it
+      if (appliedPromo) {
+        const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message || "";
+        setPromoError("Invalid or expired promo code. It has been removed.");
+        setAppliedPromo("");
+        setPromoCode("");
+        console.warn("Bad promo code cleared:", msg);
+      }
     }
   }, [userId, insideValley, appliedPromo, items]);
 
@@ -190,6 +218,9 @@ function CheckoutPage() {
   };
 
   const placeOrder = async () => {
+    // Bug Fix #2: prevent double-submission (race condition on slow networks)
+    if (submittingRef.current) return;
+
     if (!items || items.length === 0) {
         setError({ status: 400, message: "Empty Cart", details: "Please add items before checking out." });
         return;
@@ -202,6 +233,8 @@ function CheckoutPage() {
         setError({ status: 400, message: "Terms Required", details: "Please accept the Terms & Conditions." });
         return;
     }
+
+    submittingRef.current = true;
 
     const fullAddress = [
       formData.streetAddress,
@@ -245,17 +278,92 @@ function CheckoutPage() {
           orderSummary = await apiPlaceOrder(guestRequest);
       }
 
-      if (paymentMethod === "ESEWA" || paymentMethod === "KHALTI") {
-          const path = paymentMethod.toLowerCase();
+      // Handle eSewa payment — eSewa requires a form submission
+      if (paymentMethod === "ESEWA") {
           const oid = Array.isArray(orderSummary) ? orderSummary[0].orderId : orderSummary.orderId;
-          const initRes = await api.post(`/api/payment/initiate/${path}`, { orderId: oid });
-          if (initRes.data.payment_url || initRes.data.gatewayUrl) {
-              window.location.href = initRes.data.payment_url || initRes.data.gatewayUrl;
+          try {
+              const initRes = await api.post(`/api/payment/esewa/initiate`, { orderId: oid });
+              const esewaData = initRes.data;
+
+              if (esewaData && esewaData.epayUrl) {
+                  // Create dynamic form to submit to eSewa
+                  const form = document.createElement("form");
+                  form.setAttribute("method", "POST");
+                  form.setAttribute("action", esewaData.epayUrl);
+
+                  // Add all required eSewa fields
+                  const fields = [
+                    "amount", "tax_amount", "total_amount", "transaction_uuid", "product_code",
+                    "product_service_charge", "product_delivery_charge", "success_url", "failure_url",
+                    "signed_field_names", "signature"
+                  ];
+
+                  fields.forEach(field => {
+                    const hiddenField = document.createElement("input");
+                    hiddenField.setAttribute("type", "hidden");
+                    hiddenField.setAttribute("name", field);
+                    hiddenField.setAttribute("value", esewaData[field]);
+                    form.appendChild(hiddenField);
+                  });
+
+                  // Store orderId so the callback page can cancel it on failure
+                  sessionStorage.setItem("pendingEsewaOrderId", oid);
+                  sessionStorage.setItem("pendingEsewaUserId", userId || "");
+                  
+                  // Session Preservation - eSewa's cross-domain redirect can sometimes drop cookies/localStorage context
+                  // in specific browser configurations. We store them in sessionStorage as a backup.
+                  sessionStorage.setItem("pendingEsewaToken", localStorage.getItem("token") || "");
+                  sessionStorage.setItem("pendingEsewaUserRole", localStorage.getItem("userRole") || "");
+                  sessionStorage.setItem("pendingEsewaUserEmail", localStorage.getItem("userEmail") || "");
+
+                  document.body.appendChild(form);
+                  
+                  // Clear Guest Cart if it exists (we have order info in DB now)
+                  if (!userId) {
+                    saveGuestCart([]);
+                    updateGlobalCartCount(0);
+                  }
+                  
+                  form.submit();
+                  return; // Stop here, browser will redirect to eSewa
+              } else {
+                  throw new Error("Invalid eSewa initiation data");
+              }
+          } catch (err) {
+              // Bug Fix #3: cancel the ghost order if eSewa initiation fails,
+              // so a NEW order doesn't appear in DB without a payment.
+              try {
+                  if (oid) { // oid will be defined if orderSummary was successful
+                      const cancelPath = userId ? `/api/orders/user/${userId}/cancel/${oid}` : `/api/orders/guest/cancel/${oid}`;
+                      await api.put(cancelPath);
+                      console.info(`Ghost order ${oid} cancelled after eSewa initiation failure.`);
+                  }
+              } catch (cancelErr) {
+                  console.warn("Could not cancel ghost order:", cancelErr);
+              } finally {
+                  // Clear pending eSewa session data regardless of cancellation success
+                  sessionStorage.removeItem("pendingEsewaOrderId");
+                  sessionStorage.removeItem("pendingEsewaUserId");
+                  sessionStorage.removeItem("pendingEsewaToken");
+                  sessionStorage.removeItem("pendingEsewaUserRole");
+                  sessionStorage.removeItem("pendingEsewaUserEmail");
+              }
+              setLoading(false);
+              submittingRef.current = false;
+              setError({ status: 500, message: "eSewa Error", details: err.response?.data?.error || err.message || "Could not initiate eSewa payment" });
               return;
           }
       }
 
       setLoading(false);
+      submittingRef.current = false;
+      
+      // Clear Guest Cart if it exists (COD success)
+      if (!userId) {
+        saveGuestCart([]);
+        updateGlobalCartCount(0);
+      }
+      
       setSuccess(true);
       
       if (userId && saveAddress) {
@@ -284,6 +392,7 @@ function CheckoutPage() {
     } catch (e) {
       console.error("Order placement error:", e);
       setLoading(false);
+      submittingRef.current = false;
       setError(e.status ? e : { status: 500, message: "Order Failed", details: e.message || "An unexpected error occurred" });
     }
   };
@@ -395,8 +504,9 @@ function CheckoutPage() {
               <div className="payment-grid">
                 {[
                   { id: "COD", name: "Cash on Delivery", desc: "Pay when you receive", icon: <Package size={18} /> },
-                  { id: "ESEWA", name: "eSewa", desc: "Digital Payment Gateway", icon: <CreditCard size={18} /> },
-                  { id: "KHALTI", name: "Khalti", desc: "Instant Online Pay", icon: <CreditCard size={18} /> }
+                  { id: "ESEWA", name: "eSewa", desc: "Digital Payment Gateway", icon: (
+                    <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" style={{ width: '24px', height: '18px', objectFit: 'contain' }} />
+                  )},
                 ].map(p => (
                   <div key={p.id} className={`payment-card ${paymentMethod === p.id ? "active" : ""}`} onClick={() => setPaymentMethod(p.id)}>
                     <div className="payment-icon-wrapper">{p.icon}</div>
@@ -405,6 +515,12 @@ function CheckoutPage() {
                   </div>
                 ))}
               </div>
+              {paymentMethod === "ESEWA" && (
+                <div style={{ marginTop: '12px', padding: '10px 14px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '0.75rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CheckCircle size={14} color="#166534" />
+                  You'll be redirected to eSewa to complete the payment securely.
+                </div>
+              )}
               <div className="form-field" style={{ marginTop: '24px' }}>
                 <label>Order Note</label>
                 <textarea value={formData.orderNote} onChange={e => setFormData({...formData, orderNote: e.target.value})} placeholder="Any special instructions?" style={{ minHeight: '80px' }}></textarea>
@@ -431,7 +547,11 @@ function CheckoutPage() {
                     <img src={item.imagePath ? `${API_BASE}/${item.imagePath}` : "https://via.placeholder.com/60"} alt="" style={{ width: '44px', height: '44px', objectFit: 'contain', background: '#f9fafb', borderRadius: '6px', border: '1px solid #f1f5f9' }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '0.8rem', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.productName || item.name}</div>
-                      <div style={{ fontSize: '0.7rem', color: '#999', marginTop: '2px' }}>Qty: {item.quantity} • Rs. {(item.lineTotal || 0).toLocaleString()}</div>
+                      <div style={{ fontSize: '0.65rem', color: '#6b7280', display: 'flex', gap: '8px', marginTop: '2px' }}>
+                        {item.selectedColor && <span>Color: <strong>{item.selectedColor}</strong></span>}
+                        {item.selectedStorage && <span>Cap: <strong>{item.selectedStorage}</strong></span>}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#4b5563', marginTop: '2px', fontWeight: '500' }}>Qty: {item.quantity} • Rs. {(item.lineTotal || 0).toLocaleString()}</div>
                     </div>
                   </div>
                 ))}
@@ -452,10 +572,21 @@ function CheckoutPage() {
                     type="text" 
                     placeholder="Promo Code" 
                     value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
+                    onChange={(e) => { setPromoCode(e.target.value); setPromoError(null); }}
                 />
                 <button onClick={handleApplyPromo}>Apply</button>
             </div>
+            {/* Bug Fix #1: inline promo error message */}
+            {promoError && (
+                <div style={{ marginTop: '6px', fontSize: '0.72rem', color: '#dc2626', padding: '6px 10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px' }}>
+                    {promoError}
+                </div>
+            )}
+            {appliedPromo && !promoError && (
+                <div style={{ marginTop: '6px', fontSize: '0.72rem', color: '#16a34a', padding: '6px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '4px' }}>
+                    ✓ Promo code <strong>{appliedPromo}</strong> applied!
+                </div>
+            )}
 
             <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.7rem', color: '#9ca3af' }}><ShieldCheck size={14} /> SSL Secure Payment</div>

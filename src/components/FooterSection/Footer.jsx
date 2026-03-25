@@ -2,98 +2,116 @@ import React from 'react';
 import { 
   Facebook, 
   Twitter, 
-  Instagram, 
-  Youtube, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  ArrowRight
+  Linkedin, 
+  ChevronUp
 } from 'lucide-react';
 import './Footer.css';
-import logo from "../Images/Logo/logo1.png";
 
 const Footer = () => {
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="footer">
+      <div className="footer-ribbon">
+        <span>Get in touch</span>
+      </div>
       <div className="footer-top">
         <div className="footer-container">
           <div className="footer-grid">
-            {/* Brand Section */}
-            <div className="footer-brand">
-              <img src={logo} alt="Jhapcham Logo" className="footer-logo-img" />
-              <p className="footer-desc">
-                Your one-stop destination for premium electronics, fashion, and home decor. 
-                Experience seamless shopping with ultra-fast delivery.
-              </p>
+            
+            {/* Left Column: Contact Info */}
+            <div className="footer-col-contact">
+              <h3>CONTACT INFO</h3>
+              <ul className="contact-list">
+                <li>
+                  <strong>ADDRESS:</strong>
+                  <span>Kathmandu, Nepal</span>
+                </li>
+                <li>
+                  <strong>PHONE:</strong>
+                  <span>(+977) 980-0000000</span>
+                </li>
+                <li>
+                  <strong>EMAIL:</strong>
+                  <span>support@jhapcham.com.np</span>
+                </li>
+                <li>
+                  <strong>WORKING DAYS/HOURS:</strong>
+                  <span>Sun - Fri / 9:00 AM - 8:00 PM</span>
+                </li>
+              </ul>
               <div className="footer-socials">
-                <a href="#" className="social-link"><Facebook size={16} /></a>
-                <a href="#" className="social-link"><Twitter size={16} /></a>
-                <a href="#" className="social-link"><Instagram size={16} /></a>
-                <a href="#" className="social-link"><Youtube size={16} /></a>
+                <a href="#" className="social-link" aria-label="Facebook"><Facebook size={16} fill="white" strokeWidth={0}/></a>
+                <a href="#" className="social-link" aria-label="Twitter"><Twitter size={16} fill="white" strokeWidth={0}/></a>
+                <a href="#" className="social-link" aria-label="LinkedIn"><Linkedin size={16} fill="white" strokeWidth={0}/></a>
               </div>
             </div>
 
-            {/* Links Sections */}
-            <div className="footer-links">
-              <h3>Quick Links</h3>
-              <ul>
-                <li><a href="/products">Shop All</a></li>
-                <li><a href="/new-arrivals">New Arrivals</a></li>
-                <li><a href="/offers">Exclusive Offers</a></li>
-                <li><a href="/sellers">Top Sellers</a></li>
-              </ul>
-            </div>
+            {/* Right Area: Newsletter + Links */}
+            <div className="footer-col-main">
+              
+              <div className="footer-newsletter-row">
+                <div className="newsletter-text">
+                  <h3>SUBSCRIBE NEWSLETTER</h3>
+                  <p>Get all the latest information on Events, Sales and Offers.<br/>Sign up for newsletter today.</p>
+                </div>
+                <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
+                  <input type="email" placeholder="Email Address" required />
+                  <button type="submit">SUBSCRIBE</button>
+                </form>
+              </div>
 
-            <div className="footer-links">
-              <h3>Support</h3>
-              <ul>
-                <li><a href="/help">Help Center</a></li>
-                <li><a href="/shipping">Shipping Info</a></li>
-                <li><a href="/returns">Returns & Refunds</a></li>
-                <li><a href="/contact">Contact Us</a></li>
-              </ul>
-            </div>
+              <div className="footer-links-row">
+                <div className="footer-links-col">
+                  <h3>CUSTOMER SERVICE</h3>
+                  <div className="links-two-col">
+                    <ul className="links-list">
+                      <li><a href="/about">About us</a></li>
+                      <li><a href="/contact">Contact us</a></li>
+                      <li><a href="/account">My account</a></li>
+                    </ul>
+                    <ul className="links-list">
+                      <li><a href="/orders">Order history</a></li>
+                      <li><a href="/search">Advanced search</a></li>
+                      <li><a href="/login">Login</a></li>
+                    </ul>
+                  </div>
+                </div>
 
-            {/* Newsletter Section */}
-            <div className="footer-newsletter">
-              <h3>Newsletter</h3>
-              <p>Subscribe to get special offers and once-in-a-lifetime deals.</p>
-              <form className="newsletter-form">
-                <input type="email" placeholder="Your email address" required />
-                <button type="submit">
-                  <ArrowRight size={18} />
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+                <div className="footer-links-col">
+                  <h3>ABOUT US</h3>
+                  <div className="links-two-col">
+                    <ul className="links-list">
+                      <li><a href="#">Delivery across Nepal</a></li>
+                      <li><a href="#">Local Payment Options</a></li>
+                      <li><a href="#">Trusted E-commerce Platform</a></li>
+                    </ul>
+                    <ul className="links-list">
+                      <li><a href="#">Fast User Support</a></li>
+                      <li><a href="#">Secure Shopping</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
 
-      <div className="footer-contact-bar">
-        <div className="footer-container bar-content">
-          <div className="contact-item">
-            <Phone size={16} />
-            <span>+977-9800000000</span>
-          </div>
-          <div className="contact-item">
-            <Mail size={16} />
-            <span>support@jhapcham.com</span>
-          </div>
-          <div className="contact-item">
-            <MapPin size={16} />
-            <span>Kathmandu, Nepal</span>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="footer-bottom">
         <div className="footer-container bottom-flex">
-          <p>© 2025 Jhapcham E-commerce. All rights reserved.</p>
-          <div className="footer-policies">
-            <a href="/privacy">Privacy Policy</a>
-            <a href="/terms">Terms of Service</a>
+          <p>© Jhapcham eCommerce. 2026. All Rights Reserved</p>
+          <div className="footer-payments">
+            <span className="pay-icon font-esewa">eSewa</span>
           </div>
         </div>
+      </div>
+
+      <div className="scroll-to-top" onClick={scrollToTop} aria-label="Scroll to top">
+        <ChevronUp size={24} />
       </div>
     </footer>
   );

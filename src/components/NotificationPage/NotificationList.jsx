@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config/config";
 import axios from "../../api/axios";
-import { Bell, CheckCircle2, AlertTriangle, Package, Info, Search, XCircle, Shield, Store, Flag, Megaphone, MessageSquare } from "lucide-react";
+import { Bell, CheckCircle2, AlertTriangle, Package, Info, Search, XCircle, Shield, Store, Flag, Megaphone, MessageSquare, Trash2 } from "lucide-react";
 import "./NotificationPage.css";
 
 export default function NotificationList() {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
+    const [clearing, setClearing] = useState(false);
 
     useEffect(() => {
         fetchNotifications();
@@ -67,6 +70,28 @@ export default function NotificationList() {
             window.dispatchEvent(new Event('notifications-updated'));
         } catch (err) {
             console.error("Failed to mark all as read:", err);
+        }
+    };
+
+    const clearAllNotifications = async () => {
+        const username = localStorage.getItem("userEmail");
+        if (!username) return;
+        setClearing(true);
+        try {
+            await axios.delete(`${API_BASE}/api/notifications/clear-all?username=${username}`);
+            setNotifications([]);
+            window.dispatchEvent(new Event('notifications-updated'));
+        } catch (err) {
+            console.error("Failed to clear notifications:", err);
+        } finally {
+            setClearing(false);
+        }
+    };
+
+    const handleNotificationClick = (n) => {
+        if (!n.isRead) markAsRead(n.id);
+        if (n.type === 'MESSAGE_RECEIVED') {
+            navigate('/messages');
         }
     };
 
@@ -169,12 +194,23 @@ export default function NotificationList() {
                             <span className="stat-pill unread">{notifications.filter(n => !n.isRead).length} Unread</span>
                             <span className="stat-pill total">{notifications.length} Total</span>
                         </div>
-                        {notifications.some(n => !n.isRead) && (
-                            <button className="mark-all-read-btn" onClick={markAllAsRead}>
-                                <CheckCircle2 size={16} />
-                                Mark all as read
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            {notifications.some(n => !n.isRead) && (
+                                <button className="mark-all-read-btn" onClick={markAllAsRead}>
+                                    <CheckCircle2 size={16} />
+                                    Mark all as read
+                                </button>
+                            )}
+                            <button 
+                                className="clear-all-notif-btn" 
+                                onClick={clearAllNotifications}
+                                disabled={clearing}
+                                title="Delete all notifications"
+                            >
+                                <Trash2 size={16} />
+                                {clearing ? 'Clearing...' : 'Clear All'}
                             </button>
-                        )}
+                        </div>
                     </div>
                 )}
             </div>
@@ -226,8 +262,8 @@ export default function NotificationList() {
                         return (
                             <div 
                                 key={n.id} 
-                                className={`notif-item ${!n.isRead ? 'unread' : ''}`}
-                                onClick={() => !n.isRead && markAsRead(n.id)}
+                                className={`notif-item ${!n.isRead ? 'unread' : ''} ${n.type === 'MESSAGE_RECEIVED' ? 'clickable-notif' : ''}`}
+                                onClick={() => handleNotificationClick(n)}
                             >
                                 <div className="notif-sidebar">
                                     <div className={`notif-icon-container ${iconData.bgClass}`}>

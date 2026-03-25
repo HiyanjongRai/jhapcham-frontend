@@ -16,17 +16,17 @@ const Toast = ({ message, type = 'info', onClose, duration = 3000 }) => {
   if (!message) return null;
 
   const bgColors = {
-    success: '#10b981',
-    error: '#ef4444',  
-    info: '#4f46e5',   
-    warning: '#f59e0b'
+    success: '#10b981', // Bright Emerald Green
+    error: '#f87171',   // Bright Coral Red
+    info: '#3b82f6',    // Bright Blue
+    warning: '#fbbf24'  // Bright Amber
   };
 
   const icons = {
-    success: <CheckCircle size={24} color="#fff" strokeWidth={2} />,
-    error: <XCircle size={24} color="#fff" strokeWidth={2} />,
-    info: <Info size={24} color="#fff" strokeWidth={2} />,
-    warning: <Info size={24} color="#fff" strokeWidth={2} />
+    success: <CheckCircle size={18} color="#fff" strokeWidth={2.5} />,
+    error: <XCircle size={18} color="#fff" strokeWidth={2.5} />,
+    info: <Info size={18} color="#fff" strokeWidth={2.5} />,
+    warning: <Info size={18} color="#fff" strokeWidth={2.5} />
   };
 
   return ReactDOM.createPortal(

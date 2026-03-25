@@ -8,18 +8,25 @@ import {
   Minus, 
   Plus, 
   Store, 
+  ChevronLeft,
   ChevronRight,
   Share2,
   MessageCircle,
   Flag,
   Check,
   ThumbsUp,
-  Package
+  Package,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Mail,
+  Instagram
 } from "lucide-react";
 import {
   getCurrentUserId,
-  apiAddToCart,
-  addToGuestCart,
+  apiAddToCart, 
+  addToGuestCart, 
+  apiGetOrdersForUser 
 } from "../AddCart/cartUtils";
 import api from "../../api/axios";
 import { apiAddToWishlist, apiRemoveFromWishlist, apiCheckWishlist } from "../WishlistPage/wishlistUtils";
@@ -60,6 +67,8 @@ export default function ProductDetailPage() {
   const [visibleReviews, setVisibleReviews] = useState(3);
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0, opacity: 0 });
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [activeTab, setActiveTab] = useState('description');
+  const [canReport, setCanReport] = useState(false);
 
 
 
@@ -190,10 +199,22 @@ export default function ProductDetailPage() {
         if (mappedProduct.colors?.length) setSelectedColor(mappedProduct.colors[0]);
         if (mappedProduct.storage?.length) setSelectedStorage(mappedProduct.storage[0]);
 
-        // Check wishlist status
+        // Check wishlist and purchase status
         if (userId) {
             const isLiked = await apiCheckWishlist(userId, id);
             setLiked(isLiked);
+
+            // Verify if user can report (bought and delivered)
+            try {
+              const orders = await apiGetOrdersForUser(userId);
+              const hasPurchased = orders?.some(order => 
+                (order.status === 'DELIVERED' || order.stage === 'DELIVERED') &&
+                order.items?.some(item => String(item.productId) === String(id))
+              );
+              setCanReport(hasPurchased);
+            } catch (e) {
+              console.warn("Could not verify purchase status", e);
+            }
         }
 
         // Load reviews
@@ -349,373 +370,416 @@ export default function ProductDetailPage() {
       <ErrorToast error={error} onClose={() => setError(null)} />
 
       <div className="pd-container">
-
-      {/* Breadcrumb */}
-      <div className="pd-breadcrumb">
-         <Link to="/">Home</Link> 
-         <ChevronRight size={14} />
-         <Link to="/products">Products</Link>
-         <ChevronRight size={14} />
-         <span>{product.name}</span>
-      </div>
-
-      <div className="pd-grid">
-        {/* Left: Image Gallery */}
-        <div className="pd-gallery">
-          <div 
-            className="pd-main-image-wrapper"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-          >
-            <img 
-              src={mainImage} 
-              className="pd-main-image" 
-              alt={product.name} 
-              style={{
-                transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                transform: zoomPos.opacity ? 'scale(2)' : 'scale(1)',
-                cursor: 'zoom-in'
-              }}
-            />
-            {!zoomPos.opacity && <div className="zoom-hint">Hover to Zoom</div>}
-          </div>
-
-          <div className="pd-thumbnails">
-            {[product.imagePath, ...(product.additionalImages || [])].map((img, i) => {
-              const src = `${API_BASE}/${img}`;
-              return (
-                <img
-                  key={i}
-                  src={src}
-                  className={`pd-thumb ${mainImage === src ? "active" : ""}`}
-                  onClick={() => setMainImage(src)}
-                  alt="thumbnail"
-                />
-              )
-            })}
-          </div>
+        {/* Breadcrumb */}
+        <div className="pd-breadcrumb">
+          <Link to="/"><Store size={14} /></Link>
+          <ChevronRight size={12} />
+          <Link to="/products">PRODUCTS</Link>
+          <ChevronRight size={12} />
+          <span>{product.name}</span>
         </div>
 
-        {/* Right: Product Info */}
-        <div className="pd-info">
-          <div>
-            <div className="pd-brand">{product.brand}</div>
-            <h1 className="pd-title">{product.name}</h1>
-            
-            
+        <div className="pd-grid">
+          {/* Left: Image Gallery */}
+          <div className="pd-gallery">
+            <div
+              className="pd-main-image-wrapper"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
+              {/* Badges */}
+              <div className="pd-badges">
+                {product.onSale && <span className="badge-hot">HOT</span>}
+                {product.onSale && (
+                  <span className="badge-discount">
+                    -{Math.round(product.discountPercent)}%
+                  </span>
+                )}
+              </div>
 
+              <img
+                src={mainImage}
+                className="pd-main-image"
+                alt={product.name}
+                style={{
+                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                  transform: zoomPos.opacity ? "scale(2)" : "scale(1)",
+                  cursor: "zoom-in",
+                }}
+              />
+            </div>
 
-          <div className="pd-stock-status">
-              {product.stock > 0 ? (
-              <p className="status-in-stock">In Stock : {product.stock}</p>) : (
-              <p className="status-out-stock">Out of Stock</p>)}
+            <div className="pd-thumbnails">
+              {[product.imagePath, ...(product.additionalImages || [])].map(
+                (img, i) => {
+                  const src = `${API_BASE}/${img}`;
+                  return (
+                    <img
+                      key={i}
+                      src={src}
+                      className={`pd-thumb ${mainImage === src ? "active" : ""}`}
+                      onClick={() => setMainImage(src)}
+                      alt="thumbnail"
+                    />
+                  );
+                }
+              )}
+            </div>
           </div>
-  
+
+          {/* Right: Product Info */}
+          <div className="pd-info">
+            <div className="pd-info-header">
+              <h1 className="pd-title">{product.name}</h1>
+              <div className="pd-nav-arrows">
+                <button className="nav-arrow-btn"><ChevronLeft size={16} /></button>
+                <button className="nav-arrow-btn"><ChevronRight size={16} /></button>
+              </div>
+            </div>
+
             <div className="pd-rating">
               <div className="pd-stars">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    size={20}
-                    fill={i < Math.round(product.rating) ? "#1a1a1a" : "none"}
-                    color={i < Math.round(product.rating) ? "#1a1a1a" : "#d1d5db"}
+                    size={16}
+                    fill={i < Math.round(product.rating) ? "#ef4444" : "none"}
+                    color={i < Math.round(product.rating) ? "#ef4444" : "#d1d5db"}
                   />
                 ))}
               </div>
-              <span className="pd-review-count">({reviews.length} reviews)</span>
+              <span className="pd-review-count">({reviews.length} Reviews)</span>
             </div>
-          </div>
 
-          <div className="pd-price-block">
-            {product.onSale ? (
-              <>
-                <span className="pd-price-new">₹{product.salePrice}</span>
-                <span className="pd-price-old">₹{product.price}</span>
-                <span className="pd-discount-badge">
-                  {product.saleLabel || `-${Math.round(product.discountPercent)}%`}
-                </span>
-              </>
-            ) : (
-              <span className="pd-price-new">₹{product.price}</span>
-            )}
-          </div>
-
-          <p className="pd-description">{product.shortDescription}</p>
-          
-          {product.specification && (
-            <div className="pd-section">
-              <h4 className="pd-section-title">Specifications</h4>
-              <p className="pd-text-content">{product.specification}</p>
-            </div>
-          )}
-
-          {product.features && (
-            <div className="pd-section">
-              <h4 className="pd-section-title">Features</h4>
-              <ul className="pd-features-list">
-                {product.features.split('\n').map((f, i) => f.trim() && <li key={i}>{f}</li>)}
-              </ul>
-            </div>
-          )}
-
-          {product.description && (
-             <div className="pd-section">
-                <h4 className="pd-section-title">Description</h4>
-                <p className="pd-text-content">{product.description}</p>
-             </div>
-          )}
-          
-          <div className="pd-meta-info">
-             {product.warrantyMonths > 0 && <p className="meta-item"><strong>Warranty:</strong> {product.warrantyMonths} Months</p>}
-             {product.expiryDate && <p className="meta-item"><strong>Expiry Date:</strong> {new Date(product.expiryDate).toLocaleDateString()}</p>}
-             {product.manufactureDate && <p className="meta-item"><strong>Manufactured:</strong> {new Date(product.manufactureDate).toLocaleDateString()}</p>}
-          </div>
-
-          <div className="pd-options">
-            {product.colors?.length > 0 && (
-              <div className="pd-option-group">
-                <span className="pd-option-label">Select Color</span>
-                <div className="pd-option-values">
-                  {product.colors.map((c) => (
-                    <button
-                      key={c}
-                      className={`pd-opt-btn ${selectedColor === c ? "active" : ""}`}
-                      onClick={() => setSelectedColor(c)}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {product.storage?.length > 0 && (
-              <div className="pd-option-group">
-                <span className="pd-option-label">Storage</span>
-                <div className="pd-option-values">
-                  {product.storage.map((s) => (
-                    <button
-                      key={s}
-                      className={`pd-opt-btn ${selectedStorage === s ? "active" : ""}`}
-                      onClick={() => setSelectedStorage(s)}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-            <div className="pd-actions">
-              {!isSeller && (
+            <div className="pd-price-block">
+              {product.onSale ? (
                 <>
-                  <div className="pd-qty-wrapper">
-                    <button className="pd-qty-btn" onClick={decreaseQty} disabled={product.stock === 0}><Minus size={18} /></button>
-                    <span className="pd-qty-val">{quantity}</span>
-                    <button className="pd-qty-btn" onClick={increaseQty} disabled={product.stock === 0}><Plus size={18} /></button>
+                  <span className="pd-price-old">₹{product.price}</span>
+                  <span className="pd-price-new">₹{product.salePrice}</span>
+                </>
+              ) : (
+                <span className="pd-price-new">₹{product.price}</span>
+              )}
+            </div>
+
+            <p className="pd-short-description">{product.shortDescription}</p>
+
+            <div className="pd-quick-specs">
+              <div className="spec-card">
+                 <span className="spec-icon"><Package size={14} /></span>
+                 <div className="spec-info">
+                    <span className="spec-label">BRAND</span>
+                    <span className="spec-val">{product.brand || "Authentic"}</span>
+                 </div>
+              </div>
+              <div className="spec-card">
+                 <span className="spec-icon"><Flag size={14} /></span>
+                 <div className="spec-info">
+                    <span className="spec-label">WARRANTY</span>
+                    <span className="spec-val">{product.warrantyMonths ? `${product.warrantyMonths} Months` : "No Warranty"}</span>
+                 </div>
+              </div>
+              {product.expiryDate && (
+                <div className="spec-card">
+                   <span className="spec-icon"><Star size={14} /></span>
+                   <div className="spec-info">
+                      <span className="spec-label">EXPIRY</span>
+                      <span className="spec-val">{new Date(product.expiryDate).toLocaleDateString()}</span>
+                   </div>
+                </div>
+              )}
+            </div>
+
+            <div className="pd-meta-details-porto">
+              <div className="meta-row">
+                <span className="meta-label">LISTING ID:</span>
+                <span className="meta-value">{product.id.toString().padStart(8, '0')}</span>
+              </div>
+              <div className="meta-row">
+                <span className="meta-label">TAGS:</span>
+                <span className="meta-value">{product.category}, FASHION</span>
+              </div>
+            </div>
+
+            {/* Variants Selection */}
+            <div className="pd-variants-section">
+              {product.colors && product.colors.length > 0 && (
+                <div className="pd-variant-group">
+                  <span className="pd-variant-label">COLOR: <strong>{selectedColor}</strong></span>
+                  <div className="pd-variant-options">
+                    {product.colors.map(color => (
+                      <button 
+                        key={color}
+                        className={`pd-variant-btn color-btn ${selectedColor === color ? 'active' : ''}`}
+                        onClick={() => setSelectedColor(color)}
+                        title={color}
+                      >
+                        <span className="color-swatch" style={{ background: color.toLowerCase() }}></span>
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {product.storage && product.storage.length > 0 && (
+                <div className="pd-variant-group">
+                  <span className="pd-variant-label">CAPACITY: <strong>{selectedStorage}</strong></span>
+                  <div className="pd-variant-options">
+                    {product.storage.map(spec => (
+                      <button 
+                        key={spec}
+                        className={`pd-variant-btn spec-btn ${selectedStorage === spec ? 'active' : ''}`}
+                        onClick={() => setSelectedStorage(spec)}
+                      >
+                        {spec}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="pd-porto-actions">
+              {!isSeller && (
+                <div className="pd-cart-section">
+                  <div className="pd-porto-qty">
+                    <button className="qty-btn-minus" onClick={decreaseQty}>-</button>
+                    <input type="text" value={quantity} readOnly className="qty-input" />
+                    <button className="qty-btn-plus" onClick={increaseQty}>+</button>
                   </div>
 
-                  <button 
-                    className="pd-add-btn" 
+                  <button
+                    className="pd-porto-add-btn"
                     onClick={handleAddToCart}
                     disabled={product.stock === 0 || adding}
                   >
-                    <ShoppingCart size={20} />
+                    <ShoppingCart size={18} />
                     {product.stock === 0 ? "OUT OF STOCK" : adding ? "ADDING..." : "ADD TO CART"}
                   </button>
-                </>
+                </div>
               )}
+            </div>
 
+            <div className="pd-footer-actions">
+              <div className="pd-social-share">
+                <button className="social-btn"><Facebook size={14} /></button>
+                <button className="social-btn"><Twitter size={14} /></button>
+                <button className="social-btn"><Linkedin size={14} /></button>
+                <button className="social-btn"><Instagram size={14} /></button>
+                <button className="social-btn"><Mail size={14} /></button>
+              </div>
               <button 
                 className="pd-message-btn" 
                 onClick={() => setShowMessageModal(true)}
-                title="Ask Seller"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'transparent',
+                  border: '1px solid #e2e8f0',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  color: '#475569',
+                  cursor: 'pointer',
+                  marginRight: '10px'
+                }}
               >
-                <MessageCircle size={20} />
+                <MessageCircle size={16} />
+                MESSAGE STORE
               </button>
-
-               <button 
-                className="pd-message-btn pd-report-btn" 
+              <button 
+                className={`pd-wishlist-link ${liked ? 'active' : ''}`}
+                onClick={toggleWishlist}
+              >
+                <Heart size={16} fill={liked ? "currentColor" : "none"} />
+                ADD TO WISHLIST
+              </button>
+              <button 
+                className="pd-message-btn" 
                 onClick={() => setShowReportModal(true)}
-                title="Report Product"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'transparent',
+                  border: '1px solid #fee2e2',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  color: '#ef4444',
+                  cursor: 'pointer',
+                  marginLeft: '10px'
+                }}
               >
-                <Flag size={20} />
+                <Flag size={16} />
+                REPORT
               </button>
-
-              {!isSeller && (
-                <button 
-                  className={`pd-wish-btn ${liked ? 'active' : ''}`}
-                  onClick={toggleWishlist}
-                  title="Add to Wishlist"
-                >
-                  <Heart size={20} fill={liked ? "currentColor" : "none"} />
-                </button>
-              )}
             </div>
 
-          {/* Seller Card */}
-          <div className="pd-seller-card" onClick={() => navigate(`/seller/${product.sellerId}`)}>
-            <div className="pd-seller-avatar">
-              {product.logoImagePath || product.profileImagePath ? (
-                <img 
-                  src={`${API_BASE}/${product.logoImagePath || product.profileImagePath}`} 
-                  alt={product.sellerStoreName} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <Store size={24} color="#1a1a1a" />
-              )}
+            {/* Seller Card */}
+            <div className="pd-porto-seller" onClick={() => navigate(`/seller/${product.sellerId}`)}>
+              <span>Sold by: <strong>{product.sellerStoreName}</strong></span>
+              <ChevronRight size={14} />
             </div>
-            <div className="pd-seller-info">
-              <p className="seller-label">Sold by</p>
-              <h3>{product.sellerStoreName}</h3>
-              <p className="seller-address">{product.sellerStoreAddress}</p>
-            </div>
-            <ChevronRight size={20} color="#94a3b8" />
           </div>
         </div>
-      </div>
 
-      {/* Related Products Section */}
-      {relatedProducts.length > 0 && (
-        <div className="pd-related-section" style={{marginBottom: '80px', paddingTop: '40px', borderTop: '1px solid #f1f5f9'}}>
-          <h2 className="section-title">You May Also Like</h2>
-          <div className="pd-related-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px'}}>
-            {relatedProducts.map(p => (
-              <ProductCard key={p.id} product={p} />
-            ))}
+        {/* Tabs Section */}
+        <div className="pd-tabs-container">
+          <div className="pd-tabs-header">
+            <button 
+              className={`tab-btn ${activeTab === 'description' ? 'active' : ''}`}
+              onClick={() => setActiveTab('description')}
+            >
+              DESCRIPTION
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'specification' ? 'active' : ''}`}
+              onClick={() => setActiveTab('specification')}
+            >
+              SPECIFICATIONS
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'additional' ? 'active' : ''}`}
+              onClick={() => setActiveTab('additional')}
+            >
+              ADDITIONAL INFORMATION
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
+              onClick={() => setActiveTab('reviews')}
+            >
+              REVIEWS ({reviews.length})
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'report' ? 'active' : ''}`}
+              onClick={() => setActiveTab('report')}
+              style={{ color: '#ef4444' }}
+            >
+              REPORT
+            </button>
           </div>
-        </div>
-      )}
 
-      {/* Reviews Section */}
-
-      <div className="pd-reviews-section">
-          <h2 className="section-title">Customer Reviews</h2>
-          
-          <div className="pd-reviews-grid">
-            {/* Sidebar: Ratings & Breakdown */}
-            <div className="pd-reviews-sidebar">
-                <div className="pd-rating-box">
-                    <span className="rating-number">{product.rating ? Math.round(product.rating * 10) / 10 : 0}</span>
-                    <div className="pd-stars">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                            key={i}
-                            size={24}
-                            fill={i < Math.round(product.rating) ? "#1a1a1a" : "none"}
-                            color={i < Math.round(product.rating) ? "#1a1a1a" : "#d1d5db"}
-                        />
-                        ))}
-                    </div>
-                    <p className="rating-total-count">Based on {reviews.length} reviews</p>
-                </div>
-
-                <div className="pd-rating-bars">
-                    {ratingDist.map(item => (
-                        <div key={item.star} className="rating-bar-row">
-                            <span className="star-label">{item.star} <Star size={12} fill="currentColor" stroke="none" /></span>
-                            <div className="rating-track">
-                                <div className="rating-fill" style={{ width: `${item.percentage}%` }}></div>
-                            </div>
-                            <span className="count-label">{item.count}</span>
-                        </div>
+          <div className="pd-tabs-content">
+            {activeTab === 'description' && (
+              <div className="tab-pane fade-in">
+                <p className="pd-full-desc">{product.description}</p>
+              </div>
+            )}
+            {activeTab === 'specification' && (
+              <div className="tab-pane fade-in">
+                {product.specification ? (
+                  <div className="pd-spec-content">
+                    {product.specification.split('\n').filter(line => line.trim()).map((spec, i) => (
+                      <p key={i} className="spec-line">{spec.trim()}</p>
                     ))}
-                </div>
-            </div>
-
-            {/* Content: Reviews Feed */}
-            <div className="pd-reviews-feed">
-                {reviews.length === 0 ? (
-                    <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280', background: '#f9fafb', borderRadius: '16px' }}>
-                        <p style={{ fontSize: '1.1rem', fontWeight: '500' }}>No reviews yet</p>
-                        <p>Be the first to share your thoughts on this product.</p>
-                    </div>
+                  </div>
                 ) : (
+                  <p>No detailed specifications available for this product.</p>
+                )}
+              </div>
+            )}
+            {activeTab === 'additional' && (
+              <div className="tab-pane fade-in">
+                <div className="additional-info-grid">
+                  <div className="info-row">
+                    <span>Warranty</span>
+                    <span>{product.warrantyMonths} Months</span>
+                  </div>
+                  {product.manufactureDate && (
+                    <div className="info-row">
+                      <span>Manufactured</span>
+                      <span>{new Date(product.manufactureDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {activeTab === 'reviews' && (
+              <div className="tab-pane fade-in">
+                {/* Reviews implementation moved here */}
+                <div className="pd-porto-reviews-feed">
+                  {reviews.length === 0 ? (
+                    <p>No reviews yet.</p>
+                  ) : (
                     reviews.slice(0, visibleReviews).map(r => (
-                        <div className="pd-review-card" key={r.id}>
-                            <div className="pd-review-avatar-box">
-                                <img
-                                    src={r.userProfileImage 
-                                            ? (r.userProfileImage.startsWith('http') ? r.userProfileImage : `${API_BASE}/${r.userProfileImage}`) 
-                                            : "https://via.placeholder.com/56"}
-                                    className="pd-review-avatar"
-                                    alt={r.userName || "User"}
-                                />
-                            </div>
-                            <div className="pd-review-main">
-                                <div className="pd-review-header">
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                            <span className="pd-review-author">{r.userName || "Verified Buyer"}</span>
-                                            <span className="pd-verified-badge">
-                                                <Check size={10} strokeWidth={4} /> Verified Purchase
-                                            </span>
-                                        </div>
-                                        {r.createdAt && <span className="pd-review-date">{new Date(r.createdAt).toLocaleDateString()}</span>}
-                                    </div>
-                                    <div className="pd-stars">
-                                        {Array.from({ length: 5 }).map((_, i) => (
-                                        <Star
-                                            key={i}
-                                            size={14}
-                                            fill={i < r.rating ? "#1a1a1a" : "none"}
-                                            color={i < r.rating ? "#1a1a1a" : "#d1d5db"}
-                                        />
-                                        ))}
-                                    </div>
-                                </div>
-                                
-                                <p className="pd-review-content">{r.comment}</p>
-                                
-                                {r.imagePath && (
-                                    <div style={{ marginTop: '16px' }}>
-                                        <img 
-                                            src={r.imagePath.startsWith('http') ? r.imagePath : `${API_BASE}/${r.imagePath}`} 
-                                            alt="review attachment" 
-                                            style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', cursor: 'pointer', border: '1px solid #e5e7eb' }} 
-                                        />
-                                    </div>
-                                )}
-
-                                <div className="pd-review-footer">
-                                    {markedHelpful.has(r.id) ? (
-                                        <button 
-                                            className="pd-helpful-btn active"
-                                            onClick={() => handleHelpful(r.id)}
-                                        >
-                                            <ThumbsUp size={14} fill="currentColor" /> 
-                                            <span>{(r.helpfulCount || 0) + 1}</span>
-                                        </button>
-                                    ) : (
-                                        <span className="pd-review-helpful">
-                                            Was this review helpful?
-                                            <button 
-                                                className="pd-helpful-btn"
-                                                onClick={() => handleHelpful(r.id)}
-                                            >
-                                                <ThumbsUp size={14} /> 
-                                                <span>{r.helpfulCount || 0}</span>
-                                            </button>
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                      <div className="pd-porto-review-item" key={r.id}>
+                        <div className="pd-rev-avatar-circle">
+                          {r.userName?.charAt(0).toUpperCase() || "U"}
                         </div>
+                        <div className="pd-rev-content-block">
+                          <div className="pd-rev-header-strip">
+                            <div className="pd-rev-identity">
+                              <span className="pd-rev-author">{r.userName}</span>
+                              <div className="pd-rev-stars">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    size={12} 
+                                    fill={i < r.rating ? "#f59e0b" : "none"} 
+                                    color={i < r.rating ? "#f59e0b" : "#d1d5db"} 
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <span className="pd-rev-published-date">{new Date(r.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          
+                          <p className="pd-rev-body">"{r.comment}"</p>
+                          
+                          {r.imagePath && (
+                            <div className="pd-rev-photo-attachment">
+                              <img src={`${API_BASE}/${r.imagePath}`} alt="review proof" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     ))
-                )}
-                
-                {reviews.length > visibleReviews && (
-                    <button 
-                        className="pd-show-more-btn"
-                        onClick={() => setVisibleReviews(prev => prev + 5)}
-                    >
-                        Show More Reviews
-                    </button>
-                )}
+                  )}
+                </div>
+              </div>
+            )}
+            {activeTab === 'report' && (
+              <div className="tab-pane fade-in pd-report-tab">
+                 <div className="pd-report-content">
+                    <Flag size={40} color="#ef4444" style={{ marginBottom: '15px' }} />
+                    <h3>Product Flagging & Support</h3>
+                    <p style={{ maxWidth: '600px', margin: '0 auto 20px' }}>
+                       {canReport 
+                         ? "As a verified purchaser, your formal report will be prioritized by the seller and site administration to resolve any delivery or quality issues." 
+                         : "Notice something wrong? Help us keep Jhapcham safe by reporting policy violations or listing inaccuracies. Verified purchasers get priority support."
+                       }
+                    </p>
+                    <div className="pd-report-actions" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                       {canReport && <span className="badge-verified"><Check size={14} /> Verified Buyer Status</span>}
+                       <button 
+                        className="ua-primary-btn" 
+                        onClick={() => setShowReportModal(true)}
+                        style={{ background: '#ef4444', border: 'none', minWidth: '240px' }}
+                       >
+                        {canReport ? "FILE VERIFIED REPORT" : "REPORT THIS PRODUCT"}
+                       </button>
+                    </div>
+                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <div className="pd-porto-related">
+            <h2 className="related-title">YOU MAY ALSO LIKE</h2>
+            <div className="pd-related-grid">
+              {relatedProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
           </div>
+        )}
       </div>
 
       {/* Message Modal */}
@@ -744,7 +808,6 @@ export default function ProductDetailPage() {
           onClose={() => setToast({ ...toast, visible: false })}
         />
       )}
-      </div>
     </>
   );
 }

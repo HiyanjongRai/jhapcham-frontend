@@ -12,9 +12,14 @@ import ProductDetailPage from "./components/productCard/ProductDetailPage";
 import SellerRegister from "./components/Seller/SellerRegister";
 import SellerApplication from "./components/Seller/SellerApplication";
 import AdminDashboard from "./components/Admin/AdminDashboard";
+import MerchantDetails from "./components/Admin/MerchantDetails";
+import CustomerDetails from "./components/Admin/CustomerDetails";
+import OrderDetails from "./components/Order/OrderDetails";
+import SellerCustomerDetails from "./components/Seller/SellerCustomerDetails";
 import CheckoutPage from "./components/Checkout/CheckoutPage";
 import OrderSuccess from "./components/Order/OrderSuccess.jsx";
 import PaymentStatusPage from "./components/Checkout/PaymentStatusPage.jsx";
+import EsewaCallbackPage from "./components/Checkout/EsewaCallbackPage.jsx";
 import SellerOrders from "./components/Seller/SellerOrders";
 import NotificationList from "./components/NotificationPage/NotificationList";
 import ReviewForm from "./components/Review/ReviewForm.jsx";
@@ -27,6 +32,7 @@ import OnSalePage from "./components/Collections/OnSalePage.jsx";
 import NewArrivalsPage from "./components/Collections/NewArrivalsPage.jsx";
 import BrandsPage from "./components/Collections/BrandsPage.jsx";
 import CampaignsPage from "./components/Campaigns/CampaignsPage.jsx";
+import SellerShipments from "./components/Seller/SellerShipments.jsx";
 
 import SellerProfilePage from "./components/Seller/SellerProfilePage.jsx";
 import SellerLayout from "./components/Seller/SellerLayout";
@@ -57,19 +63,10 @@ const ProfileRedirect = () => {
 };
 
 function App() {
-  const [isCartOpen, setIsCartOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    const handleOpen = () => setIsCartOpen(true);
-    window.addEventListener("open-cart-drawer", handleOpen);
-    return () => window.removeEventListener("open-cart-drawer", handleOpen);
-  }, []);
-
   return (
 
     <ErrorBoundary>
-      <Navbar onOpenCart={() => setIsCartOpen(true)} />
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <Navbar />
 
 
       <Routes>
@@ -97,7 +94,10 @@ function App() {
           <Route path="add-product" element={<AddProduct />} />
           <Route path="products" element={<ProductManagement />} />
           <Route path="promos" element={<PromoCodeManager />} /> {/* New Route */}
+          <Route path="shipment" element={<SellerShipments />} />
           <Route path="settings" element={<UpdateAccount />} />
+          <Route path="order/:id" element={<OrderDetails />} />
+          <Route path="customer/:id" element={<SellerCustomerDetails />} />
         </Route>
 
         <Route path="/seller/register" element={<SellerRegister />} />
@@ -106,18 +106,22 @@ function App() {
 
         {/* Product Details */}
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        
+        {/* Customer Standalone Order Detail */}
+        <Route path="/customer/order/:id" element={<OrderDetails />} />
 
         {/* Checkout */}
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-success" element={<OrderSuccess />} />
         
         {/* Payment Callbacks */}
-        <Route path="/payment/esewa_success" element={<PaymentStatusPage provider="esewa" status="success" />} />
-        <Route path="/payment/esewa_failure" element={<PaymentStatusPage provider="esewa" status="failure" />} />
-        <Route path="/payment/khalti_callback" element={<PaymentStatusPage provider="khalti" />} />
+        <Route path="/payment/esewa-callback" element={<EsewaCallbackPage />} />
 
         {/* Admin */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/merchant/:id" element={<MerchantDetails />} />
+        <Route path="/admin/customer/:id" element={<CustomerDetails />} />
+        <Route path="/admin/order/:id" element={<OrderDetails />} />
 
         {/* Account */}
         <Route path="/update-account" element={<UpdateAccount />} />

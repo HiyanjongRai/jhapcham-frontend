@@ -1,191 +1,131 @@
 /* =============================================
-   COMPACT PROFESSIONAL PRODUCT CARD
+   CLEAN PRODUCT CARD - BOUTIQUE PREMIUM
    ============================================= */
 
 .modern-pc-card {
   background: #ffffff;
   border-radius: 12px;
   position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   height: 100%;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #f1f5f9;
   overflow: hidden;
-  will-change: transform;
 }
 
 .modern-pc-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  border-color: #d1d5db;
-}
-
-.modern-pc-card:active {
-  transform: translateY(-2px);
-}
-
-.modern-pc-card:focus-within {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-/* Accessibility: Keyboard navigation */
-.modern-pc-card[tabindex]:focus {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+  border-color: #e2e8f0;
 }
 
 /* Wishlist Button */
 .modern-pc-wishlist {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(6px);
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   z-index: 10;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .modern-pc-wishlist:hover {
   transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(255, 77, 77, 0.25);
-  background: rgba(255, 245, 245, 0.98);
-}
-
-.modern-pc-wishlist.active {
-  background: #fff5f5;
-  animation: heartBeat 0.6s ease;
-}
-
-@keyframes heartBeat {
-  0%, 100% {
-    transform: scale(1);
-  }
-  25% {
-    transform: scale(1.2);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  75% {
-    transform: scale(1.15);
-  }
-}
-
-.modern-pc-wishlist:active {
-  transform: scale(0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Sale Badge */
 .modern-pc-badge {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  background: #ef4444;
+  top: 12px;
+  left: 12px;
+  background: #ff4d4d;
   color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 0.65rem;
   font-weight: 700;
   z-index: 10;
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
-  line-height: 1;
 }
 
 /* Image Box */
 .modern-pc-img-box {
   width: 100%;
-  height: 160px;
+  height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   background: #fafafa;
-  padding: 12px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 10px;
   position: relative;
-}
-
-.modern-pc-img-skeleton {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    #f3f4f6 0%,
-    #e5e7eb 50%,
-    #f3f4f6 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 8px;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
 }
 
 .modern-pc-img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-  opacity: 0;
-  position: relative;
-  z-index: 1;
-}
-
-.modern-pc-img.loaded {
-  opacity: 1;
+  transition: transform 0.5s ease;
 }
 
 .modern-pc-card:hover .modern-pc-img {
   transform: scale(1.05);
 }
 
-.modern-pc-out-of-stock-overlay {
+/* Quick View Action */
+.modern-pc-quick-view-trigger {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  padding: 0 15px 15px;
+  display: flex;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 5;
+}
+
+.modern-pc-card:hover .modern-pc-quick-view-trigger {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.quick-view-ghost-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.7rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
-  backdrop-filter: blur(2px);
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.06);
 }
 
-.modern-pc-out-of-stock-overlay span {
-  color: white;
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 6px 12px;
-  background: rgba(239, 68, 68, 0.95);
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+.quick-view-ghost-btn:hover {
+  background: #1e293b;
+  color: #fff;
 }
 
 /* Body Content */
@@ -198,70 +138,60 @@
   gap: 6px;
 }
 
+.modern-pc-brand {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  opacity: 0.8;
+}
+
 .modern-pc-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
   margin: 0;
-  line-height: 1.35;
+  line-height: 1.4;
   display: -webkit-box;
-  line-clamp: 2;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-height: 2.3rem;
-  transition: color 0.2s ease;
 }
 
-.modern-pc-card:hover .modern-pc-title {
-  color: #2563eb;
-}
-
-.modern-pc-brand {
-  font-size: 0.7rem;
-  color: #6b7280;
-  margin: 0;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-/* Meta Section - Rating & Views */
 .modern-pc-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-top: 2px;
+  gap: 12px;
 }
 
 .modern-pc-rating {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
 }
 
 .rating-value {
   font-size: 0.8rem;
-  font-weight: 600;
-  color: #111827;
+  font-weight: 700;
+  color: #1e293b;
   margin-left: 4px;
 }
 
 .modern-pc-views {
   display: flex;
   align-items: center;
-  gap: 4px;
-  color: #6b7280;
-  font-size: 0.7rem;
-  font-weight: 500;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
-.modern-pc-views svg {
-  color: #9ca3af;
-  width: 12px;
-  height: 12px;
-}
+.modern-pc-rating-placeholder { height: 15px; }
 
 /* Footer Section */
 .modern-pc-footer {
@@ -269,9 +199,9 @@
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid #f3f4f6;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .modern-pc-price-box {
@@ -281,249 +211,59 @@
 }
 
 .modern-pc-price {
-  display: flex;
-  align-items: baseline;
   color: #0f172a;
-}
-
-.modern-pc-price .currency {
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-right: 1px;
-}
-
-.modern-pc-price .amount {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #111827;
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 
 .modern-pc-old-price {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   text-decoration: line-through;
-  color: #9ca3af;
+  color: #94a3b8;
   font-weight: 500;
 }
 
-/* Seller Below Price Text */
 .modern-pc-seller-below-price {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   font-size: 0.65rem;
-  color: #6b7280;
-  font-weight: 500;
+  color: #94a3b8;
+  font-weight: 600;
   margin-top: 2px;
 }
 
-.modern-pc-seller-below-price svg {
-  color: #9ca3af;
-  flex-shrink: 0;
-  width: 9px;
-  height: 9px;
-}
-
-.modern-pc-seller-below-price span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100px;
-}
-
-/* Add to Cart Button - Compact Professional */
 .modern-pc-btn {
-  background: #111827;
+  background: #1e293b;
   color: #ffffff;
   border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.7rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.15);
   white-space: nowrap;
-  position: relative;
-  overflow: hidden;
-}
-
-.modern-pc-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.modern-pc-btn:hover:not(:disabled)::before {
-  left: 100%;
-}
-
-.modern-pc-btn span {
-  display: inline;
-  position: relative;
-  z-index: 1;
 }
 
 .modern-pc-btn:hover:not(:disabled) {
-  background: #1f2937;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  background: #334155;
+  transform: translateY(-2px);
 }
 
-.modern-pc-btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.modern-pc-btn:disabled,
-.modern-pc-btn.out-of-stock {
-  background: #e5e7eb;
-  color: #9ca3af;
+.modern-pc-btn:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
   cursor: not-allowed;
   box-shadow: none;
-  transform: none;
-}
-
-.modern-pc-btn:disabled::before,
-.modern-pc-btn.out-of-stock::before {
-  display: none;
-}
-
-/* Loading Spinner */
-.modern-pc-btn .spinner {
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-  display: inline-block;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Enhanced Focus States for Accessibility */
-.modern-pc-wishlist:focus,
-.modern-pc-btn:focus {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-.modern-pc-wishlist:focus-visible,
-.modern-pc-btn:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .modern-pc-card {
-    border-radius: 10px;
-  }
-  
-  .modern-pc-img-box {
-    height: 150px;
-    padding: 10px;
-  }
-  
-  .modern-pc-body {
-    padding: 10px 12px;
-  }
-  
-  .modern-pc-title {
-    font-size: 0.8rem;
-    min-height: 2.1rem;
-  }
-  
-  .modern-pc-price .amount {
-    font-size: 1.05rem;
-  }
-  
-  .modern-pc-card:hover {
-    transform: translateY(-2px);
-  }
 }
 
 @media (max-width: 480px) {
-  .modern-pc-card {
-    border-radius: 8px;
-  }
-  
-  .modern-pc-img-box {
-    height: 120px;
-    padding: 8px;
-  }
-  
-  .modern-pc-body {
-    padding: 8px;
-    gap: 4px;
-  }
-  
-  .modern-pc-title {
-    font-size: 0.75rem;
-    min-height: 2rem;
-    margin-bottom: 2px;
-  }
-  
-  .modern-pc-brand { font-size: 0.6rem; }
-
-  .modern-pc-meta { gap: 4px; margin-top: 0; }
-  .rating-value { font-size: 0.7rem; margin-left: 2px; }
-  .modern-pc-views { font-size: 0.6rem; }
-  
-  .modern-pc-price .amount {
-    font-size: 0.9rem;
-  }
-  .modern-pc-price .currency { font-size: 0.65rem; }
-  
-  .modern-pc-btn {
-    padding: 6px 8px;
-    font-size: 0.65rem;
-    border-radius: 6px;
-    gap: 4px;
-  }
-
-  .modern-pc-btn svg { width: 12px !important; height: 12px !important; }
-  
-  .modern-pc-wishlist {
-    width: 24px;
-    height: 24px;
-    top: 6px;
-    right: 6px;
-  }
-  
-  .modern-pc-badge {
-    top: 6px;
-    left: 6px;
-    padding: 2px 6px;
-    font-size: 0.55rem;
-  }
-  
-  .modern-pc-footer {
-    flex-direction: column;
-    align-items: stretch;
-    padding-top: 8px;
-    gap: 6px;
-  }
-  
-  .modern-pc-price-box {
-    width: 100%;
-    margin-bottom: 0;
-  }
-  
-  .modern-pc-card:hover {
-    transform: translateY(-1px);
-  }
+  .modern-pc-price { font-size: 1.1rem; }
+  .modern-pc-btn { padding: 8px 10px; font-size: 0.7rem; }
 }

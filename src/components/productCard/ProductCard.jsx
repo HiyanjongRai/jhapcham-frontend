@@ -6,7 +6,6 @@ import {
   Star, 
   Eye, 
   ShoppingCart,
-  ShoppingBag,
   Store
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -18,8 +17,6 @@ function ProductCard({ product }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
 
   const showToast = (message, type = 'info') => {
@@ -50,10 +47,8 @@ function ProductCard({ product }) {
     sellerFullName
   } = product;
 
-  // Derive store name with fallbacks
   const finalStoreName = storeName || sellerStoreName || sellerName || sellerFullName || "Official Store";
 
-  // Check wishlist status on mount
   useEffect(() => {
     const checkStatus = async () => {
       const userId = getCurrentUserId();
@@ -69,53 +64,35 @@ function ProductCard({ product }) {
   const safePrice = price ?? 0;
   const displayPrice = onSale ? (effectiveSalePrice ?? safePrice) : safePrice;
   const safeRating = averageRating ?? 0;
-  const inStock = (stock ?? 0) > 0 && (visible ?? true) && status === "ACTIVE";
 
   const isFullUrl = (src) => src && (src.startsWith('http://') || src.startsWith('https://'));
-
-  const rawImg = (product.imagePaths && product.imagePaths.length > 0)
-    ? product.imagePaths[0]
-    : product.imagePath;
-
+  const rawImg = (product.imagePaths && product.imagePaths.length > 0) ? product.imagePaths[0] : product.imagePath;
   const PLACEHOLDER_IMG = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22300%22%20height%3D%22300%22%20viewBox%3D%220%200%20300%20300%22%3E%3Crect%20fill%3D%22%23f0f0f0%22%20width%3D%22300%22%20height%3D%22300%22%2F%3E%3Ctext%20fill%3D%22%23999%22%20font-family%3D%22sans-serif%22%20font-size%3D%2230%22%20dy%3D%2210.5%22%20font-weight%3D%22bold%22%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fsvg%3E';
 
-  const imgSrc = isFullUrl(rawImg)
-    ? rawImg
-    : (rawImg
-        ? `${API_BASE}/${rawImg}`
-        : PLACEHOLDER_IMG);
+  const imgSrc = isFullUrl(rawImg) ? rawImg : (rawImg ? `${API_BASE}/${rawImg}` : PLACEHOLDER_IMG);
 
-  const handleCardClick = () => {
-    navigate(`/products/${id}`);
-  };
+  const handleCardClick = () => navigate(`/products/${id}`);
 
   const handleAddToCartClick = async (e) => {
     e.stopPropagation();
     if (stock === 0 || adding) return;
     setAdding(true);
-    
     const userId = getCurrentUserId();
     try {
-      if (userId) {
-        await apiAddToCart(userId, id, 1, null, null);
-      } else {
-        addToGuestCart(product);
-      }
+      if (userId) await apiAddToCart(userId, id, 1, null, null);
+      else addToGuestCart(product);
       showToast("Item added to cart", "success");
     } catch (err) {
-      console.error("Add to cart error:", err);
-      const errorMsg = err.response?.data?.message || "Failed to add item to cart";
-      showToast(errorMsg, "error");
+      showToast(err.response?.data?.message || "Failed to add item to cart", "error");
     } finally {
       setAdding(false);
     }
-  }; 
+  };
 
   const toggleWishlist = async (e) => {
     e.stopPropagation();
     const userId = getCurrentUserId();
     if (!userId) return navigate("/login");
-    
     try {
       if (liked) {
         await apiRemoveFromWishlist(userId, id);
@@ -126,9 +103,7 @@ function ProductCard({ product }) {
         setLiked(true);
         showToast("Added to wishlist", "success");
       }
-    } catch (err) {
-      console.error("Wishlist toggle fail", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   const renderStars = (rating) => {
@@ -137,89 +112,55 @@ function ProductCard({ product }) {
       stars.push(
         <Star 
           key={i} 
-          size={12} 
-          fill={i <= Math.round(rating) ? "#fbbf24" : "none"} 
-          color={i <= Math.round(rating) ? "#fbbf24" : "#d1d5db"} 
+          size={14} 
+          fill={i <= Math.round(rating) ? "#fbc02d" : "none"} 
+          color={i <= Math.round(rating) ? "#fbc02d" : "#cbd5e1"} 
         />
       );
     }
     return stars;
   };
 
-  const formatViews = (views) => {
-    if (views >= 1000) return (views / 1000).toFixed(1) + 'K';
-    return views || 0;
-  };
+  const formatViews = (views) => (views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views || 0);
 
   return (
-    <div 
-      className="modern-pc-card" 
-      onClick={handleCardClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleCardClick();
-        }
-      }}
-      tabIndex={0}
-      role="article"
-      aria-label={`Product: ${name}`}
-    >
-      {/* Wishlist Button */}
+    <div className="modern-pc-card" onClick={handleCardClick}>
       {!isSeller && (
-        <button
-          className={`modern-pc-wishlist ${liked ? "active" : ""}`}
-          onClick={toggleWishlist}
-          aria-label="Toggle Wishlist"
-        >
-          <Heart size={14} fill={liked ? "#ef4444" : "none"} color={liked ? "#ef4444" : "#6b7280"} />
+        <button className={`modern-pc-wishlist ${liked ? "active" : ""}`} onClick={toggleWishlist}>
+          <Heart size={18} fill={liked ? "#ff4d4d" : "none"} color={liked ? "#ff4d4d" : "#1e293b"} />
         </button>
       )}
 
-      {/* Sale/Discount Badge */}
       {onSale && (
-        <div className="modern-pc-badge" title={saleLabel}>
+        <div className="modern-pc-badge">
           {saleLabel || (salePercentage ? `${Math.round(salePercentage)}% OFF` : 'SALE')}
         </div>
       )}
 
-      {/* Product Image Area */}
       <div className="modern-pc-img-box">
-        {!imageLoaded && !imageError && (
-          <div className="modern-pc-img-skeleton" />
-        )}
-        <img 
-          src={imgSrc} 
-          alt={name} 
-          className={`modern-pc-img ${imageLoaded ? 'loaded' : ''}`}
-          loading="lazy" 
-          onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = PLACEHOLDER_IMG;
-            setImageError(true);
-            setImageLoaded(true);
-          }}
-        />
-        {!inStock && (
-          <div className="modern-pc-out-of-stock-overlay">
-            <span>Out of Stock</span>
-          </div>
-        )}
+        <img src={imgSrc} alt={name} className="modern-pc-img" loading="lazy" />
+        <div className="modern-pc-quick-view-trigger">
+           <button className="quick-view-ghost-btn">
+             <Eye size={14} /> Quick View
+           </button>
+        </div>
       </div>
 
-      {/* Product Info Section */}
       <div className="modern-pc-body">
         <p className="modern-pc-brand">{brand || categoryName || "Official Brand"}</p>
         <h3 className="modern-pc-title">{name}</h3>
         
         <div className="modern-pc-meta">
-          <div className="modern-pc-rating">
-            {renderStars(safeRating)}
-            <span className="rating-value">{safeRating.toFixed(1)}</span>
-          </div>
+          {safeRating > 0 ? (
+            <div className="modern-pc-rating">
+              {renderStars(safeRating)}
+              <span className="rating-value">{safeRating.toFixed(1)}</span>
+            </div>
+          ) : (
+            <div className="modern-pc-rating-placeholder" />
+          )}
           <div className="modern-pc-views">
-            <Eye size={12} />
+            <Eye size={14} />
             <span>{formatViews(totalViews)} Views</span>
           </div>
         </div>
@@ -233,48 +174,24 @@ function ProductCard({ product }) {
             {onSale && safePrice > displayPrice && (
               <span className="modern-pc-old-price">Rs {Number(safePrice).toLocaleString()}</span>
             )}
-            
             {finalStoreName && (
-              <div className="modern-pc-seller-below-price" title={`Sold by: ${finalStoreName}`}>
-                <Store size={9} />
+              <div className="modern-pc-seller-below-price">
+                <Store size={10} />
                 <span>{finalStoreName}</span>
               </div>
             )}
           </div>
           
           {!isSeller && (
-            <button 
-              className={`modern-pc-btn ${!inStock ? 'out-of-stock' : ''}`}
-              onClick={handleAddToCartClick} 
-              disabled={stock === 0 || adding}
-              aria-label={stock === 0 ? "Out of stock" : "Add to cart"}
-            >
-              {adding ? (
-                <>
-                  <span className="spinner"></span>
-                  <span>Adding...</span>
-                </>
-              ) : stock === 0 ? (
-                <>
-                  <span>Out of Stock</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingCart size={14} />
-                  <span>Add to Cart</span>
-                </>
-              )}
+            <button className="modern-pc-btn" onClick={handleAddToCartClick} disabled={stock === 0 || adding}>
+              {adding ? "Adding..." : <><ShoppingCart size={16} /><span>Add to Cart</span></>}
             </button>
           )}
         </div>
       </div>
 
       {toast.visible && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast({ ...toast, visible: false })} 
-        />
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, visible: false })} />
       )}
     </div>
   );

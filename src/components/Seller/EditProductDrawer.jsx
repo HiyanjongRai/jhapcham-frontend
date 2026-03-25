@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { UploadCloud, Image as ImageIcon, Info } from "lucide-react";
 import "./ProductManagement.css";
 
 export default function EditProductDrawer({
@@ -199,11 +200,12 @@ export default function EditProductDrawer({
   }
 
   return (
-    <div className="pm-drawer">
-      <div className="pm-drawer-header">
-        <h3>{product.id ? "Edit Product" : "Add Product"}</h3>
-        <button className="pm-close-btn" onClick={onClose}>&times;</button>
-      </div>
+    <div className="pm-modal-overlay" onClick={onClose}>
+      <div className="pm-drawer modal-mode" onClick={e => e.stopPropagation()}>
+        <div className="pm-drawer-header">
+          <h3>{product.id ? "Edit Product" : "Add Product"}</h3>
+          <button className="pm-close-btn" onClick={onClose}>&times;</button>
+        </div>
       
       <div className="pm-drawer-tabs">
         <button className={activeTab === 'essentials' ? 'active' : ''} onClick={() => setActiveTab('essentials')}>Essentials</button>
@@ -241,7 +243,6 @@ export default function EditProductDrawer({
                   <select
                       value={product.category || ""}
                       onChange={e => handleFieldChange("category", e.target.value)}
-                       style={{padding: '6px', borderRadius: '2px', border: '1px solid #000', width: '100%', fontSize: '0.7rem'}}
                   >
                     <option value="">Select a category</option>
                     {categories.map(cat => (
@@ -257,7 +258,7 @@ export default function EditProductDrawer({
                     value={product.shortDescription || ""}
                     onChange={e => handleFieldChange("shortDescription", e.target.value)}
                     placeholder="Brief overview for cards and lists..."
-                    style={{height: '60px', borderRadius: '2px', border: '1px solid #000', padding: '6px', fontSize: '0.7rem'}}
+                    style={{ height: '70px', resize: 'vertical' }}
                 />
             </div>
 
@@ -267,7 +268,7 @@ export default function EditProductDrawer({
                     value={product.description || ""}
                     onChange={e => handleFieldChange("description", e.target.value)}
                     placeholder="Detailed product information..."
-                    style={{height: '100px', borderRadius: '2px', border: '1px solid #000', padding: '6px', fontSize: '0.7rem'}}
+                    style={{ height: '120px', resize: 'vertical' }}
                 />
             </div>
           </div>
@@ -512,15 +513,19 @@ export default function EditProductDrawer({
         {activeTab === 'media' && (
           <div className="pm-form-section">
              <div className="pm-image-upload-section">
-                 <h4>Main Product Image</h4>
+                 <div className="pm-section-title" style={{ marginTop: 0, border: 'none', paddingBottom: 0 }}>Main Product Image</div>
                  <div className="pm-file-drop">
                      <input type="file" onChange={e => setImageFile(e.target.files[0])} accept="image/*" />
-                     {imageFile ? <span className="file-name">{imageFile.name}</span> : <span className="placeholder">Choose Main Image</span>}
+                     <div className="pm-file-drop-content">
+                       <UploadCloud size={36} strokeWidth={1.5} className="pm-file-icon" />
+                       {imageFile ? <span className="file-name">{imageFile.name}</span> : <span className="placeholder">Drag & drop or <span className="browse-link">browse</span></span>}
+                       <span className="file-hint">Supports: JPG, PNG, WEBP</span>
+                     </div>
                  </div>
              </div>
 
-             <div className="pm-image-upload-section">
-                 <h4>Gallery Images</h4>
+             <div className="pm-image-upload-section" style={{ marginTop: '0.5rem' }}>
+                 <div className="pm-section-title" style={{ marginTop: 0, border: 'none', paddingBottom: 0 }}>Gallery Images</div>
                  <div className="pm-file-drop">
                      <input
                         type="file"
@@ -528,14 +533,19 @@ export default function EditProductDrawer({
                         onChange={e => setAdditionalFiles([...e.target.files])}
                          accept="image/*"
                       />
-                      <span className="placeholder">
-                          {additionalFiles.length > 0 ? `${additionalFiles.length} files selected` : "Choose Additional Images"}
-                      </span>
+                     <div className="pm-file-drop-content">
+                       <ImageIcon size={36} strokeWidth={1.5} className="pm-file-icon" />
+                       <span className="placeholder">
+                          {additionalFiles.length > 0 ? `${additionalFiles.length} files selected` : <span>Drag & drop or <span className="browse-link">browse</span> multiple</span>}
+                       </span>
+                       <span className="file-hint">Select up to 5 additional angles</span>
+                     </div>
                  </div>
              </div>
              
              <div className="pm-alert-info">
-                 Tip: Use high-quality JPG or PNG images. Square aspect ratio (1:1) is recommended.
+                 <Info size={16} />
+                 <span>Tip: Use high-quality flat-lay or white background images. Square aspect ratio (1:1) is recommended.</span>
              </div>
           </div>
         )}
@@ -545,6 +555,7 @@ export default function EditProductDrawer({
       <div className="pm-drawer-footer">
         <button className="pm-btn-cancel" onClick={onClose}>Cancel</button>
         <button className="pm-btn-save" onClick={saveProduct}>Save Product</button>
+      </div>
       </div>
     </div>
   );

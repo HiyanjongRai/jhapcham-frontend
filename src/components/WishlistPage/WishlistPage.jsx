@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getCurrentUserId, apiAddToCart } from "../AddCart/cartUtils";
 import { apiGetWishlist, apiRemoveFromWishlist } from "./wishlistUtils";
 import Toast from "../Toast/Toast";
+import { X, Search, ShoppingCart } from "lucide-react";
 import "./WishlistPage.css";
 
 function WishlistPage() {
@@ -87,7 +88,7 @@ function WishlistPage() {
 
   const formatPrice = (n) => {
     if (n == null) return "";
-    return `Rs. ${n.toFixed(2)}`;
+    return `Rs. ${n.toLocaleString()}`;
   };
 
   if (loading) {
@@ -121,85 +122,76 @@ function WishlistPage() {
     <div className="wl-page">
       <h2 className="wl-title">My Wishlist</h2>
 
-      <div className="wl-grid">
-        {items.map((item) => {
-          const imgSrc = item.imagePath
-            ? `${API_BASE}/${item.imagePath}`
-            : "https://via.placeholder.com/400x260?text=No+Image";
+      <div className="wl-table-container">
+        <table className="wl-table">
+          <thead>
+            <tr>
+              <th className="wl-col-product">PRODUCT</th>
+              <th className="wl-col-price">PRICE</th>
+              <th className="wl-col-stock">STOCK STATUS</th>
+              <th className="wl-col-actions">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => {
+              const imgSrc = item.imagePath
+                ? `${API_BASE}/${item.imagePath}`
+                : "https://via.placeholder.com/100?text=No+Image";
 
-          const rating = item.rating ?? 0;
-          const views = item.views ?? 0;
+              const stockStatus = item.stockQuantity > 0 ? "In stock" : "Out of stock";
+              const isOutOfStock = item.stockQuantity <= 0;
 
-          const hasDiscount =
-            item.salePrice != null &&
-            item.salePrice > 0 &&
-            item.discountPercent != null;
-
-          return (
-            <div key={item.id} className="wl-card">
-              <div className="wl-img-wrap" onClick={() => handleOpenProduct(item.productId)}>
-                <img src={imgSrc} alt={item.name || "Product"} className="wl-img" />
-
-                {hasDiscount && (
-                  <span className="wl-badge-sale">-{item.discountPercent}%</span>
-                )}
-              </div>
-
-              <div className="wl-body">
-                <h3 className="wl-name">{item.name}</h3>
-
-                {item.shortDescription && (
-                  <p className="wl-short">{item.shortDescription}</p>
-                )}
-
-                <div className="wl-row wl-meta">
-                  <span className="wl-rating">⭐ {rating.toFixed(1)}</span>
-                  <span className="wl-views">👁 {views}</span>
-                </div>
-
-                <div className="wl-row wl-price-row">
-                  {hasDiscount ? (
-                    <>
-                      <span className="wl-price-sale">
-                        {formatPrice(item.salePrice)}
+              return (
+                <tr key={item.id} className="wl-table-row">
+                  <td className="wl-col-product">
+                    <div className="wl-product-cell">
+                      <div className="wl-img-wrapper">
+                        <img src={imgSrc} alt={item.name} className="wl-thumbnail" />
+                        <button 
+                          className="wl-remove-btn" 
+                          onClick={() => handleRemove(item.productId)}
+                          title="Remove from wishlist"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <span className="wl-product-name" onClick={() => handleOpenProduct(item.productId)}>
+                        {item.name}
                       </span>
-                      <span className="wl-price-original">
-                        {formatPrice(item.price)}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="wl-price">{formatPrice(item.price)}</span>
-                  )}
-                </div>
-
-                <div className="wl-row wl-actions">
-                  <button
-                    className="wl-btn wl-btn-primary"
-                    onClick={() => handleOpenProduct(item.productId)}
-                  >
-                    View
-                  </button>
-
-                  <button
-                    className="wl-btn wl-btn-green"
-                    onClick={() => handleBuyNow(item)}
-                  >
-                    Buy Now
-                  </button>
-
-                  <button
-                    className="wl-btn wl-btn-ghost"
-                    onClick={() => handleRemove(item.productId)}
-                  >
-                    Remove
-                  </button>
-                </div>
-
-              </div>
-            </div>
-          );
-        })}
+                    </div>
+                  </td>
+                  <td className="wl-col-price">
+                    <span className="wl-price-text">{formatPrice(item.price)}</span>
+                  </td>
+                  <td className="wl-col-stock">
+                    <span className={`wl-stock-badge ${isOutOfStock ? 'out' : 'in'}`}>
+                      {stockStatus}
+                    </span>
+                  </td>
+                  <td className="wl-col-actions">
+                    <div className="wl-action-buttons">
+                      <button 
+                        className="wl-action-btn wl-quickview-btn"
+                        onClick={() => handleOpenProduct(item.productId)}
+                      >
+                        QUICK VIEW
+                      </button>
+                      <button 
+                        className="wl-action-btn wl-addcart-btn"
+                        onClick={() => handleBuyNow(item)}
+                        disabled={isOutOfStock}
+                      >
+                        {isOutOfStock ? "STAY TUNED" : "ADD TO CART"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
+
       {toast.visible && (
         <Toast 
           message={toast.message} 

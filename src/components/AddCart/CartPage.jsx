@@ -12,7 +12,7 @@ import {
 } from "./cartUtils";
 import { API_BASE } from "../config/config";
 import { 
-  Trash2, 
+  X, 
   Plus, 
   Minus, 
   ArrowRight, 
@@ -63,7 +63,8 @@ function CartPage() {
             lineTotal: (i.price || 0) * (i.quantity || 1),
             imagePath: i.image,
             color: i.selectedColor,
-            storage: i.selectedStorage
+            storage: i.selectedStorage,
+            stock: i.stockQuantity
           }));
           
           setItems(mappedItems);
@@ -158,6 +159,13 @@ function CartPage() {
 
   const handleQtyChange = async (item, newQty) => {
     if (newQty <= 0) return;
+
+    // Check stock limit if available
+    if (item.stock !== undefined && newQty > item.stock) {
+      alert(`Sorry, only ${item.stock} items are available in stock.`);
+      return;
+    }
+    
     
     const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
     setUpdatingItemId(itemKey);
@@ -173,7 +181,8 @@ function CartPage() {
             lineTotal: (i.price || 0) * (i.quantity || 1),
             imagePath: i.image,
             color: i.selectedColor,
-            storage: i.selectedStorage
+            storage: i.selectedStorage,
+            stock: i.stockQuantity
           }));
           
         setItems(mappedItems);
@@ -308,79 +317,100 @@ function CartPage() {
       
       <div className="cart-layout">
         {/* Cart Items */}
-        <div className="cart-items-list">
-          {items.map((item) => {
-            const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
-            const isRemoving = removingItemId === itemKey;
-            const isUpdating = updatingItemId === itemKey;
-            
-            return (
-              <div 
-                key={itemKey} 
-                className={`cart-item ${isRemoving ? 'removing' : ''} ${isUpdating ? 'updating' : ''}`}
-              >
-                {/* Product Image */}
-                <Link to={`/product/${item.productId}`} className="cart-item-image">
-                  <img
-                    src={item.imagePath ? `${API_BASE}/${item.imagePath}` : "https://via.placeholder.com/100"}
-                    alt={item.name}
-                  />
-                  {isUpdating && (
-                    <div className="updating-overlay">
-                      <div className="spinner"></div>
-                    </div>
-                  )}
-                </Link>
+        <div className="cart-items-section">
+          <table className="cart-table">
+            <thead>
+              <tr>
+                <th className="product-col">PRODUCT</th>
+                <th className="price-col">PRICE</th>
+                <th className="qty-col">QUANTITY</th>
+                <th className="subtotal-col">SUBTOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => {
+                const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
+                const isRemoving = removingItemId === itemKey;
+                const isUpdating = updatingItemId === itemKey;
                 
-                {/* Product Details */}
-                <div className="cart-item-details">
-                  <Link to={`/product/${item.productId}`} className="cart-item-name">
-                    {item.name}
-                  </Link>
-                  
-                  {(item.color || item.storage) && (
-                    <div className="cart-item-variant">
-                      {item.storage && <span>Size: {item.storage}</span>}
-                      {item.color && <span>Color: {item.color}</span>}
-                    </div>
-                  )}
-                  
-                  <div className="cart-item-price">
-                    Rs. {item.lineTotal.toLocaleString()}
-                  </div>
-                </div>
-                
-                {/* Delete Button */}
-                <button 
-                  className="cart-item-delete" 
-                  onClick={() => handleRemove(item)}
-                  disabled={isRemoving}
-                  title="Remove item"
-                >
-                  <Trash2 size={16} />
-                </button>
-                
-                {/* Quantity Controls */}
-                <div className="cart-item-qty">
-                  <button 
-                    className="qty-btn"
-                    onClick={() => handleQtyChange(item, item.quantity - 1)} 
-                    disabled={item.quantity <= 1 || isUpdating}
+                return (
+                  <tr 
+                    key={itemKey} 
+                    className={`cart-table-row ${isRemoving ? 'removing' : ''} ${isUpdating ? 'updating' : ''}`}
                   >
-                    <Minus size={14} />
-                  </button>
-                  <span className="qty-value">{item.quantity}</span>
-                  <button 
-                    className="qty-btn"
-                    onClick={() => handleQtyChange(item, item.quantity + 1)} 
-                    disabled={isUpdating}
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+                    <td className="product-col">
+                      <div className="product-cell-content">
+                        <div className="product-image-container">
+                          <button 
+                            className="remove-item-btn" 
+                            onClick={() => handleRemove(item)}
+                            disabled={isRemoving}
+                            title="Remove item"
+                          >
+                            <X size={14} strokeWidth={3} />
+                          </button>
+                          <Link to={`/product/${item.productId}`} className="cart-item-img-link">
+                            <img
+                              src={item.imagePath ? `${API_BASE}/${item.imagePath}` : "https://via.placeholder.com/100"}
+                              alt={item.name}
+                            />
+                            {isUpdating && (
+                              <div className="updating-overlay">
+                                <div className="spinner"></div>
+                              </div>
+                            )}
+                          </Link>
+                        </div>
+                        <div className="cart-item-info">
+                          <Link to={`/product/${item.productId}`} className="cart-item-name">
+                            {item.name}
+                          </Link>
+                          {(item.color || item.storage) && (
+                            <div className="cart-item-variant">
+                              {item.storage && <span className="variant-label">Capacity: <strong>{item.storage}</strong></span>}
+                              {item.color && (
+                                <span className="variant-label">
+                                  Color: <strong>{item.color}</strong>
+                                  <span className="color-indicator" style={{ backgroundColor: item.color.toLowerCase() }}></span>
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="price-col">
+                      <span className="price-text">Rs. {item.unitPrice.toLocaleString()}</span>
+                    </td>
+                    <td className="qty-col">
+                      <div className="cart-item-qty">
+                        <button 
+                          className="qty-btn"
+                          onClick={() => handleQtyChange(item, item.quantity - 1)} 
+                          disabled={item.quantity <= 1 || isUpdating}
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="qty-value">{item.quantity}</span>
+                        <button 
+                          className="qty-btn"
+                          onClick={() => handleQtyChange(item, item.quantity + 1)} 
+                          disabled={isUpdating}
+                        >
+                          <Plus size={14} strokeWidth={2} />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="subtotal-col">
+                      <span className="subtotal-text">Rs. {item.lineTotal.toLocaleString()}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          
+
         </div>
         
         {/* Order Summary */}
@@ -433,17 +463,17 @@ function CartPage() {
               navigate("/checkout", { state: { preselectedZone: shippingLocation } });
             }}
           >
-            Go to Checkout
-            <ArrowRight size={18} />
+            <span>Proceed to Checkout</span>
+            <ArrowRight size={20} strokeWidth={3} />
           </button>
         </div>
       </div>
 
       {/* Cross-sell Recommendations */}
       {crossSellProducts.length > 0 && (
-        <div className="cart-cross-sell" style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '20px' }}>Frequently Bought Together</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+        <div className="cart-cross-sell">
+          <h2 className="cross-sell-title">Frequently Bought Together</h2>
+          <div className="cross-sell-grid">
             {crossSellProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}

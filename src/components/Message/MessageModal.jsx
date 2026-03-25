@@ -32,6 +32,11 @@ export default function MessageModal({
       return;
     }
 
+    if (!recipientId) {
+      setFeedback({ type: "error", text: "Recipient details are not loaded properly. Please try again." });
+      return;
+    }
+
     setSending(true);
     setFeedback({ type: "", text: "" });
 

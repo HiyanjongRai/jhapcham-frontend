@@ -68,6 +68,7 @@ export function addToGuestCart(product, quantity = 1, color = null, storage = nu
       lineTotal: unit * quantity,
       color,
       storage,
+      stock: product.stockQuantity ?? product.stock
     });
   }
 

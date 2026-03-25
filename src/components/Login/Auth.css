@@ -35,8 +35,8 @@
 .auth-main-card {
   background: #ffffff;
   width: 100%;
-  max-width: 1100px;
-  min-height: 600px;
+  max-width: 850px;
+  min-height: 520px;
   border-radius: var(--auth-radius-lg);
   display: flex;
   overflow: hidden;
@@ -57,7 +57,7 @@
   flex: 1.1;
   background: #09090b;
   position: relative;
-  padding: 30px; /* Tight padding for consistency */
+  padding: 24px; /* Reduced for compact look */
   display: flex;
   flex-direction: column;
   color: white;
@@ -85,11 +85,11 @@
 }
 
 .auth-visual-title {
-  font-size: 3.5rem;
+  font-size: 2.8rem;
   font-weight: 800;
-  line-height: 1;
-  letter-spacing: -3px;
-  margin-bottom: 24px;
+  line-height: 1.1;
+  letter-spacing: -2px;
+  margin-bottom: 20px;
   background: linear-gradient(to bottom right, #fff 50%, #71717a);
   -webkit-background-clip: text;
   background-clip: text;
@@ -114,7 +114,7 @@
 }
 
 .auth-primary-illustration {
-  height: 280px;
+  height: 220px;
   width: auto;
   max-width: 100%;
   object-fit: contain;
@@ -129,7 +129,7 @@
 /* --- Right Form Section (Modern Professional) --- */
 .auth-form-section {
   flex: 1;
-  padding: 30px 40px; /* Reduced vertical padding */
+  padding: 24px 30px; /* More compact padding */
   justify-content: center;
   display: flex;
   flex-direction: column;
@@ -159,11 +159,11 @@
 }
 
 .auth-header-text h1 {
-  font-size: 2.1rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: var(--auth-text-main);
-  letter-spacing: -1.5px;
-  margin-bottom: 6px;
+  letter-spacing: -1.2px;
+  margin-bottom: 4px;
 }
 
 .auth-header-text p {
@@ -183,7 +183,7 @@
 
 .auth-input {
   width: 100%;
-  height: 48px;
+  height: 45px;
   background: #ffffff;
   border: 1.5px solid var(--auth-border);
   border-radius: var(--auth-radius-md);
@@ -248,7 +248,7 @@
 /* Primary "Impact" Button */
 .auth-primary-btn {
   width: 100%;
-  height: 48px;
+  height: 45px;
   background: #000000;
   color: #ffffff;
   border: none;
@@ -314,7 +314,7 @@
 }
 
 .auth-social-btn {
-  height: 46px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;

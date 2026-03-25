@@ -31,4 +31,24 @@ api.interceptors.request.use(
   }
 );
 
+// Add response interceptor to handle auth errors system-wide
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // The user's token is invalid or the server memory was cleared during a restart
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userEmail');
+      
+      // Dispatch an event so components (like the Navbar or modals) can react or redirect
+      window.dispatchEvent(new Event('auth-expired'));
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

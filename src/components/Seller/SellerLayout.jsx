@@ -4,6 +4,7 @@ import SellerSidebar from "./SellerSidebar";
 import { getCurrentUserId } from "../../utils/authUtils";
 import { API_BASE } from "../config/config";
 import "./seller.css";
+import DashboardNavbar from "../Admin/DashboardNavbar";
 
 export default function SellerLayout() {
   const [storeInfo, setStoreInfo] = useState(null);
@@ -35,7 +36,15 @@ export default function SellerLayout() {
     <div className="dashboard">
       <SellerSidebar storeInfo={storeInfo} />
       <div className="dashboard-content">
-        <Outlet context={{ storeInfo }} />
+        <DashboardNavbar 
+          title="Dashboard" 
+          role="SELLER" 
+          showSearch={false}
+          customUserName={storeInfo?.shopName || storeInfo?.storeName}
+        />
+        <div className="seller-page-wrapper">
+          <Outlet context={{ storeInfo }} />
+        </div>
       </div>
     </div>
   );

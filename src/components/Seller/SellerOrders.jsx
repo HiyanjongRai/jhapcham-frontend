@@ -25,7 +25,10 @@ import { apiGetSellerOrders, apiGetOrder } from "../AddCart/cartUtils";
 import Toast from "../Toast/Toast"; // Import Toast
 import MessageModal from "../Message/MessageModal"; // Import MessageModal
 
+import { useNavigate } from "react-router-dom";
+
 export default function SellerOrders() {
+  const navigate = useNavigate();
   const sellerId = useMemo(() => getCurrentUserId(), []);
   const [orders, setOrders] = useState([]);
   const [, setLoading] = useState(true);
@@ -236,8 +239,8 @@ export default function SellerOrders() {
       <main className="so-main-content">
         <header className="so-header-v2">
           <div className="so-header-left">
-            <h1 className="so-page-title">Order Hub</h1>
-            <p className="so-page-subtitle">Manage your fulfillment pipeline with precision.</p>
+            <h1 className="so-page-title gt-h3">Order Hub</h1>
+            <p className="so-page-subtitle gt-note">Manage your fulfillment pipeline with precision.</p>
           </div>
           <div className="so-header-right">
              <div className="so-header-actions">
@@ -262,13 +265,13 @@ export default function SellerOrders() {
                onClick={() => setStatusFilter(s.key === 'total' ? 'ALL' : (s.key === 'pending' ? 'NEW' : s.key.toUpperCase()))}
             >
               <div className="metric-header">
-                <span className="metric-label">{s.label} {s.icon}</span>
+                <span className="metric-label gt-note">{s.label} {s.icon}</span>
               </div>
               <div className="metric-body">
-                <span className="metric-value">{s.value.toLocaleString()}</span>
+                <span className="metric-value gt-h3">{s.value.toLocaleString()}</span>
               </div>
               <div className="metric-footer">
-                <span className="metric-sub">{s.sub}</span>
+                <span className="metric-sub gt-note">{s.sub}</span>
               </div>
             </div>
           ))}
@@ -277,8 +280,8 @@ export default function SellerOrders() {
         {/* Workflow Controls */}
         <div className="so-workflow-controls-v2">
           <div className="so-tabs-v2">
-            <button className={`so-tab-v2 ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>Active Workbench</button>
-            <button className={`so-tab-v2 ${activeTab === 'completed' ? 'active' : ''}`} onClick={() => setActiveTab('completed')}>History Archive</button>
+            <button className={`so-tab-v2 gt-note ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>Active Workbench</button>
+            <button className={`so-tab-v2 gt-note ${activeTab === 'completed' ? 'active' : ''}`} onClick={() => setActiveTab('completed')}>History Archive</button>
           </div>
 
           <div className="so-filters-v2">
@@ -308,13 +311,13 @@ export default function SellerOrders() {
           <table className="so-table-v2">
             <thead>
               <tr>
-                <th>ORDER ID</th>
-                <th>RECIPIENT</th>
-                <th>PRODUCT</th>
-                <th>PAYMENT</th>
-                <th>TOTAL & DISCOUNT</th>
-                <th>SETTLEMENT</th>
-                <th>STATUS</th>
+                <th className="gt-note">ORDER ID</th>
+                <th className="gt-note">RECIPIENT</th>
+                <th className="gt-note">PRODUCT</th>
+                <th className="gt-note">PAYMENT</th>
+                <th className="gt-note">TOTAL & DISCOUNT</th>
+                <th className="gt-note">SETTLEMENT</th>
+                <th className="gt-note">STATUS</th>
               </tr>
             </thead>
             <tbody>
@@ -323,14 +326,14 @@ export default function SellerOrders() {
                 const isSelected = selectedOrderId === oid;
                 return (
                   <tr key={oid} className={`${isSelected ? 'selected' : ''}`} onClick={() => handleSelectOrder(oid)}>
-                    <td>
+                    <td onClick={(e) => { e.stopPropagation(); navigate(`/seller/order/${oid}`); }} style={{ cursor: 'pointer' }}>
                       <div className="oid-cell">
-                        <span className="oid-text">ORD-{String(oid).padStart(5, '0')}</span>
-                        <span className="oid-time">{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</span>
+                        <span className="oid-text gt-caption">ORD-{String(oid).padStart(5, '0')}</span>
+                        <span className="oid-time gt-note">{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</span>
                       </div>
                     </td>
                     <td>
-                      <div className="recipient-cell">
+                      <div className="recipient-cell" onClick={(e) => { e.stopPropagation(); if(order.customerId) navigate(`/seller/customer/${order.customerId}`); }} style={{ cursor: 'pointer' }}>
                         <div className="recipient-avatar-v2">
                            <div className="avatar-initial">{(order.customerName || 'U').charAt(0)}</div>
                            {order.customerProfileImagePath && (
@@ -343,8 +346,8 @@ export default function SellerOrders() {
                            )}
                         </div>
                         <div className="recipient-info-v2">
-                           <span className="recipient-name">{order.customerName || "Confidential Buyer"}</span>
-                           <span className="recipient-phone">{order.customerPhone || "N/A"}</span>
+                           <span className="recipient-name gt-caption">{order.customerName || "Confidential Buyer"}</span>
+                           <span className="recipient-phone gt-note">{order.customerPhone || "N/A"}</span>
                         </div>
                       </div>
                     </td>
@@ -357,32 +360,39 @@ export default function SellerOrders() {
                           onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/40?text=P'; }}
                         />
                         <div className="prod-info-v2">
-                           <span className="prod-name-v2">{order.productNames?.split(',')[0]}</span>
-                           {order.items?.length > 1 && <span className="prod-count-v2">+{order.items.length - 1} items</span>}
+                           <span className="prod-name-v2 gt-caption">{order.productNames?.split(',')[0]}</span>
+                           {order.items?.length > 1 && <span className="prod-count-v2 gt-note">+{order.items.length - 1} items</span>}
                         </div>
                       </div>
                     </td>
                     <td>
-                      <span className={`payment-badge-v2 ${(order.paymentMethod || 'COD').toLowerCase()}`}>
-                        {order.paymentMethod || 'COD'}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span className={`payment-badge-v2 ${(order.paymentMethod || 'COD').toLowerCase()}`}>
+                          {order.paymentMethod === 'ESEWA' ? 'eSewa (Online)' : 
+                           order.paymentMethod === 'KHALTI' ? 'Khalti (Online)' : 
+                           'Cash on Delivery'}
+                        </span>
+                        {order.paymentReference && (
+                          <span style={{ fontSize: '0.6rem', color: '#64748b' }}>Ref: {order.paymentReference}</span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <div className="total-cell-v2">
-                        <span className="grand-total-v2">NPR {(order.grandTotal || 0).toLocaleString()}</span>
+                        <span className="grand-total-v2 gt-caption">NPR {(order.grandTotal || 0).toLocaleString()}</span>
                         {order.discountTotal > 0 && (
-                          <span className="discount-tag-v2">-NPR {order.discountTotal.toLocaleString()}</span>
+                          <span className="discount-tag-v2 gt-note">-NPR {order.discountTotal.toLocaleString()}</span>
                         )}
                       </div>
                     </td>
                     <td>
                       <div className="settlement-cell-v2">
-                         <span className="net-amount-v2">NPR {(order.sellerNetAmount || 0).toLocaleString()}</span>
-                         <span className="settlement-sub-v2">Net Income</span>
+                         <span className="net-amount-v2 gt-caption">NPR {(order.sellerNetAmount || 0).toLocaleString()}</span>
+                         <span className="settlement-sub-v2 gt-note">Net Income</span>
                       </div>
                     </td>
                     <td>
-                      <div className={`status-dot-pill ${(order.status || 'PENDING').toLowerCase()}`}>
+                      <div className={`status-dot-pill gt-note ${(order.status || 'PENDING').toLowerCase()}`}>
                         <span className="dot"></span>
                         {(order.status || "").replace(/_/g, " ")}
                       </div>
@@ -401,10 +411,11 @@ export default function SellerOrders() {
         </div>
       </main>
 
-      {/* Detail Drawer */}
-      <aside className={`so-detail-drawer ${selectedOrderId ? 'open' : ''}`}>
+      {/* Detail Modal */}
+      <div className={`so-detail-modal-overlay ${selectedOrderId ? 'open' : ''}`} onClick={() => setSelectedOrderId(null)}>
         {currentOrder ? (
-          <div className="drawer-inner">
+          <div className="so-detail-modal" onClick={e => e.stopPropagation()}>
+            <div className="drawer-inner">
             <header className="drawer-header">
               <div className="order-id-meta">
                 <span className="label">ORDER MANIFEST</span>
@@ -431,15 +442,17 @@ export default function SellerOrders() {
                                    ["PROCESSING"].includes(currentStatus) ? 1 :
                                    ["SHIPPED", "SHIPPED_TO_BRANCH", "OUT_FOR_DELIVERY"].includes(currentStatus) ? 2 :
                                    ["DELIVERED"].includes(currentStatus) ? 3 : 0;
-                  
-                  const isDone = idx < stepIndex;
-                  const isActive = idx === stepIndex;
+                   const isDone = idx < stepIndex;
+                   const isActive = idx === stepIndex;
+                   const isLast = idx === 3;
                   
                   return (
                     <div key={step.label} className={`step-item-v2 ${isDone ? 'done' : ''} ${isActive ? 'active' : ''}`}>
-                      <div className="step-circle">{isDone ? <CheckCircle size={10} /> : idx + 1}</div>
-                      <span className="step-label">{step.label}</span>
-                      {idx < 3 && <div className="step-line"></div>}
+                      <div className="step-content-v2">
+                        <div className="step-circle">{isDone ? <CheckCircle size={10} /> : idx + 1}</div>
+                        <span className="step-label">{step.label}</span>
+                      </div>
+                      {!isLast && <div className="step-line"></div>}
                     </div>
                   );
                 })}
@@ -447,7 +460,7 @@ export default function SellerOrders() {
 
               {/* Customer Info */}
               <section className="drawer-section">
-                <h3 className="section-title"><User size={14} /> CUSTOMER</h3>
+                <h3 className="section-title gt-caption"><User size={14} /> CUSTOMER</h3>
                 <div className="customer-info-box">
                   <div className="customer-avatar">
                 {currentOrder.customerProfileImagePath && (
@@ -457,11 +470,11 @@ export default function SellerOrders() {
                     onError={(e) => { e.currentTarget.style.display='none'; }} 
                   />
                 )}
-                <span>{currentOrder.customerName?.charAt(0) || 'U'}</span>
+                <span className="gt-caption">{currentOrder.customerName?.charAt(0) || 'U'}</span>
               </div>
                   <div className="customer-details">
-                    <span className="customer-name">{currentOrder.customerName || "Sita Sharma"}</span>
-                    <span className="customer-contact">+977 {currentOrder.customerPhone || "980-332-1100"}</span>
+                    <span className="customer-name gt-caption">{currentOrder.customerName || "Sita Sharma"}</span>
+                    <span className="customer-contact gt-note">+977 {currentOrder.customerPhone || "980-332-1100"}</span>
                   </div>
                   <button className="so-btn-message" onClick={() => setMsgModal({ isOpen: true, recipientId: currentOrder.customerId, recipientName: currentOrder.customerName, type: 'store' })}><MessageSquare size={14} /></button>
                 </div>
@@ -499,7 +512,19 @@ export default function SellerOrders() {
                        <img src={buildImageUrl(item.imagePath)} alt="" className="item-img-v2" />
                        <div className="item-meta-v2">
                           <span className="item-name-v2">{item.name}</span>
-                          <span className="item-sub-v2">{item.selectedColor || ''} {item.selectedStorage || ''}</span>
+                          <div className="item-variant-badges-v2">
+                            {item.selectedColor && (
+                              <span className="variant-mini-badge color">
+                                <span className="dot" style={{ backgroundColor: item.selectedColor.toLowerCase() }}></span>
+                                {item.selectedColor}
+                              </span>
+                            )}
+                            {item.selectedStorage && (
+                              <span className="variant-mini-badge cap">
+                                {item.selectedStorage}
+                              </span>
+                            )}
+                          </div>
                        </div>
                        <div className="item-qty-v2">x{item.quantity}</div>
                        <div className="item-price-v2">NPR {item.lineTotal?.toLocaleString()}</div>
@@ -526,6 +551,19 @@ export default function SellerOrders() {
                         <span>NPR {currentDetail?.grandTotal?.toLocaleString()}</span>
                       </div>
                       
+                      <div className="payment-method-info" style={{ marginTop: '8px', padding: '10px', background: currentOrder?.paymentMethod === 'ESEWA' || currentOrder?.paymentMethod === 'KHALTI' ? '#f0fdf4' : '#f8fafc', borderRadius: '6px', border: `1px solid ${currentOrder?.paymentMethod === 'ESEWA' || currentOrder?.paymentMethod === 'KHALTI' ? '#bbf7d0' : '#e2e8f0'}`, fontSize: '0.8rem', fontWeight: '600', color: currentOrder?.paymentMethod === 'ESEWA' || currentOrder?.paymentMethod === 'KHALTI' ? '#166534' : '#475569', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {currentOrder?.paymentMethod === 'ESEWA' ? '✔️ Paid by eSewa' : 
+                           currentOrder?.paymentMethod === 'KHALTI' ? '✔️ Paid by Khalti' : 
+                           '📦 Cash on Delivery'}
+                        </div>
+                        {currentOrder?.paymentReference && (
+                          <div style={{ fontSize: '0.7rem', color: '#64748b', marginLeft: '24px' }}>
+                            Ref: {currentOrder.paymentReference}
+                          </div>
+                        )}
+                      </div>
+                      
                       <div className="settlement-box-v2" style={{ marginTop: '20px', padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                         <h4 style={{ margin: '0 0 12px', fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Seller Settlement</h4>
                         <div className="total-row-v2">
@@ -546,61 +584,78 @@ export default function SellerOrders() {
               </section>
             </div>
 
-            <footer className="drawer-footer-v2">
-              <div className="execution-panel-v2">
+            <footer className="drawer-footer-v3">
+              <div className="status-terminal-v3">
                 {currentOrder.status !== 'CANCELED' && (
-                  <>
-                    <div className="hub-selection-v2">
-                      <select 
-                        value={orderBranches[selectedOrderId] || ""} 
-                        onChange={(e) => setOrderBranches(prev => ({ ...prev, [selectedOrderId]: e.target.value }))}
-                      >
-                        <option value="" disabled>Select Delivery Hub</option>
-                        {branches.map(b => <option key={b} value={b}>{b} Hub</option>)}
-                      </select>
+                  <div className="terminal-workflow-v3">
+                    <div className="workflow-header-v3">
+                      <span className="gt-note">Execution Workflow</span>
+                      {orderBranches[selectedOrderId] && (
+                        <span className="hub-ping notification-glow">
+                           Routing via {orderBranches[selectedOrderId]} Hub
+                        </span>
+                      )}
                     </div>
                     
-                    <div className="main-actions-v2">
-                      {["NEW", "PENDING"].includes(currentOrder.status) && (
-                        <button className="so-btn-big primary" onClick={() => updateStatus(selectedOrderId, 'PROCESSING')}>
-                           <CheckCircle size={14} /> Confirm Process
+                    <div className="terminal-actions-v3">
+                      <div className="terminal-setup-v3">
+                        <select 
+                          value={orderBranches[selectedOrderId] || ""} 
+                          onChange={(e) => setOrderBranches(prev => ({ ...prev, [selectedOrderId]: e.target.value }))}
+                          className="terminal-select-v3"
+                        >
+                          <option value="" disabled>Select Fulfillment Hub</option>
+                          {branches.map(b => <option key={b} value={b}>{b} Logistics Center</option>)}
+                        </select>
+                      </div>
+
+                      <div className="terminal-main-v3">
+                        {["NEW", "PENDING"].includes(currentOrder.status) && (
+                          <button className="terminal-btn-v3 primary-glow" onClick={() => updateStatus(selectedOrderId, 'PROCESSING')}>
+                             <Package size={14} /> Start Processing
+                          </button>
+                        )}
+                        {currentOrder.status === "PROCESSING" && (
+                          <button className="terminal-btn-v3 energy-glow" disabled={!orderBranches[selectedOrderId]} onClick={() => updateStatus(selectedOrderId, 'SHIPPED')}>
+                             <Truck size={14} /> Dispatch to Hub
+                          </button>
+                        )}
+                        {["SHIPPED", "SHIPPED_TO_BRANCH"].includes(currentOrder.status) && (
+                          <button className="terminal-btn-v3 energy-glow" onClick={() => updateStatus(selectedOrderId, 'OUT_FOR_DELIVERY')}>
+                             <Truck size={14} /> Final Dispatch
+                          </button>
+                        )}
+                        {currentOrder.status === "OUT_FOR_DELIVERY" && (
+                          <button className="terminal-btn-v3 success-glow" onClick={() => updateStatus(selectedOrderId, 'DELIVERED')}>
+                             <CheckCircle size={14} /> Mark Fulfilled
+                          </button>
+                        )}
+                        
+                        <button className="terminal-btn-v3 ghost-red-v3" onClick={() => updateStatus(selectedOrderId, 'CANCELED')}>
+                          <XCircle size={14} /> Void Manifest
                         </button>
-                      )}
-                      {currentOrder.status === "PROCESSING" && (
-                        <button className="so-btn-big primary" disabled={!orderBranches[selectedOrderId]} onClick={() => updateStatus(selectedOrderId, 'SHIPPED')}>
-                           Confirm Dispatch
-                        </button>
-                      )}
-                      {["SHIPPED", "SHIPPED_TO_BRANCH"].includes(currentOrder.status) && (
-                        <button className="so-btn-big primary" onClick={() => updateStatus(selectedOrderId, 'OUT_FOR_DELIVERY')}>
-                           Authorize Dispatch
-                        </button>
-                      )}
-                      {currentOrder.status === "OUT_FOR_DELIVERY" && (
-                        <button className="so-btn-big success" onClick={() => updateStatus(selectedOrderId, 'DELIVERED')}>
-                           Verify Fulfillment
-                        </button>
-                      )}
-                      
-                      <button className="so-btn-big secondary" onClick={() => updateStatus(selectedOrderId, 'CANCELED')}>
-                        Void Order
-                      </button>
+                      </div>
                     </div>
-                  </>
+                  </div>
                 )}
+                
                 {currentOrder.status === 'CANCELED' && (
-                  <div className="void-info-v2">
-                    <XCircle size={20} />
-                    <span>This transaction has been voided.</span>
+                  <div className="terminal-void-banner-v3">
+                    <Archive size={18} />
+                    <div style={{ flex: 1 }}>
+                       <strong>MANIFEST VOIDED</strong>
+                       <p className="gt-note">This transaction is archived and no longer actionable.</p>
+                    </div>
                   </div>
                 )}
               </div>
             </footer>
+            </div>
           </div>
         ) : (
           <div className="drawer-empty-v2">Select an order to view details.</div>
         )}
-      </aside>
+      </div>
 
       {toast.isVisible && (
         <Toast 

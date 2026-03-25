@@ -82,8 +82,8 @@ const PromoCodeManager = () => {
     <div className="promo-manager-container">
       <div className="promo-header">
         <div>
-          <h2>Promo Codes</h2>
-          <p>Manage your discount coupons</p>
+          <h2 className="gt-h3">Promo Codes</h2>
+          <p className="gt-note">Manage your discount coupons</p>
         </div>
         <button className="create-btn" onClick={() => setShowCreateModal(true)}>
           <Plus size={14} /> Create New
@@ -99,7 +99,7 @@ const PromoCodeManager = () => {
           {promos.map(promo => (
             <div key={promo.id} className={`promo-card ${!promo.isActive ? 'expired' : ''}`}>
               <div className="card-top">
-                <div className="promo-type-badge">
+                <div className="promo-type-badge gt-caption">
                    {promo.discountType === 'PERCENTAGE' ? <Percent size={14} /> : <DollarSign size={14} />}
                    {promo.discountType === 'PERCENTAGE' ? `${promo.discountValue}% OFF` : `Rs. ${promo.discountValue} OFF`}
                 </div>
@@ -109,7 +109,7 @@ const PromoCodeManager = () => {
               </div>
               
               <div className="code-display" onClick={() => copyToClipboard(promo.code)}>
-                <span className="code-text">{promo.code}</span>
+                <span className="code-text gt-caption">{promo.code}</span>
                 <Copy size={14} className="copy-icon" />
               </div>
 

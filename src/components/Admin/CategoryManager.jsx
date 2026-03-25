@@ -75,81 +75,103 @@ const CategoryManager = ({ showToast }) => {
     };
 
     return (
-        <div className="ad-table-container">
-            <div className="ad-table-header">
-                <h2>Product Categories</h2>
+        <div className="adm-categories-manager">
+            <div className="adm-header">
+                <div>
+                    <h1 className="adm-page-title">Category Manager</h1>
+                    <p className="adm-page-sub">Manage product hierarchy and descriptions</p>
+                </div>
                 {!isAdding && (
-                    <button className="ad-btn-primary" onClick={() => setIsAdding(true)}>
-                        <Plus size={16} /> Add New
+                    <button className="adm-panel-btn primary" onClick={() => setIsAdding(true)}>
+                        <Plus size={18} /> Add Category
                     </button>
                 )}
             </div>
 
             {isAdding && (
-                <div className="ad-form-panel">
-                    <div className="ad-form-grid">
-                        <div className="ad-input-group">
-                            <label>Category Name</label>
+                <div className="adm-chart-card" style={{ marginBottom: '24px' }}>
+                    <div className="adm-chart-header">
+                        <h3>{editingId ? "Edit Category" : "New Category"}</h3>
+                        <button className="adm-close-btn" onClick={resetForm}><X size={18}/></button>
+                    </div>
+                    
+                    <div className="adm-panel-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div>
+                            <label className="adm-form-label">Category Name</label>
                             <input 
-                                className="ad-input" 
+                                className="adm-select" 
+                                style={{ width: '100%', boxSizing: 'border-box' }}
                                 value={formData.name} 
                                 onChange={e => setFormData({...formData, name: e.target.value})} 
                                 placeholder="e.g. Electronics"
                             />
                         </div>
-                        <div className="ad-input-group">
-                            <label>Description</label>
+                        <div>
+                            <label className="adm-form-label">Description</label>
                             <input 
-                                className="ad-input" 
+                                className="adm-select" 
+                                style={{ width: '100%', boxSizing: 'border-box' }}
                                 value={formData.description} 
                                 onChange={e => setFormData({...formData, description: e.target.value})} 
                                 placeholder="Short description..."
                             />
                         </div>
-                        <div style={{ display: 'flex', gap: '0.75rem' }}>
-                            <button className="ad-btn-primary" onClick={handleSave}>
-                                <Save size={16} /> Save
-                            </button>
-                            <button className="ad-btn-secondary" onClick={resetForm}>
-                                <X size={16} /> Cancel
-                            </button>
-                        </div>
+                    </div>
+                    
+                    <div style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
+                        <button className="adm-submit-btn" style={{ width: 'auto', padding: '10px 24px' }} onClick={handleSave}>
+                            {editingId ? "Update Category" : "Create Category"}
+                        </button>
+                        <button className="adm-panel-btn warn" style={{ width: 'auto', padding: '10px 24px' }} onClick={resetForm}>
+                            Cancel
+                        </button>
                     </div>
                 </div>
             )}
 
-            <table className="ad-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {categories.map(cat => (
-                        <tr key={cat.id}>
-                            <td className="ad-id">#{cat.id}</td>
-                            <td style={{ fontWeight: '600', textTransform: 'capitalize' }}>{cat.name}</td>
-                            <td style={{ color: '#666', fontSize: '0.9rem' }}>{cat.description || '-'}</td>
-                            <td>
-                                <div className="ad-action-buttons">
-                                    <button className="ad-action-btn" onClick={() => startEdit(cat)} title="Edit">
+            <div className="adm-table-card">
+                <div className="adm-table-filters">
+                    <span>{categories.length} Categories Total</span>
+                </div>
+                
+                {loading ? (
+                    <div className="adm-loader">
+                        <Plus size={32} className="spinning" />
+                        <p>Synchronizing Categories...</p>
+                    </div>
+                ) : (
+                    <div className="adm-table-body">
+                        {categories.map(cat => (
+                            <div key={cat.id} className="adm-row">
+                                <div className="adm-row-avatar">
+                                    {cat.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="adm-row-info">
+                                    <h4 className="adm-row-title">{cat.name}</h4>
+                                    <p className="adm-row-sub">{cat.description || "No description provided."}</p>
+                                    <div style={{ marginTop: '6px' }}>
+                                        <span className="adm-report-type-badge">ID: #{cat.id}</span>
+                                    </div>
+                                </div>
+                                <div className="adm-row-actions">
+                                    <button className="adm-icon-btn" onClick={() => startEdit(cat)} title="Edit">
                                         <Edit2 size={16} />
                                     </button>
-                                    <button className="ad-action-btn action-reject" onClick={() => handleDelete(cat.id)} title="Delete">
+                                    <button className="adm-icon-btn danger" onClick={() => handleDelete(cat.id)} title="Delete">
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
-                            </td>
-                        </tr>
-                    ))}
-                    {categories.length === 0 && !loading && (
-                        <tr><td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: '#999' }}>No categories found. Start by adding one.</td></tr>
-                    )}
-                </tbody>
-            </table>
+                            </div>
+                        ))}
+                        {categories.length === 0 && (
+                            <div className="adm-empty-state">
+                                <h3>No Categories Found</h3>
+                                <p>Get started by creates your first product category.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

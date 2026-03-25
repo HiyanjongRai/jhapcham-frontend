@@ -1,553 +1,372 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import "./Navbar.css";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { 
-  ShoppingBag, 
-  User, 
-  Search, 
-  Menu, 
-  X, 
-  MessageCircle,
-  ChevronDown,
-  LogOut,
-  Store,
-  Bell,
-  Truck,
-  ShieldCheck,
-  Zap,
-  Globe,
-  ArrowRight
+  ShoppingBag, User, Search, Menu, X, 
+  ChevronDown, Phone, Heart, ArrowRight, Bell
 } from "lucide-react";
-import ConfirmModal from "../Common/ConfirmModal.jsx";
+import "./Navbar.css";
 import { API_BASE } from "../config/config";
-import { apiGetCart, loadGuestCart } from "../AddCart/cartUtils";
-import axios from "../../api/axios";
+import api from "../../api/axios";
 import logo from "../Images/Logo/logo1.png";
+import ConfirmModal from "../Common/ConfirmModal.jsx";
 
-const navLinks = [
-  { label: "Shop", labelKey: "Shop", path: "/", hasMegaMenu: true },
-  { label: "On Sale", labelKey: "On Sale", path: "/on-sale" },
-  { label: "New Arrivals", labelKey: "New Arrivals", path: "/new-arrivals" },
-  { label: "Brands", labelKey: "Brands", path: "/brands" },
-  { label: "Campaigns", labelKey: "Campaigns", path: "/campaigns" },
-];
-
-const Navbar = ({ onOpenCart }) => {
-
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-  const [messageCount, setMessageCount] = useState(0);
-  const [notificationCount, setNotificationCount] = useState(0);
-  const [profileImage, setProfileImage] = useState(null);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [activeMegaMenu, setActiveMegaMenu] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [navCampaigns, setNavCampaigns] = useState([]);
-
+const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchCategory, setSearchCategory] = useState("All Categories");
+  const [categories, setCategories] = useState([]);
+  const [cartCount, setCartCount] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [language, setLanguage] = useState("ENG");
+  const [currency, setCurrency] = useState("NPR");
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const [showCurrDropdown, setShowCurrDropdown] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
 
   const encodedId = localStorage.getItem("userId");
   const role = localStorage.getItem("userRole");
   const isLoggedIn = !!encodedId;
-  const isSeller = role === "SELLER";
 
-  // Load cart count when navbar loads
+  // Do not show Navbar on Dashboards or dedicated Admin/Seller pages
+  const hideOnPaths = ["/admin", "/seller", "/customer", "/update-account", "/notifications"];
+  const shouldHide = hideOnPaths.some(path => location.pathname.startsWith(path));
+
   useEffect(() => {
-    const syncCart = async () => {
-      let count = 0;
-      if (encodedId) {
-         try {
-           const userId = atob(encodedId);
-           const cartData = await apiGetCart(userId);
-           // Legacy DTO has .items array
-           if (cartData && Array.isArray(cartData.items)) {
-             count = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
-           }
-         } catch (e) { 
-           console.error("Nav sync cart failed", e); 
-         }
-      } else {
-         const cart = loadGuestCart();
-         count = cart.reduce((sum, item) => sum + item.quantity, 0);
+    if (shouldHide) return; // Don't fetch data if we're hidden anyway
+    
+    const fetchData = async () => {
+      try {
+        const res = await api.get("/api/categories");
+        if (res.data) setCategories(res.data);
+      } catch (e) { console.warn(e); }
+    };
+    fetchData();
+
+    // Initial cart count
+    setCartCount(Number(localStorage.getItem("cartCount")) || 0);
+
+    const handleCartUpdate = () => {
+      setCartCount(Number(localStorage.getItem("cartCount")) || 0);
+    };
+    window.addEventListener("cart-updated", handleCartUpdate);
+
+    // Fetch Notifications if logged in
+    const userEmail = localStorage.getItem("userEmail");
+    if (isLoggedIn && userEmail) {
+      const fetchNotifications = async () => {
+        try {
+          const res = await api.get(`/api/notifications?username=${userEmail}`);
+          const countRes = await api.get(`/api/notifications/unread-count?username=${userEmail}`);
+          setNotifications(res.data || []);
+          setUnreadNotifCount(countRes.data || 0);
+        } catch (e) {
+          console.warn("Could not load notifications:", e);
+        }
+      };
+      // Fetch once immediately
+      fetchNotifications();
+      
+      // Setup polling every 30 seconds
+      const notifInterval = setInterval(fetchNotifications, 30000);
+      return () => {
+        window.removeEventListener("cart-updated", handleCartUpdate);
+        clearInterval(notifInterval);
+      };
+    }
+
+    return () => window.removeEventListener("cart-updated", handleCartUpdate);
+  }, [shouldHide, isLoggedIn]);
+
+  // Modified: Instead of hiding completely, we now partially hide parts on dashboards
+  const isDashboard = hideOnPaths.some(path => location.pathname.startsWith(path));
+
+  // Still return null for very specific cases if needed, but here we want to show TopBars
+  // if (shouldHide) return null; 
+
+  const handleReadNotification = async (id, notif) => {
+    try {
+      if (!notif.isRead) {
+        await api.put(`/api/notifications/${id}/read`);
+        setUnreadNotifCount(prev => Math.max(0, prev - 1));
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
       }
       
-      setCartCount(count);
-      localStorage.setItem("cartCount", count);
-    };
-
-    syncCart();
-  }, [encodedId]);
-
-  // Listen for cart updates from any component
-  useEffect(() => {
-    const handleUpdate = () => {
-      const count = Number(localStorage.getItem("cartCount")) || 0;
-      setCartCount(count);
-    };
-
-    window.addEventListener("cart-updated", handleUpdate);
-    return () => window.removeEventListener("cart-updated", handleUpdate);
-  }, []);
-
-  // Load message count (unread only)
-  useEffect(() => {
-    const loadMessageCount = async () => {
-      if (!encodedId) return;
-
-      try {
-        const response = await fetch(`${API_BASE}/api/messages/unread-count`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        if (response.ok) {
-          const unreadCount = await response.json();
-          setMessageCount(unreadCount);
-        }
-      } catch (error) {
-        console.error("Failed to load message count:", error);
+      let targetPath = null;
+      if (notif.type === "MESSAGE_RECEIVED") {
+        targetPath = `/messages`;
+      } else if (notif.type === "ORDER_UPDATE") {
+        targetPath = role === "SELLER" ? `/seller/dashboard` : 
+                     role === "ADMIN" ? `/admin/dashboard` : `/customer/dashboard`;
       }
-    };
-
-    loadMessageCount();
-    
-    // Refresh message count every 30 seconds
-    const interval = setInterval(loadMessageCount, 30000);
-    
-    // Listen for manual refresh events (when user reads messages)
-    window.addEventListener('messages-updated', loadMessageCount);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('messages-updated', loadMessageCount);
-    };
-  }, [encodedId]);
-
-  // Load notification count
-  useEffect(() => {
-    const loadNotificationCount = async () => {
-      if (!encodedId) return;
-      const username = localStorage.getItem("userEmail"); // Assuming email is stored as userEmail
-      if (!username) return;
-
-      try {
-        const response = await axios.get(`${API_BASE}/api/notifications/unread-count?username=${username}`);
-        setNotificationCount(response.data);
-      } catch (error) {
-        console.error("Failed to load notification count:", error);
-      }
-    };
-
-    loadNotificationCount();
-    const interval = setInterval(loadNotificationCount, 30000);
-    window.addEventListener('notifications-updated', loadNotificationCount);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('notifications-updated', loadNotificationCount);
-    };
-  }, [encodedId]);
-
-  // Load Categories and Brands for Mega Menu
-  useEffect(() => {
-    const fetchMegaMenuData = async () => {
-      // Categories
-      try {
-        const catRes = await axios.get("/api/categories");
-        if (catRes.data) setCategories(catRes.data);
-      } catch (err) {
-        console.warn("Categories fetch failed", err);
-      }
-
-      // Brands (derived from products)
-      try {
-        const prodRes = await axios.get("/api/products");
-        if (prodRes.data && Array.isArray(prodRes.data)) {
-          const uniqueBrands = [...new Set(prodRes.data.map(p => p.brand).filter(Boolean))];
-          setBrands(uniqueBrands.sort());
-        }
-      } catch (err) {
-        console.warn("Brands derivation failed", err);
-      }
-
-      // Brands (derived from products)
-      try {
-        const prodRes = await axios.get("/api/products");
-        if (prodRes.data && Array.isArray(prodRes.data)) {
-          const uniqueBrands = [...new Set(prodRes.data.map(p => p.brand).filter(Boolean))];
-          setBrands(uniqueBrands.sort());
-        }
-      } catch (err) {
-        console.warn("Brands derivation failed", err);
-      }
-    };
-    fetchMegaMenuData();
-  }, []);
-
-  // Load profile image
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!encodedId) return;
-      try {
-        const userId = atob(encodedId);
-        const res = await fetch(`${API_BASE}/api/users/${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.email) {
-            localStorage.setItem("userEmail", data.email);
-          }
-          if (data.profileImagePath) {
-            setProfileImage(data.profileImagePath.startsWith('http') 
-              ? data.profileImagePath 
-              : `${API_BASE}/uploads/${data.profileImagePath}`);
-          }
-        }
-      } catch (e) {
-        console.error("Failed to load profile for nav", e);
-      }
-    };
-    loadProfile();
-    window.addEventListener('profile-updated', loadProfile);
-    return () => window.removeEventListener('profile-updated', loadProfile);
-  }, [encodedId]);
-
-  // Search Suggestions Logic
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (searchQuery.trim().length < 2) {
-        setSuggestions([]);
-        return;
-      }
-      try {
-        const res = await axios.get(`/api/products?search=${encodeURIComponent(searchQuery)}`);
-        setSuggestions(res.data.slice(0, 6)); // limit to 6
-      } catch (err) {
-        console.error("Suggestions fetch failed", err);
-      }
-    };
-
-    const timer = setTimeout(fetchSuggestions, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-
-  const toggleMobileMenu = () => setMobileOpen(!mobileOpen);
-
-  const handleLogout = () => {
-    setShowLogoutConfirm(true);
+      
+      if (targetPath) navigate(targetPath);
+      setShowNotifDropdown(false);
+    } catch (e) {
+      console.warn("Failed to mark as read:", e);
+    }
   };
 
-  const performLogout = () => {
-    localStorage.clear();
-    navigate("/login");
-    setShowLogoutConfirm(false);
+  const handleClearNotifications = async (e) => {
+    e.stopPropagation();
+    const userEmail = localStorage.getItem("userEmail");
+    if (!userEmail) return;
+    try {
+      await api.delete(`/api/notifications/clear-all?username=${userEmail}`);
+      setUnreadNotifCount(0);
+      setNotifications([]); 
+      setShowNotifDropdown(false);
+    } catch (e) {
+      console.warn("Failed to clear notifications:", e);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      let url = `/products?search=${encodeURIComponent(searchQuery)}`;
+      if (searchCategory !== "All Categories") {
+        url += `&category=${encodeURIComponent(searchCategory)}`;
+      }
+      navigate(url);
+    }
   };
 
   return (
-    <>
-      {/* Top Announcement Bar - Infinity Scroll */}
-      <div className="top-announcement-bar">
-        <div className="scroll-container">
-          <div className="scroll-item">
-            <Truck size={14} className="scroll-icon" />
-            <span>Free delivery on orders over <span className="highlight">Rs. 5000</span></span>
+    <header className={"porto-navbar-wrapper" + (isDashboard ? " dashboard-mode" : "")}>
+      
+      {/* ── TOP UTILITY BAR (Show on Dashboards) ────────────────────────── */}
+      <div className="porto-top-bar">
+        <div className="porto-container">
+          <div className="porto-top-left">
+            <span>FREE RETURNS. STANDARD SHIPPING ORDERS NPR 5,000+</span>
           </div>
-          <div className="scroll-item">
-            <Zap size={14} className="scroll-icon" />
-            <span>Flash Sale: Up to <span className="highlight">50% Off</span> on electronics</span>
-          </div>
-          <div className="scroll-item">
-            <ShieldCheck size={14} className="scroll-icon" />
-            <span>100% Genuine Products & Secure Payments</span>
-          </div>
-          <div className="scroll-item">
-            <Globe size={14} className="scroll-icon" />
-            <span>Fast Shipping across Nepal</span>
-          </div>
-          <div className="scroll-item">
-            <Zap size={14} className="scroll-icon" />
-            <span>New Arrivals: Check out the Summer Collection</span>
-          </div>
-          <div className="scroll-item">
-            <Truck size={14} className="scroll-icon" />
-            <span>Easy 7-day returns on all items</span>
-          </div>
-          <div className="scroll-item">
-            <Zap size={14} className="scroll-icon" />
-            <span>Exclusive Deals for Mobile App Users</span>
-          </div>
-          <div className="scroll-item">
-            <ShieldCheck size={14} className="scroll-icon" />
-            <span>Verified Seller Network - Buy with Confidence</span>
+          <div className="porto-top-right">
+            <nav className="porto-top-links">
+              <Link to={role === "ADMIN" ? "/admin/dashboard" : "/customer/dashboard"}>My Account</Link>
+              <Link to="/about">About Us</Link>
+              <Link to="/blog">Blog</Link>
+              <Link to="/wishlist">My Wishlist</Link>
+              <Link to="/cart">Cart</Link>
+              {role === "SELLER" ? (
+                <Link to="/seller/dashboard" style={{ color: "var(--porto-primary)", fontWeight: "700" }}>Seller Dashboard</Link>
+              ) : role === "ADMIN" ? (
+                <Link to="/admin/dashboard" style={{ color: "var(--porto-primary)", fontWeight: "700" }}>Admin Dashboard</Link>
+              ) : (
+                <Link to="/seller/register">Become a Seller</Link>
+              )}
+              {isLoggedIn ? (
+                <span className="porto-logout-link" onClick={() => setShowLogoutModal(true)}>Log Out</span>
+              ) : (
+                <Link to="/login">Log In</Link>
+              )}
+            </nav>
+            <div className="porto-top-selectors" onMouseLeave={() => { setShowLangDropdown(false); setShowCurrDropdown(false); }}>
+              <div className="porto-selector" onClick={() => setShowLangDropdown(!showLangDropdown)}>
+                <img 
+                  src={language === "ENG" 
+                    ? "https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg" 
+                    : "https://upload.wikimedia.org/wikipedia/commons/9/9b/Flag_of_Nepal.svg"} 
+                  alt={language} 
+                />
+                <span>{language}</span>
+                <ChevronDown size={10} />
+                {showLangDropdown && (
+                  <div className="porto-selector-dropdown">
+                    <div onClick={() => { setLanguage("ENG"); setShowLangDropdown(false); }}>ENG</div>
+                    <div onClick={() => { setLanguage("NEP"); setShowLangDropdown(false); }}>NEP</div>
+                  </div>
+                )}
+              </div>
+              <div className="porto-selector" onClick={() => setShowCurrDropdown(!showCurrDropdown)}>
+                <span>{currency}</span>
+                <ChevronDown size={10} />
+                {showCurrDropdown && (
+                  <div className="porto-selector-dropdown">
+                    <div onClick={() => { setCurrency("NPR"); setShowCurrDropdown(false); }}>NPR</div>
+                    <div onClick={() => { setCurrency("USD"); setShowCurrDropdown(false); }}>USD</div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="porto-social-links">
+              <i className="fab fa-facebook-f"></i>
+              <i className="fab fa-twitter"></i>
+              <i className="fab fa-instagram"></i>
+            </div>
           </div>
         </div>
       </div>
 
-      <header className="nav">
-        {/* LEFT SIDE: Logo & Links */}
-        <div className="nav-container">
-          <div className="nav-left">
-            <div className="nav-logo-wrapper" onClick={() => navigate("/")}>
-              <img src={logo} alt="Jhapcham Logo" className="nav-logo-img" />
-            </div>
-
-            <nav className="nav-desktop-links">
-              {navLinks.map((link) => (
-                <div 
-                  key={link.labelKey} 
-                  className="nav-link-wrapper"
-                  onMouseEnter={() => link.hasMegaMenu && setActiveMegaMenu(link.labelKey)}
-                  onMouseLeave={() => setActiveMegaMenu(null)}
-                >
-                  <button
-                    className={`nav-link ${link.hasMegaMenu ? 'has-dropdown' : ''}`}
-                    onClick={() => navigate(link.path)}
-                  >
-                    {link.label}
-                    {link.hasMegaMenu && <ChevronDown size={12} className="nav-chevron" />}
-                  </button>
-
-                  {link.hasMegaMenu && activeMegaMenu === link.labelKey && (
-                    <div className="mega-menu-dropdown">
-                      <div className="mega-menu-container">
-                        {link.labelKey === "Shop" ? (
-                          <>
-                            <div className="mega-menu-sidebar">
-                              <h3>SHOP BY CATEGORIES</h3>
-                              <ul>
-                                {categories.length > 0 ? (
-                                    categories.slice(0, 8).map(cat => (
-                                        <li key={cat.id} onClick={() => { 
-                                          if (cat?.name) {
-                                            navigate(`/products?category=${encodeURIComponent(cat.name)}`); 
-                                            setActiveMegaMenu(null); 
-                                          }
-                                        }}>
-                                            {cat?.name?.toUpperCase() || "CATEGORY"}
-                                        </li>
-                                    ))
-                                ) : (
-                                    <li>Loading...</li>
-                                )}
-                              </ul>
-                              <button className="all-sneakers-btn" onClick={() => { navigate('/products'); setActiveMegaMenu(null); }}>
-                                ALL PRODUCTS <ArrowRight size={16} />
-                              </button>
-                            </div>
-
-                            <div className="mega-menu-content">
-                              <div className="mega-menu-section-header">
-                                <h3>SHOP BY BRANDS</h3>
-                              </div>
-                              
-                              <div className="mega-menu-grid">
-                                {brands.length > 0 ? (
-                                    brands.slice(0, 10).map(brand => (
-                                        <div className="mega-menu-column" key={brand}>
-                                          <h4 className="column-title clickable" onClick={() => { 
-                                            if (brand) {
-                                              navigate(`/products?brand=${encodeURIComponent(brand)}`); 
-                                              setActiveMegaMenu(null); 
-                                            }
-                                          }}>
-                                            {brand && brand.toUpperCase()}
-                                          </h4>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="mega-menu-column">
-                                      <h4 className="column-title">Loading brands...</h4>
-                                    </div>
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        ) : null}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </nav>
+      {/* ── MIDDLE BRANDING BAR (Show on Dashboards) ────────────────────── */}
+      <div className="porto-mid-bar">
+        <div className="porto-container">
+          
+          <div className="porto-logo-area" onClick={() => navigate('/')}>
+             <img src={logo} alt="Porto Logo" className="porto-logo-img" />
           </div>
 
-          {/* CENTER: Search Bar */}
-          <div className="nav-center">
-            <form className="nav-search-container" onSubmit={(e) => {
-                e.preventDefault();
-                if(searchQuery.trim()) {
-                  navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
-                  setShowSuggestions(false);
-                }
-            }}>
-                <Search className="search-icon" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="Search for products, brands..." 
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setShowSuggestions(true);
-                  }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                />
-                <button type="submit" className="search-submit-btn">Search</button>
-
-                {showSuggestions && suggestions.length > 0 && (
-                  <div className="search-suggestions-dropdown">
-                    {suggestions.map((item) => (
-                      <div 
-                        key={item.id} 
-                        className="suggestion-item"
-                        onClick={() => {
-                          navigate(`/products/${item.id}`);
-                          setSearchQuery("");
-                          setShowSuggestions(false);
-                        }}
-                      >
-                        <div className="suggestion-img">
-                          <img src={`${API_BASE}/${item.imagePath || (item.imagePaths && item.imagePaths[0])}`} alt="" />
-                        </div>
-                        <div className="suggestion-info">
-                          <span className="suggestion-name">{item.name}</span>
-                          <span className="suggestion-price">Rs. {Number(item.salePrice || item.price).toLocaleString()}</span>
-                        </div>
-                        <ChevronDown size={14} className="suggestion-arrow" />
-                      </div>
+          <div className="porto-search-area">
+            <form className="porto-search-form" onSubmit={handleSearch}>
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <div className="porto-search-cat" onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}>
+                <span>{searchCategory}</span>
+                <ChevronDown size={14} />
+                {showCategoryDropdown && (
+                  <div className="porto-search-cat-dropdown">
+                    <div onClick={() => setSearchCategory("All Categories")}>All Categories</div>
+                    {categories.map(c => (
+                      <div key={c.id} onClick={() => setSearchCategory(c.name)}>{c.name}</div>
                     ))}
-                    <div className="suggestion-footer" onClick={() => navigate(`/products?search=${encodeURIComponent(searchQuery)}`)}>
-                      View all results for "{searchQuery}"
-                    </div>
                   </div>
                 )}
+              </div>
+              <button type="submit" className="porto-search-btn">
+                <Search size={18} />
+              </button>
             </form>
           </div>
 
+          <div className="porto-contact-area">
+            <div className="porto-contact-icon">
+              <Phone size={28} strokeWidth={1} />
+            </div>
+            <div className="porto-contact-text">
+              <span>CALL US NOW</span>
+              <strong>+123 5678 890</strong>
+            </div>
+          </div>
 
-          {/* RIGHT SIDE: Actions */}
-          <div className="nav-right">
-            {!isLoggedIn ? (
-              <>
-                {!isSeller && (
-                  <button className="nav-icon-btn" onClick={() => navigate("/cart")}>
-                    <ShoppingBag size={20} />
-                    {cartCount > 0 && <span className="nav-badge">{cartCount}</span>}
-                  </button>
+          <div className="porto-actions-area">
+            {role !== "SELLER" && role !== "ADMIN" && (
+              <button 
+                className="porto-action-btn" 
+                onClick={() => navigate('/customer/dashboard')}
+                title="My Account"
+              >
+                <User size={26} strokeWidth={1.5} />
+              </button>
+            )}
+            {role === "ADMIN" && (
+              <button 
+                className="porto-action-btn" 
+                onClick={() => navigate('/admin/dashboard')}
+                title="Admin Console"
+              >
+                <User size={26} strokeWidth={1.5} />
+              </button>
+            )}
+            <button className="porto-action-btn" onClick={() => navigate('/wishlist')}>
+              <Heart size={26} strokeWidth={1.5} />
+            </button>
+            <button className="porto-action-btn porto-cart-btn" onClick={() => navigate('/cart')}>
+              <ShoppingBag size={26} strokeWidth={1.5} />
+              <span className="porto-cart-badge">{cartCount}</span>
+            </button>
 
-                )}
-
-                <div className="nav-auth-btns">
-                  <button className="nav-btn-text" onClick={() => navigate("/login")}>Login</button>
-                  <button className="nav-btn-primary" onClick={() => navigate("/signup")}>Sign Up</button>
-                </div>
+            {isLoggedIn && !location.pathname.includes('/customer/dashboard') && !location.pathname.includes('/seller') && (
+              <div 
+                className="porto-action-btn porto-cart-btn" 
+                style={{ marginLeft: '10px' }}
+                onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+              >
+                <Bell size={26} strokeWidth={1.5} />
+                {unreadNotifCount > 0 && <span className="porto-cart-badge">{unreadNotifCount}</span>}
                 
-                  <button className="nav-seller-link" onClick={() => navigate("/seller/register")}>
-                  <Store size={16} />
-                  <span>Become Seller</span>
-                </button>
-              </>
-            ) : (
-              <div className="nav-logged-in">
-                {!isSeller && (
-                  <button className="nav-icon-btn" onClick={() => navigate("/cart")}>
-                    <ShoppingBag size={20} />
-                    {cartCount > 0 && <span className="nav-badge">{cartCount}</span>}
-                  </button>
-
-                )}
-
-                <button className="nav-icon-btn" onClick={() => navigate("/messages")}>
-                  <MessageCircle size={20} />
-                  {messageCount > 0 && <span className="nav-badge">{messageCount}</span>}
-                </button>
-
-                <button className="nav-icon-btn" onClick={() => navigate("/notifications")} title="Notifications">
-                  <Bell size={20} />
-                  {notificationCount > 0 && <span className="nav-badge">{notificationCount}</span>}
-                </button>
-
-                <div className="nav-user-profile" onClick={() => navigate(`/${role.toLowerCase()}/dashboard`)}>
-                   <div className="nav-avatar" style={{ overflow: 'hidden' }}>
-                      {profileImage ? (
-                        <img src={profileImage} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <User size={16} />
-                      )}
+                {showNotifDropdown && (
+                   <div className="porto-notification-dropdown">
+                     <div className="porto-notification-header">
+                       <span>Notifications</span>
+                       {notifications.length > 0 && (
+                         <div className="porto-clear-all-btn" onClick={handleClearNotifications}>
+                           Clear All
+                         </div>
+                       )}
+                     </div>
+                     <div className="porto-notification-list">
+                       {notifications.length > 0 ? (
+                         notifications.slice(0, 8).map(notif => (
+                           <div 
+                             key={notif.id} 
+                             className={`porto-notification-item ${!notif.isRead ? 'unread' : ''}`}
+                             onClick={(e) => { e.stopPropagation(); handleReadNotification(notif.id, notif); }}
+                           >
+                             <div className="porto-notif-title">{notif.title}</div>
+                             <div className="porto-notif-msg">{notif.message}</div>
+                             <div className="porto-notif-time">{new Date(notif.createdAt).toLocaleDateString()} {new Date(notif.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                           </div>
+                         ))
+                       ) : (
+                         <div className="porto-notif-empty">No notifications yet.</div>
+                       )}
+                     </div>
                    </div>
-                   <span className="nav-role-tag">{role}</span>
-                   <ChevronDown size={12} />
-                </div>
-
-                <button className="nav-logout-btn" onClick={handleLogout} title="Logout">
-                   <LogOut size={18} />
-                </button>
+                )}
               </div>
             )}
-            
-            <button className="nav-mobile-btn" onClick={toggleMobileMenu}>
-              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── BOTTOM NAVIGATION BAR (Hide on Dashboards) ───────────────────── */}
+      {!isDashboard && (
+        <div className="porto-nav-bar">
+          <div className="porto-container">
+            <button className="porto-mobile-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              <Menu size={24} />
             </button>
+
+            <nav className={`porto-main-nav ${isMobileMenuOpen ? 'open' : ''}`}>
+               <Link to="/" className="active">HOME</Link>
+               <div className="porto-nav-item has-dropdown">
+                 <Link to="/products">CATEGORIES</Link>
+                 <ChevronDown size={10} />
+               </div>
+               <div className="porto-nav-item has-dropdown">
+                 <Link to="/products">PRODUCTS</Link>
+                 <ChevronDown size={10} />
+               </div>
+               <div className="porto-nav-item has-dropdown">
+                 <span>PAGES</span>
+                 <ChevronDown size={10} />
+               </div>
+               <Link to="/blog">BLOG</Link>
+               <Link to="/elements">ELEMENTS</Link>
+               <Link to="/contact">CONTACT US</Link>
+            </nav>
+
+            <div className="porto-nav-right">
+               <span className="porto-nav-tag">SPECIAL OFFER!</span>
+               <Link to="/products" className="porto-buy-link">BUY PORTO!</Link>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* MOBILE MENU */}
-        {mobileOpen && (
-          <div className="nav-mobile-dropdown">
-            <div className="mobile-search-wrapper">
-              <form onSubmit={(e) => {
-                  e.preventDefault();
-                  if(searchQuery.trim()) {
-                    navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
-                    setMobileOpen(false);
-                    setSearchQuery("");
-                  }
-              }}>
-                <input 
-                  type="text" 
-                  placeholder="Search products..." 
-                  className="mobile-search-input"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)} 
-                />
-              </form>
-            </div>
-            <nav className="nav-mobile-links">
-              {navLinks.map((link) => (
-                <button key={link.labelKey} onClick={() => { navigate(link.path); setMobileOpen(false); }}>
-                  {link.label}
-                </button>
-              ))}
-              <hr />
-              {!isLoggedIn ? (
-                <>
-                  <button onClick={() => { navigate("/login"); setMobileOpen(false); }}>Login</button>
-                  <button onClick={() => { navigate("/signup"); setMobileOpen(false); }}>Sign Up</button>
-                  <button className="mobile-seller-cta" onClick={() => { navigate("/seller/register"); setMobileOpen(false); }}>Become Seller</button>
-                </>
-              ) : (
-                <>
-                  <button onClick={() => { navigate(`/${(role || 'customer').toLowerCase()}/dashboard`); setMobileOpen(false); }}>Dashboard</button>
-                  <button className="mobile-logout" onClick={handleLogout}>Logout</button>
-                </>
-              )}
-            </nav>
-          </div>
-        )}
-      </header>
       <ConfirmModal 
-        isOpen={showLogoutConfirm}
-        onClose={() => setShowLogoutConfirm(false)}
-        onConfirm={performLogout}
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          localStorage.clear();
+          navigate('/login');
+        }}
         title="Sign Out"
-        message="Are you sure you want to sign out from Jhapcham?"
-        confirmText="Sign Out"
+        message="Are you sure you want to log out from your account?"
+        confirmText="Logout"
+        cancelText="Stay Logged In"
         type="danger"
       />
-    </>
+    </header>
   );
 };
 

@@ -1,0 +1,19 @@
+:root {
+  /* Luxury Studio-Grade Tokens */
+  --lux-bg: #f3f4f6;
+  --lux-surface: rgba(255, 255, 255, 0.75);
+  --lux-glass-border: rgba(255, 255, 255, 0.4);
+  --lux-glass-shadow: 0 8px 32px 0 rgba(0, 136, 204, 0.08);
+  --lux-blur: blur(12px);
+  
+  /* Role-Specific Gradients */
+  --grad-seller: linear-gradient(135deg, #0088cc 0%, #005580 100%);
+  --grad-customer: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  --grad-admin: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  
+  /* Typography Hierarchy */
+  --font-h1: 2.5rem;
+  --font-h2: 1.5rem;
+  --font-body: 0.95rem;
+  --font-sm: 0.8rem;
+}

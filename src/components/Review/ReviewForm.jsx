@@ -226,7 +226,7 @@ export default function ReviewForm() {
                   className={`review-star ${
                     star <= (hoverRating || rating) ? "active" : ""
                   }`}
-                  fill={star <= (hoverRating || rating) ? "#000" : "none"}
+                  fill={star <= (hoverRating || rating) ? "#f59e0b" : "none"}
                   onClick={() => handleStarClick(star)}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}

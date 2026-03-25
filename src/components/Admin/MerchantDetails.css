@@ -1,0 +1,311 @@
+/* ══════════════════════════════════════════════════════════
+   MERCHANT DETAILS — SELLER DASHBOARD AESTHETIC
+   ══════════════════════════════════════════════════════════ */
+:root {
+  --mdp-bg:           #f5f7f9;
+  --mdp-sidebar:      #FFFFFF;
+  --mdp-card:         #FFFFFF;
+  --mdp-primary:      #0088cc;
+  --mdp-primary-fade: #e6f3f9;
+  --mdp-success:      #10B981;
+  --mdp-success-fade: #E6FAF4;
+  --mdp-warning:      #F59E0B;
+  --mdp-warning-fade: #FEF3C7;
+  --mdp-danger:       #EF4444;
+  --mdp-danger-fade:  #FEE2E2;
+  --mdp-text:         #222529;
+  --mdp-text-muted:   #777777;
+  --mdp-text-sub:     #999999;
+  --mdp-border:       #e7e7e7;
+  
+  --mdp-radius-lg:    8px;
+  --mdp-radius-md:    6px;
+  --mdp-radius-sm:    4px;
+  
+  --mdp-shadow:       0 2px 8px rgba(0, 0, 0, 0.04);
+  --mdp-shadow-hover: 0 5px 15px rgba(0, 0, 0, 0.06);
+}
+
+.merchant-details-page {
+  padding: 30px 40px;
+  background: var(--mdp-bg);
+  min-height: calc(100vh - 70px);
+  font-family: 'Open Sans', sans-serif;
+  color: var(--mdp-text);
+  animation: dashFadeIn 0.3s ease forwards;
+}
+
+@keyframes dashFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.mdp-header { margin-bottom: 24px; }
+
+.mdp-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--mdp-text-muted);
+  font-weight: 700;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.2s;
+}
+
+.mdp-back-btn:hover { color: var(--mdp-primary); }
+
+.mdp-profile-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--mdp-card);
+  padding: 24px 32px;
+  border-radius: var(--mdp-radius-lg);
+  box-shadow: var(--mdp-shadow);
+  border: 1px solid var(--mdp-border);
+}
+
+.mdp-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: var(--mdp-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 136, 204, 0.2);
+}
+
+.mdp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.mdp-identity h1 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--mdp-text);
+  margin: 0 0 4px 0;
+}
+
+.mdp-meta { display: flex; align-items: center; gap: 10px; }
+
+.mdp-id-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--mdp-text-muted);
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.mdp-role-tag {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #8b5cf6;
+  text-transform: uppercase;
+}
+
+.mdp-action-btn {
+  padding: 8px 20px;
+  border-radius: var(--mdp-radius-sm);
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: 1px solid var(--mdp-border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mdp-action-btn.primary { background: var(--mdp-primary); color: #fff; border: none; }
+.mdp-action-btn.primary:hover { background: #0077b3; transform: translateY(-1px); }
+
+.mdp-action-btn.danger { background: #fff; color: var(--mdp-danger); }
+.mdp-action-btn.danger:hover { background: var(--mdp-danger-fade); border-color: var(--mdp-danger); }
+
+.mdp-action-btn.success { background: #fff; color: var(--mdp-success); }
+.mdp-action-btn.success:hover { background: var(--mdp-success-fade); border-color: var(--mdp-success); }
+
+.mdp-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+}
+
+.mdp-card {
+  background: var(--mdp-card);
+  border-radius: var(--mdp-radius-md);
+  padding: 24px;
+  border: 1px solid var(--mdp-border);
+  box-shadow: var(--mdp-shadow);
+  margin-bottom: 24px;
+}
+
+.mdp-card-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--mdp-text);
+  letter-spacing: 0.05em;
+  margin-bottom: 20px;
+}
+
+.mdp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.mdp-stat-box {
+  background: #fff;
+  padding: 20px;
+  border-radius: var(--mdp-radius-md);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--mdp-border);
+  transition: all 0.2s;
+}
+
+.mdp-stat-box:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mdp-shadow-hover);
+  border-color: var(--mdp-primary);
+}
+
+.mdp-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mdp-stat-icon.blue { background: var(--mdp-primary-fade); color: var(--mdp-primary); }
+.mdp-stat-icon.purple { background: #f5f3ff; color: #8b5cf6; }
+.mdp-stat-icon.orange { background: var(--mdp-warning-fade); color: var(--mdp-warning); }
+.mdp-stat-icon.green { background: var(--mdp-success-fade); color: var(--mdp-success); }
+
+.mdp-stat-info label {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--mdp-text-muted);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.mdp-stat-val {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--mdp-text);
+}
+
+.mdp-order-table-wrap {
+  margin: 0 -24px -24px;
+  border-top: 1px solid var(--mdp-border);
+}
+
+.mdp-order-table { width: 100%; border-collapse: collapse; }
+
+.mdp-order-table th {
+  background: #fcfdfe;
+  padding: 12px 24px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--mdp-text-muted);
+  text-transform: uppercase;
+  text-align: left;
+  border-bottom: 1px solid var(--mdp-border);
+}
+
+.mdp-order-table td {
+  padding: 14px 24px;
+  font-size: 0.8rem;
+  color: var(--mdp-text);
+  border-bottom: 1px solid #f8fafc;
+}
+
+.mdp-tr-clickable:hover td { background: #fcfdfe; }
+
+.mdp-td-bold { font-weight: 700; }
+.mdp-td-price { font-weight: 700; color: var(--mdp-primary); }
+.mdp-td-date { color: var(--mdp-text-sub); font-size: 0.75rem; }
+
+.mdp-info-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+
+.mdp-info-item { display: flex; gap: 14px; align-items: center; }
+
+.mdp-info-icon {
+  width: 32px;
+  height: 32px;
+  background: #f8fafc;
+  color: var(--mdp-text-muted);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+}
+
+.mdp-info-text label {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--mdp-text-sub);
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.mdp-info-text span { font-size: 0.82rem; font-weight: 600; color: var(--mdp-text); }
+
+.mdp-msg-btn {
+  width: 100%;
+  padding: 10px;
+  background: #fff;
+  color: var(--mdp-text);
+  border: 1px solid var(--mdp-border);
+  border-radius: var(--mdp-radius-sm);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
+}
+
+.mdp-msg-btn:hover { border-color: var(--mdp-primary); color: var(--mdp-primary); background: var(--mdp-primary-fade); }
+
+.mdp-alert-card { background: #fcfdfe; border-left: 3px solid #0088cc; }
+.mdp-alert-head { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--mdp-text); margin-bottom: 8px; font-size: 0.75rem; text-transform: uppercase; }
+.mdp-alert-card p { font-size: 0.78rem; color: var(--mdp-text-muted); line-height: 1.5; margin: 0; }
+
+/* Status Badges Matching Seller System */
+.adm-badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-active { background: var(--mdp-success-fade); color: var(--mdp-success-dark, #166534); }
+.badge-blocked { background: var(--mdp-danger-fade); color: var(--mdp-danger); }
+.badge-pending { background: var(--mdp-warning-fade); color: #92400e; }
+
+.adm-page-loader {
+  display: flex; justify-content: center; align-items: center; height: 60vh;
+  font-weight: 700; text-transform: uppercase; font-size: 0.7rem; color: var(--mdp-text-muted);
+}

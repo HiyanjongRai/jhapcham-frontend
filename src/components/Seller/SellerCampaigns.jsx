@@ -123,14 +123,14 @@ const SellerCampaigns = () => {
 
     return (
         <div className="sc-container">
-            <h2 className="sc-title">All Campaigns</h2>
-            <p className="sc-subtitle">Join platform-wide sales to boost your revenue.</p>
+            <h2 className="sc-title gt-h3">All Campaigns</h2>
+            <p className="sc-subtitle gt-note">Join platform-wide sales to boost your revenue.</p>
 
             <div className="sc-grid">
                 {Array.isArray(campaigns) && campaigns.map(c => (
                     <div key={c.id} className="sc-card">
-                        <div className="sc-card-badge">{c.type?.replace('_',' ')}</div>
-                        <h3>{c.name}</h3>
+                        <div className="sc-card-badge gt-note">{c.type?.replace('_',' ')}</div>
+                        <h3 className="gt-caption">{c.name}</h3>
                         
                         <div className="sc-dates">
                             <span>

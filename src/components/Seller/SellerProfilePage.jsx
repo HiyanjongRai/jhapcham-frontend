@@ -117,7 +117,7 @@ export default function SellerProfilePage() {
           </div>
 
           <div className="spp-header-info">
-            <h1 className="spp-title">{seller.storeName}</h1>
+            <h1 className="spp-title gt-h2">{seller.storeName}</h1>
 
             <div className="spp-header-meta">
               <div className="spp-rating-row">
@@ -136,7 +136,7 @@ export default function SellerProfilePage() {
 
               <div className="spp-rating-row">
                 <UserPlus size={16} />
-                <span className="spp-rating-text">{seller.followerCount || 0} Followers</span>
+                <span className="spp-rating-text gt-note">{seller.followerCount || 0} Followers</span>
               </div>
 
               {seller.isVerified && (
@@ -182,7 +182,7 @@ export default function SellerProfilePage() {
         <div className="spp-left-col">
           <div className="spp-card">
             <div className="spp-card-header">
-              <h3>
+              <h3 className="gt-caption">
                 <Store size={14} className="spp-icon-accent" /> Store Overview
               </h3>
             </div>
@@ -222,10 +222,10 @@ export default function SellerProfilePage() {
               <div className="spp-stat-card">
                 <div className="spp-stat-header">
                   <div className="spp-stat-icon-wrap"><Package size={14} /></div>
-                  <div className="spp-stat-label">Catalog Size</div>
+                  <div className="spp-stat-label gt-note">Catalog Size</div>
                 </div>
-                <div className="spp-stat-val">{products.length}</div>
-                <div className="spp-stat-label">Active Products</div>
+                <div className="spp-stat-val gt-h3">{products.length}</div>
+                <div className="spp-stat-label gt-note">Active Products</div>
               </div>
 
               <div className="spp-stat-card">
@@ -261,7 +261,7 @@ export default function SellerProfilePage() {
         {/* RIGHT COLUMN: Sidebar Bits */}
         <div className="spp-right-col">
           <div className="spp-widget">
-            <h3 className="spp-widget-title">Quick Performance</h3>
+            <h3 className="spp-widget-title gt-note">Quick Performance</h3>
             <div className="spp-quick-row">
               <span className="spp-quick-label">On-time Shipping</span>
               <span className="spp-quick-val">99%</span>
@@ -299,7 +299,7 @@ export default function SellerProfilePage() {
 
       {/* PRODUCTS SECTION */}
       <div className="spp-section-header">
-        <h2 className="spp-section-title">Latest & Trending</h2>
+        <h2 className="spp-section-title gt-h3">Latest & Trending</h2>
         <div style={{ color: '#000', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '0.75rem', textTransform: 'uppercase' }}>
           View All Collection <ChevronRight size={14} />
         </div>
@@ -320,7 +320,7 @@ export default function SellerProfilePage() {
             </div>
 
             <div className="spp-prod-details">
-              <h4 className="spp-prod-name">{p.name}</h4>
+              <h4 className="spp-prod-name gt-caption">{p.name}</h4>
 
               <div className="spp-prod-rating">
                 {[...Array(5)].map((_, i) => (

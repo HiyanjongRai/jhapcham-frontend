@@ -131,12 +131,26 @@ export default function ProductManagement() {
     }
   }
 
+  async function toggleVisibility(product) {
+    const newStatus = product.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    try {
+      await axios.put(`${API_BASE}/api/products/${product.id}/status?status=${newStatus}`);
+      setProducts(prev => prev.map(p => 
+        p.id === product.id ? { ...p, status: newStatus } : p
+      ));
+      showSuccess(`Product visibility changed to ${newStatus}`);
+    } catch (err) {
+      console.error(err);
+      showError("Failed to update product visibility");
+    }
+  }
+
   return (
     <div className="sp-container">
       <div className="sp-header">
         <div>
-          <h1 className="sp-title">Product Management</h1>
-          <p className="sp-subtitle">Manage your inventory, pricing, and stock levels.</p>
+          <h1 className="sp-title gt-h3">Product Management</h1>
+          <p className="sp-subtitle gt-note">Manage your inventory, pricing, and stock levels.</p>
         </div>
         <button className="sp-add-btn" onClick={() => navigate('/seller/add-product')}>
           <Plus size={14} /> Add Product
@@ -174,14 +188,14 @@ export default function ProductManagement() {
           <table className="sp-table">
             <thead>
               <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Views</th>
-                <th>Status</th>
-                <th>Expiry</th>
-                <th>Actions</th>
+                <th className="gt-note">Product</th>
+                <th className="gt-note">Category</th>
+                <th className="gt-note">Price</th>
+                <th className="gt-note">Stock</th>
+                <th className="gt-note">Views</th>
+                <th className="gt-note">Status</th>
+                <th className="gt-note">Expiry</th>
+                <th className="gt-note">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -209,8 +223,8 @@ export default function ProductManagement() {
                           )}
                         </div>
                         <div>
-                          <div className="sp-product-name">{p.name}</div>
-                          <div className="sp-product-brand">{p.brand}</div>
+                          <div className="sp-product-name gt-caption">{p.name}</div>
+                          <div className="sp-product-brand gt-note">{p.brand}</div>
                         </div>
                       </div>
                     </td>
@@ -254,6 +268,13 @@ export default function ProductManagement() {
                     </td>
                     <td>
                       <div className="sp-actions">
+                        <button 
+                            className="sp-action-btn" 
+                            onClick={() => toggleVisibility(p)} 
+                            title={p.status === 'ACTIVE' ? "Hide Product" : "Show Product"}
+                        >
+                          {p.status === 'ACTIVE' ? <EyeOff size={12} /> : <Eye size={12} />}
+                        </button>
                         <button className="sp-action-btn" onClick={() => setEditingProduct(p)} title="Edit">
                           <Edit2 size={12} />
                         </button>

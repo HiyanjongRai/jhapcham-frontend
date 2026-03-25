@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "./AdminDashboard.css";
 import { API_BASE } from "../config/config";
 import { useNavigate } from "react-router-dom";
@@ -7,1032 +7,608 @@ import UpdateAccount from "../Profile/UpdateAccount.jsx";
 import ConfirmModal from "../Common/ConfirmModal.jsx";
 import Toast from "../Toast/Toast.jsx";
 
-import { 
-  Users, 
-  Boxes, 
-  AlertTriangle, 
-  FileText, 
-  Settings, 
-  LogOut, 
-  Shield, 
-  CheckCircle2, 
-  XCircle, 
-  ExternalLink,
-  Eye,
-  EyeOff,
-  ChevronRight,
-  TrendingUp,
-  Store,
-  Calendar,
-  LayoutDashboard,
-  MessageSquare,
-  Search,
-  X
+// Recharts for Professional Analytics
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
+} from 'recharts';
+
+import {
+  Users, Boxes, AlertTriangle, FileText, Settings, LogOut,
+  Shield, CheckCircle2, XCircle, ExternalLink, Eye, EyeOff,
+  ChevronRight, TrendingUp, Store, Calendar, LayoutDashboard,
+  MessageSquare, Search, X, Package, DollarSign, Star,
+  ShoppingBag, Bell, AlertCircle, CheckCheck, RefreshCw, Zap,
+  BarChart3, Lock, Unlock, Trash2, ListChecks, Filter
 } from "lucide-react";
 import MessageModal from "../Message/MessageModal.jsx";
 import ResolutionModal from "./ResolutionModal.jsx";
 import CreateCampaign from "./CreateCampaign.jsx";
 import CategoryManager from "./CategoryManager.jsx";
+import DashboardNavbar from "./DashboardNavbar.jsx";
 
+// ─────────────────────────────────────────
+// KPI Stat Card
+// ─────────────────────────────────────────
+const StatCard = ({ icon: Icon, label, value, color, sub }) => (
+  <div className="adm-stat-card">
+    <div className="adm-stat-icon-wrap" style={{ background: color + "18", color }}>
+      <Icon size={22} />
+    </div>
+    <div className="adm-stat-info">
+      <span className="adm-stat-label">{label}</span>
+      <span className="adm-stat-value">{value}</span>
+      {sub && <span className="adm-stat-sub">{sub}</span>}
+    </div>
+  </div>
+);
+
+// ─────────────────────────────────────────
+// Badge
+// ─────────────────────────────────────────
+const Badge = ({ status }) => {
+  const map = {
+    ACTIVE:               { cls: "badge-active",    text: "Active" },
+    BLOCKED:              { cls: "badge-blocked",   text: "Blocked" },
+    PENDING:              { cls: "badge-pending",   text: "Pending" },
+    INACTIVE:             { cls: "badge-inactive",  text: "Inactive" },
+    NEW:                  { cls: "badge-new",       text: "New" },
+    UNDER_INVESTIGATION:  { cls: "badge-warning",   text: "Investigating" },
+    RESOLVED:             { cls: "badge-active",    text: "Resolved" },
+    RESOLVED_REFUNDED:    { cls: "badge-active",    text: "Refunded" },
+    CLOSED_REJECTED:      { cls: "badge-blocked",   text: "Rejected" },
+    DELIVERED:            { cls: "badge-active",    text: "Delivered" },
+    PLACED:               { cls: "badge-pending",   text: "Placed" },
+    PROCESSING:           { cls: "badge-warning",   text: "Processing" },
+    CANCELLED:            { cls: "badge-blocked",   text: "Cancelled" },
+    SHIPPED:              { cls: "badge-active",    text: "Shipped" },
+    SHIPPED_TO_BRANCH:    { cls: "badge-warning",   text: "In Transit" },
+  };
+  const m = map[status] || { cls: "badge-inactive", text: status };
+  return <span className={`adm-badge ${m.cls}`}>{m.text}</span>;
+};
+
+// ─────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────
 const AdminDashboard = () => {
-    const [activeTab, setActiveTab] = useState("applications"); // Default to applications for visibility
-    const [stats, setStats] = useState({ users: 0, sellers: 0, products: 0, reports: 0, applications: 0 });
-    
-    // Data States
-    const [users, setUsers] = useState([]);
-    const [sellers, setSellers] = useState([]);
-    const [products, setProducts] = useState([]);
-    const [reports, setReports] = useState([]);
-    const [applications, setApplications] = useState([]);
-    
-    // Loading and Error States
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
+  const [activeTab, setActiveTab] = useState("overview");
+  const [analytics, setAnalytics] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
-    // Search and Messaging State
-    const [searchTerm, setSearchTerm] = useState("");
-    const [messageConfig, setMessageConfig] = useState({ isOpen: false, receiverId: null, receiverName: "" });
-    const [resolutionConfig, setResolutionConfig] = useState({ isOpen: false, reportId: null, status: null });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [toast, setToast] = useState({ message: "", type: "info", visible: false });
+  const showToast = (msg, type = "info") => setToast({ message: msg, type, visible: true });
 
-    const showToast = (message, type = 'info') => {
-        setToast({ message, type, visible: true });
-    };
-    
-    // Seller Detail Modal
-    const [selectedSeller, setSelectedSeller] = useState(null);
-    const [showSellerModal, setShowSellerModal] = useState(false);
+  const [messageConfig, setMessageConfig] = useState({ isOpen: false, recipientId: null, recipientName: "" });
+  const [resolutionConfig, setResolutionConfig] = useState({ isOpen: false, reportId: null, status: '', reason: '' });
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", onConfirm: () => {}, type: "warning" });
+  const [warningConfig, setWarningConfig] = useState({ isOpen: false, sellerId: null, reason: "" });
 
-    // Custom Confirm Modal State
-    const [confirmConfig, setConfirmConfig] = useState({
-        isOpen: false,
-        title: "",
-        message: "",
-        onConfirm: () => {},
-        type: "warning"
-    });
+  const navigate = useNavigate();
 
-    // Warning Modal State
-    const [warningConfig, setWarningConfig] = useState({
-        isOpen: false,
-        sellerId: null,
-        reason: ""
-    });
+  // Load analytics on mount
+  const fetchAnalytics = () => {
+    axios.get(`${API_BASE}/api/admin/analytics`)
+      .then(r => setAnalytics(r.data))
+      .catch(() => {});
+  };
 
-    const handleIssueWarning = (sellerId) => {
-        setWarningConfig({
-            isOpen: true,
-            sellerId: sellerId,
-            reason: ""
-        });
-    };
+  useEffect(() => { fetchAnalytics(); }, []);
+  useEffect(() => { fetchData(); }, [activeTab]);
 
-    const submitWarning = async () => {
-        if (!warningConfig.reason.trim()) {
-            showToast("Please provide a reason for the warning", "error");
-            return;
-        }
-        try {
-            await axios.post(`${API_BASE}/api/admin/sellers/${warningConfig.sellerId}/warning`, {
-                reason: warningConfig.reason
-            });
-            showToast("Warning issued successfully", "success");
-            setWarningConfig({ isOpen: false, sellerId: null, reason: "" });
-            fetchData();
-        } catch (err) {
-            console.error(err);
-            showToast("Failed to issue warning", "error");
-        }
-    };
-    
-    const navigate = useNavigate();
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    setSearchTerm("");
+    try {
+      if (activeTab === "users") {
+        const res = await axios.get("/api/admin/users");
+        setUsers(res.data.filter(u => u.role === "CUSTOMER"));
+      } else if (activeTab === "sellers") {
+        const res = await axios.get("/api/admin/sellers");
+        setSellers(res.data);
+      } else if (activeTab === "products") {
+        const res = await axios.get("/api/admin/products");
+        setProducts(res.data);
+      } else if (activeTab === "reports") {
+        const res = await axios.get("/api/admin/reports");
+        setReports(res.data);
+      } else if (activeTab === "applications") {
+        const res = await axios.get("/api/admin/sellers/applications/pending");
+        setApplications(res.data);
+      } else if (activeTab === "orders") {
+        const res = await axios.get("/api/admin/orders");
+        setOrders(res.data);
+      } else if (activeTab === "reviews") {
+        const res = await axios.get("/api/admin/reviews");
+        setReviews(res.data);
+      }
+    } catch (e) {
+      setError(e.response?.data?.message || "Failed to load data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-        fetchData();
-    }, [activeTab]);
+  // ── Handlers ──
+  const blockUser = (userId) => setConfirmConfig({
+    isOpen: true, title: "Block User",
+    message: "Block this user? They will not be able to log in.",
+    type: "danger",
+    onConfirm: async () => {
+      await axios.put(`${API_BASE}/api/admin/users/${userId}/block`);
+      showToast("User blocked", "success"); fetchData();
+    }
+  });
 
-    const fetchData = async () => {
-        setLoading(true);
-        setError(null);
-        
-        try {
-            if (activeTab === "users") {
-                const res = await axios.get(`${API_BASE}/api/admin/users`);
-                const allUsers = res.data;
-                const customersOnly = allUsers.filter(u => u.role === 'CUSTOMER');
-                const sellersOnly = allUsers.filter(u => u.role === 'SELLER');
-                setUsers(customersOnly);
-                setStats(prev => ({ ...prev, users: customersOnly.length }));
-            } else if (activeTab === "sellers") {
-                const res = await axios.get(`${API_BASE}/api/admin/sellers`);
-                setSellers(res.data);
-                setStats(prev => ({ ...prev, sellers: res.data.length }));
-            } else if (activeTab === "products") {
-                const res = await axios.get(`${API_BASE}/api/admin/products`);
-                setProducts(res.data);
-                setStats(prev => ({ ...prev, products: res.data.length }));
-            } else if (activeTab === "reports") {
-                const res = await axios.get(`${API_BASE}/api/admin/reports`);
-                setReports(res.data);
-                setStats(prev => ({ ...prev, reports: res.data.length }));
-            } else if (activeTab === "applications") {
-                const res = await axios.get(`${API_BASE}/api/admin/sellers/applications/pending`);
-                setApplications(res.data);
-                setStats(prev => ({...prev, applications: res.data.length}));
-            }
-        } catch (error) {
-            console.error("Error fetching data:", error);
-            const errorMessage = error.response?.data?.message || error.message || "Failed to load data. Please try again.";
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const unblockUser = (userId) => setConfirmConfig({
+    isOpen: true, title: "Reactivate User",
+    message: "Allow this user to access their account again?",
+    type: "success",
+    onConfirm: async () => {
+      await axios.put(`${API_BASE}/api/admin/users/${userId}/unblock`);
+      showToast("User reactivated", "success"); fetchData();
+    }
+  });
 
-    const handleBlockUser = (userId) => {
-        setConfirmConfig({
-            isOpen: true,
-            title: "Block User",
-            message: "Are you sure you want to block this user? They will not be able to log in or use the platform.",
-            type: "danger",
-            onConfirm: async () => {
-                try {
-                    await axios.put(`${API_BASE}/api/admin/users/${userId}/block`);
-                    showToast("User blocked successfully", "success");
-                    fetchData();
-                } catch (err) {
-                    showToast("Failed to block user", "error");
-                }
-            }
-        });
-    };
+  const toggleProduct = async (id, status) => {
+    const newVisible = status !== "ACTIVE";
+    await axios.put(`${API_BASE}/api/admin/products/${id}/visibility?visible=${newVisible}`);
+    showToast("Product visibility updated", "success"); fetchData();
+  };
 
-    const handleUnblockUser = (userId) => {
-        setConfirmConfig({
-            isOpen: true,
-            title: "Unblock User",
-            message: "Allow this user to access their account again?",
-            type: "success",
-            onConfirm: async () => {
-                try {
-                    await axios.put(`${API_BASE}/api/admin/users/${userId}/unblock`);
-                    showToast("User unblocked successfully", "success");
-                    fetchData();
-                } catch (err) {
-                    showToast("Failed to unblock user", "error");
-                }
-            }
-        });
-    };
+  const deleteReview = (id) => setConfirmConfig({
+    isOpen: true, title: "Delete Review",
+    message: "Permanently delete this customer review?",
+    type: "danger",
+    onConfirm: async () => {
+      await axios.delete(`${API_BASE}/api/admin/reviews/${id}`);
+      showToast("Review deleted", "success"); fetchData();
+    }
+  });
 
-    const handleViewSeller = async (userId) => {
-        try {
-            const res = await axios.get(`${API_BASE}/api/admin/sellers/${userId}`);
-            setSelectedSeller(res.data);
-            setShowSellerModal(true);
-        } catch (err) {
-            showToast("Failed to fetch seller details", "error");
-        }
-    };
+  const updateOrderStatus = async (id, status) => {
+    try {
+      await axios.put(`/api/admin/orders/${id}/status?status=${status}`);
+      showToast(`Order status updated to ${status}`, "success");
+      fetchData();
+    } catch { showToast("Failed to update status", "error"); }
+  };
 
-    const handleToggleProduct = async (productId, currentStatus) => {
-        const newVisible = currentStatus !== "ACTIVE";
-        try {
-            await axios.put(`${API_BASE}/api/admin/products/${productId}/visibility?visible=${newVisible}`);
-            showToast(`Product visibility updated`, "success");
-            fetchData();
-        } catch (err) {
-            showToast("Failed to update product status", "error");
-        }
-    };
+  const viewSeller = (id) => navigate(`/admin/merchant/${id}`);
+  const viewCustomer = (id) => navigate(`/admin/customer/${id}`);
 
-    const handleResolveReport = async (reportId, status, note) => {
-         try {
-            await axios.post(`${API_BASE}/api/admin/reports/${reportId}/resolve`, {
-                status,
-                note
-            });
-            showToast(`Report status updated to ${status}`, "success");
-            fetchData();
-        } catch (err) {
-            showToast("Failed to update report status", "error");
-        }
-    };
+  const approveApp = (id) => setConfirmConfig({
+    isOpen: true, title: "Approve Merchant",
+    message: "Allow this merchant to start selling on Jhapcham?",
+    type: "success",
+    onConfirm: async () => {
+      await axios.post(`${API_BASE}/api/admin/sellers/applications/${id}/approve`);
+      showToast("Application approved", "success"); fetchData();
+    }
+  });
 
-    const handleSendMessage = (user, reportData = null) => {
-        setMessageConfig({
-            isOpen: true,
-            receiverId: user.id,
-            receiverName: user.fullName || user.username,
-            reportContext: reportData 
-        });
-    };
-    
-    const handleApproveApp = (appId) => {
-        setConfirmConfig({
-            isOpen: true,
-            title: "Approve Seller",
-            message: "Approve this seller application? They will gain access to the seller dashboard.",
-            type: "success",
-            onConfirm: async () => {
-                try {
-                    await axios.post(`${API_BASE}/api/admin/sellers/applications/${appId}/approve`, {
-                        note: "Approved by admin"
-                    });
-                    showToast("Application approved!", "success");
-                    fetchData();
-                } catch (err) {
-                    showToast("Failed to approve application", "error");
-                }
-            }
-        });
-    };
+  const rejectApp = (id) => setConfirmConfig({
+    isOpen: true, title: "Reject Merchant",
+    message: "Are you sure you want to reject this merchant application?",
+    type: "danger",
+    onConfirm: async () => {
+      await axios.post(`${API_BASE}/api/admin/sellers/applications/${id}/reject`);
+      showToast("Application rejected", "info"); fetchData();
+    }
+  });
 
-    const handleRejectApp = (appId) => {
-        setConfirmConfig({
-            isOpen: true,
-            title: "Reject Seller",
-            message: "Reject this seller application? Please ensure you have reviewed their documents.",
-            type: "danger",
-            onConfirm: async () => {
-                try {
-                    await axios.post(`${API_BASE}/api/admin/sellers/applications/${appId}/reject`, {
-                        note: "Rejected by admin"
-                    });
-                    showToast("Application rejected", "info");
-                    fetchData();
-                } catch (err) {
-                    showToast("Failed to reject application", "error");
-                }
-            }
-        });
-    };
-    
-    const handleLogout = () => {
-        setConfirmConfig({
-            isOpen: true,
-            title: "Sign Out",
-            message: "Are you sure you want to sign out from the Admin Panel?",
-            type: "danger",
-            onConfirm: () => {
-                localStorage.clear();
-                navigate("/login");
-            }
-        });
-    };
+  const resolveReport = async (id, status, note) => {
+    try {
+      await axios.post(`${API_BASE}/api/admin/reports/${id}/resolve`, { status, note });
+      showToast("Report resolved successfully", "success");
+      setResolutionConfig({ ...resolutionConfig, isOpen: false });
+      fetchData();
+    } catch { showToast("Failed to resolve report", "error"); }
+  };
 
-    const renderTabs = () => (
-        <nav className="ad-nav">
-             <button 
-                className={`ad-nav-item ${activeTab === 'applications' ? 'active' : ''}`}
-                onClick={() => setActiveTab('applications')}
-            >
-                <FileText size={18} /> Pending Sellers
-                {applications.length > 0 && <span className="ad-badge-count">{applications.length}</span>}
-            </button>
-             <button 
-                className={`ad-nav-item ${activeTab === 'users' ? 'active' : ''}`}
-                onClick={() => setActiveTab('users')}
-            >
-                <Users size={18} /> Customers
-            </button>
-            <button 
-                className={`ad-nav-item ${activeTab === 'sellers' ? 'active' : ''}`}
-                onClick={() => setActiveTab('sellers')}
-            >
-                <Store size={18} /> Merchants
-            </button>
-            <button 
-                className={`ad-nav-item ${activeTab === 'products' ? 'active' : ''}`}
-                onClick={() => setActiveTab('products')}
-            >
-                <Boxes size={18} /> Catalog
-            </button>
-            <button 
-                className={`ad-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
-                onClick={() => setActiveTab('reports')}
-            >
-                <AlertTriangle size={18} /> Disputes
-            </button>
-            <button 
-                className={`ad-nav-item ${activeTab === 'campaigns' ? 'active' : ''}`}
-                onClick={() => setActiveTab('campaigns')}
-            >
-                <Calendar size={18} /> Campaigns
-            </button>
-            <button 
-                className={`ad-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
-                onClick={() => setActiveTab('categories')}
-            >
-                <Boxes size={18} /> Categories
-            </button>
-            <button 
-                className={`ad-nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-                onClick={() => setActiveTab('settings')}
-            >
-                <Settings size={18} /> Configuration
-            </button>
-        </nav>
-    );
+  const handleLogout = () => setConfirmConfig({
+    isOpen: true, title: "Sign Out",
+    message: "Are you sure you want to sign out?",
+    type: "danger",
+    onConfirm: () => { localStorage.clear(); navigate("/login"); }
+  });
 
-    const renderUsers = () => (
-        <div className="ad-content-wrapper">
-            <div className="ad-table-container">
-                <table className="ad-table">
-                    <thead>
-                        <tr>
-                            <th>User Profile</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th className="ad-text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.filter(u => 
-                            (u.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
-                        ).map(user => (
-                            <tr key={user.id} className="ad-table-row">
-                                <td>
-                                    <div className="ad-merchant-cell">
-                                        <div className="ad-avatar-wrapper">
-                                            <div className="ad-avatar-placeholder">
-                                                {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
-                                            </div>
-                                            <div className={`ad-status-dot ${user.status === 'ACTIVE' ? 'active' : 'blocked'}`}></div>
-                                        </div>
-                                        <div className="ad-merchant-info">
-                                            <div className="ad-store-name">{user.fullName || user.username}</div>
-                                            <div className="ad-owner-name">{user.email} (ID: #{user.id})</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span className={`ad-badge-pro role-${user.role?.toLowerCase()}`}>
-                                        {user.role}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span className={`ad-badge-pro status-${user.status === 'ACTIVE' ? 'active' : 'blocked'}`}>
-                                        {user.status}
-                                    </span>
-                                </td>
-                                <td className="ad-text-right">
-                                    <div className="ad-action-pill-group">
-                                        {user.role === 'SELLER' && (
-                                            <button className="ad-action-icon-btn" title="Seller Details" onClick={() => handleViewSeller(user.id)}>
-                                                <ExternalLink size={16} />
-                                            </button>
-                                        )}
-                                        <div className="ad-action-divider"></div>
-                                        {user.status === 'ACTIVE' ? (
-                                            <button className="ad-action-icon-btn danger" title="Block User" onClick={() => handleBlockUser(user.id)}>
-                                                <Shield size={16} />
-                                            </button>
-                                        ) : (
-                                            <button className="ad-action-icon-btn success" title="Unblock User" onClick={() => handleUnblockUser(user.id)}>
-                                                <CheckCircle2 size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+  const filtered = (arr, keys) => arr.filter(item =>
+    keys.some(k => String(item[k] || "").toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  // ── Analytics Data Mapping ──
+  const revenueData = useMemo(() => {
+    if (!analytics?.monthlyRevenue) return [];
+    return Object.entries(analytics.monthlyRevenue)
+      .sort((a,b) => a[0].localeCompare(b[0]))
+      .map(([month, rev]) => ({ month, rev }));
+  }, [analytics]);
+
+  const orderTrendData = useMemo(() => {
+    if (!analytics?.dailyOrders) return [];
+    return Object.entries(analytics.dailyOrders)
+      .sort((a,b) => a[0].localeCompare(b[0]))
+      .map(([date, count]) => ({ date: date.split('-').slice(1).join('/'), count }));
+  }, [analytics]);
+
+  // ── Nav items ──
+  const navItems = [
+    { group: "General", items: [
+      { id: "overview",      label: "Overview",      icon: LayoutDashboard },
+      { id: "orders",        label: "Orders",        icon: ShoppingBag },
+      { id: "products",      label: "Catalog",       icon: Boxes },
+      { id: "messages",      label: "Messages",      icon: MessageSquare },
+    ]},
+    { group: "Partners", items: [
+      { id: "sellers",       label: "Merchants",     icon: Store },
+      { id: "applications",  label: "Applications",  icon: FileText, badge: applications.length },
+    ]},
+    { group: "Operations", items: [
+      { id: "reports",       label: "Disputes",      icon: AlertTriangle, badge: reports.filter(r => ["NEW","UNDER_INVESTIGATION"].includes(r.status)).length },
+      { id: "reviews",       label: "Moderation",    icon: Star },
+      { id: "users",         label: "Customers",     icon: Users },
+    ]},
+    { group: "Content", items: [
+      { id: "campaigns",     label: "Campaigns",     icon: Zap },
+      { id: "categories",    label: "Categories",    icon: ListChecks },
+    ]},
+    { group: "System", items: [
+      { id: "settings",      label: "Settings",      icon: Settings },
+    ]}
+  ];
+
+  const tabTitles = {
+    overview: "Platform Summary", applications: "Merchant Applications",
+    users: "Customer Directory", sellers: "Marketplace Merchants",
+    products: "Product Catalog", reports: "Resolution Center",
+    campaigns: "Campaign Hub", categories: "Inventory Structure",
+    settings: "Admin Account", orders: "Platform Orders", reviews: "Review Moderation"
+  };
+
+  // ─── Tab Components ───
+
+  const renderOverview = () => (
+    <div className="adm-overview">
+      <div className="adm-welcome-banner">
+        <div>
+          <h2 className="adm-welcome-title">Platform Summary 👋</h2>
+          <p className="adm-welcome-sub">Live health status of your ecosystem.</p>
         </div>
-    );
+        <button className="adm-refresh-btn" onClick={fetchAnalytics}>
+          <RefreshCw size={16} /> Update
+        </button>
+      </div>
 
-    const renderSellers = () => (
-        <div className="ad-content-wrapper">
-            <div className="ad-stats-summary">
-                <div className="ad-mini-stat">
-                    <span className="mini-stat-label">Total Merchants</span>
-                    <span className="mini-stat-value">{sellers.length}</span>
-                </div>
-                <div className="ad-mini-stat">
-                    <span className="mini-stat-label">Active Products</span>
-                    <span className="mini-stat-value">{sellers.reduce((acc, s) => acc + (s.totalProducts || 0), 0)}</span>
-                </div>
-                <div className="ad-mini-stat highlight">
-                    <span className="mini-stat-label">Cumulative Volume</span>
-                    <span className="mini-stat-value">Rs. {sellers.reduce((acc, s) => acc + (s.totalIncome || 0), 0).toLocaleString()}</span>
-                </div>
-            </div>
+      <div className="adm-stat-grid">
+        <StatCard icon={Users}       label="Customers"   value={analytics?.totalUsers ?? "—"}    color="#3b82f6" />
+        <StatCard icon={Store}       label="Merchants"  value={analytics?.totalSellers ?? "—"}  color="#8b5cf6" />
+        <StatCard icon={ShoppingBag} label="Total Orders"      value={analytics?.totalOrders ?? "—"}   color="#0088cc" />
+        <StatCard icon={DollarSign}  label="Platform GMV"      value={analytics ? `Rs. ${analytics.totalRevenue.toLocaleString()}` : "—"} color="#10b981" />
+        <StatCard icon={Boxes}       label="Products"   value={analytics?.totalProducts ?? "—"} color="#f59e0b" />
+        <StatCard icon={Star}        label="Reviews"     value={analytics?.totalReviews ?? "—"}  color="#ec4899" />
+      </div>
 
-            <div className="ad-table-container">
-                <table className="ad-table">
-                    <thead>
-                        <tr>
-                            <th>Merchant Profile</th>
-                            <th>Contact Info</th>
-                            <th>Inventory & Volume</th>
-                            <th>Fulfillment</th>
-                            <th>Status</th>
-                            <th className="ad-text-right">Manage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {sellers.filter(s => 
-                            (s.storeName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            (s.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (s.email || "").toLowerCase().includes(searchTerm.toLowerCase())
-                        ).map(seller => {
-                            const deliveryRate = seller.totalOrders > 0 
-                                ? Math.round((seller.totalDelivered / seller.totalOrders) * 100) 
-                                : 0;
-                            
-                            return (
-                                <tr key={seller.id} className="ad-table-row">
-                                    <td>
-                                        <div className="ad-merchant-cell">
-                                            <div className="ad-avatar-wrapper">
-                                                {seller.logoImagePath ? (
-                                                    <img 
-                                                        src={`${API_BASE}/${seller.logoImagePath}`} 
-                                                        alt={seller.storeName} 
-                                                        className="ad-merchant-logo"
-                                                    />
-                                                ) : (
-                                                    <div className="ad-avatar-placeholder">
-                                                        {seller.storeName?.charAt(0).toUpperCase() || 'S'}
-                                                    </div>
-                                                )}
-                                                <div className={`ad-status-dot ${seller.status?.toLowerCase()}`}></div>
-                                            </div>
-                                            <div className="ad-merchant-info">
-                                                <div className="ad-store-name">{seller.storeName}</div>
-                                                <div className="ad-owner-name">Owner: {seller.fullName}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="ad-id" style={{ color: 'inherit', fontWeight: 500 }}>{seller.email}</div>
-                                        <div className="ad-id" style={{ fontSize: '0.75rem' }}>ID: #{seller.id}</div>
-                                    </td>
-                                    <td>
-                                        <div className="ad-stats-compound">
-                                            <div className="compound-item">
-                                                <span className="label">STOCK</span>
-                                                <span className="val">{seller.totalProducts}</span>
-                                            </div>
-                                            <div className="compound-divider"></div>
-                                            <div className="compound-item">
-                                                <span className="label">VOLUME</span>
-                                                <span className="val">{seller.totalOrders}</span>
-                                            </div>
-                                            <div className="compound-divider"></div>
-                                            <div className="compound-item accent">
-                                                <span className="label">REVENUE</span>
-                                                <span className="val">Rs. {seller.totalIncome || 0}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="ad-fulfillment-container">
-                                            <div className="ad-fulfillment-meta">
-                                                <span className="pct">{deliveryRate}%</span>
-                                                <span className="count">{seller.totalDelivered} DLV</span>
-                                            </div>
-                                            <div className="ad-fulfillment-track-modern">
-                                                <div className="ad-fulfillment-fill-modern" style={{ width: `${deliveryRate}%` }}></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className={`ad-badge-pro status-${seller.status?.toLowerCase()}`}>
-                                            {seller.status}
-                                        </span>
-                                    </td>
-                                    <td className="ad-text-right">
-                                        <div className="ad-action-pill-group">
-                                            <button className="ad-action-icon-btn" onClick={() => handleViewSeller(seller.id)} title="View Detail">
-                                                <Eye size={16} />
-                                            </button>
-                                            <button className="ad-action-icon-btn" onClick={() => handleSendMessage(seller)} title="Message">
-                                                <MessageSquare size={16} />
-                                            </button>
-                                            <button className="ad-action-icon-btn warn" onClick={() => handleIssueWarning(seller.id)} title="Warning">
-                                                <AlertTriangle size={16} />
-                                            </button>
-                                            <div className="ad-action-divider"></div>
-                                            {seller.status === 'ACTIVE' ? (
-                                                <button className="ad-action-icon-btn danger" onClick={() => handleBlockUser(seller.id)} title="Block">
-                                                    <Shield size={16} />
-                                                </button>
-                                            ) : (
-                                                <button className="ad-action-icon-btn success" onClick={() => handleUnblockUser(seller.id)} title="Unblock">
-                                                    <CheckCircle2 size={16} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-
-    const renderProducts = () => (
-        <div className="ad-content-wrapper">
-            <div className="ad-table-container">
-                <table className="ad-table">
-                    <thead>
-                        <tr>
-                            <th>Product Info</th>
-                            <th>Seller</th>
-                            <th>Pricing</th>
-                            <th>Visibility</th>
-                            <th className="ad-text-right">Manage</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.map(p => (
-                            <tr key={p.id} className="ad-table-row">
-                                <td>
-                                    <div className="ad-merchant-cell">
-                                        <div className="ad-avatar-wrapper">
-                                            {p.imagePaths && p.imagePaths.length > 0 ? (
-                                                <img 
-                                                    src={`${API_BASE}/${p.imagePaths[0]}`} 
-                                                    alt={p.name} 
-                                                    className="ad-merchant-logo"
-                                                />
-                                            ) : (
-                                                <div className="ad-avatar-placeholder">
-                                                    <Boxes size={18} />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="ad-merchant-info">
-                                            <div className="ad-store-name">{p.name}</div>
-                                            <div className="ad-owner-name">{p.category} (ID: #{p.id})</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="ad-owner-name" style={{ fontWeight: 600, color: '#111827' }}>{p.sellerFullName}</div>
-                                </td>
-                                <td>
-                                    <div className="ad-stats-compound">
-                                        {p.onSale ? (
-                                            <div className="compound-item accent">
-                                                <span className="label">SALE PRICE</span>
-                                                <span className="val">Rs. {p.salePrice}</span>
-                                                <span className="label" style={{ textDecoration: 'line-through', opacity: 0.5 }}>WAS Rs. {p.price}</span>
-                                            </div>
-                                        ) : (
-                                            <div className="compound-item">
-                                                <span className="label">BASE PRICE</span>
-                                                <span className="val">Rs. {p.price}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </td>
-                                <td>
-                                    <span className={`ad-badge-pro status-${p.status === 'ACTIVE' ? 'active' : 'blocked'}`}>
-                                        {p.status}
-                                    </span>
-                                </td>
-                                <td className="ad-text-right">
-                                    <div className="ad-action-pill-group">
-                                        <button 
-                                            className={`ad-action-icon-btn ${p.status === 'ACTIVE' ? 'danger' : 'success'}`}
-                                            onClick={() => handleToggleProduct(p.id, p.status)}
-                                            title={p.status === 'ACTIVE' ? 'Hide Product' : 'Show Product'}
-                                        >
-                                            {p.status === 'ACTIVE' ? <EyeOff size={16} /> : <Eye size={16} />}
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-    
-    const renderReports = () => (
-        <div className="ad-content-wrapper">
-            <div className="ad-table-container">
-                <table className="ad-table">
-                    <thead>
-                        <tr>
-                            <th>Issue Detail</th>
-                            <th>Reported Subject</th>
-                            <th>Reason / Case</th>
-                            <th>Reporter</th>
-                            <th>Resolution Status</th>
-                            <th className="ad-text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {reports.map(r => (
-                            <tr key={r.id} className="ad-table-row">
-                                <td>
-                                    <div className="ad-badge-pro role-admin" style={{ fontSize: '0.6rem' }}>{r.type}</div>
-                                    <div className="ad-id" style={{ marginTop: '4px' }}>#REP-{r.id}</div>
-                                </td>
-                                <td>
-                                    <div className="ad-merchant-cell">
-                                        <div className="ad-avatar-wrapper">
-                                            {r.reportedEntityImage ? (
-                                                <img 
-                                                    src={r.reportedEntityImage.startsWith('http') ? r.reportedEntityImage : `${API_BASE}/${r.reportedEntityImage}`} 
-                                                    alt="Target" 
-                                                    className="ad-merchant-logo"
-                                                />
-                                            ) : (
-                                                <div className="ad-avatar-placeholder" style={{ fontSize: '0.7rem' }}>N/A</div>
-                                            )}
-                                        </div>
-                                        <div className="ad-merchant-info">
-                                            <div className="ad-store-name">{r.reportedEntityName || "Unknown"}</div>
-                                            <div className="ad-owner-name">ID: {r.reportedEntityId}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="ad-id" style={{ maxWidth: '200px', whiteSpace: 'normal', lineHeight: '1.4' }}>
-                                        {r.reason}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div className="ad-store-name" style={{ fontSize: '0.85rem' }}>{r.reporterName}</div>
-                                    <div className="ad-owner-name">ID: {r.reporterId}</div>
-                                </td>
-                                <td>
-                                    <span className={`ad-badge-pro status-${r.status?.toLowerCase().replace('(', '').replace(')', '').replace(/ /g, '_')}`}>
-                                        {r.status?.replace(/_/g, ' ')}
-                                    </span>
-                                </td>
-                                <td className="ad-text-right">
-                                    <div className="ad-action-pill-group">
-                                        {!['RESOLVED', 'RESOLVED_REFUNDED', 'CLOSED_REJECTED'].includes(r.status) ? (
-                                            <select 
-                                                className="ad-status-select-pro"
-                                                onChange={(e) => {
-                                                    if (e.target.value) {
-                                                        setResolutionConfig({
-                                                            isOpen: true,
-                                                            reportId: r.id,
-                                                            status: e.target.value,
-                                                            reason: r.reason
-                                                        });
-                                                        e.target.value = "";
-                                                    }
-                                                }}
-                                                value=""
-                                            >
-                                                <option value="" disabled>Status</option>
-                                                <option value="UNDER_INVESTIGATION">Investigate</option>
-                                                <option value="RESOLVED_REFUNDED">Refund</option>
-                                                <option value="CLOSED_REJECTED">Reject</option>
-                                                <option value="RESOLVED">Resolve</option>
-                                            </select>
-                                        ) : (
-                                            <span className="ad-id" style={{ padding: '0 8px', fontWeight: 600 }}>Archived</span>
-                                        )}
-
-                                        {r.sellerUserId && (
-                                            <button 
-                                                className="ad-action-icon-btn" 
-                                                title="Message Seller" 
-                                                onClick={() => handleSendMessage({ 
-                                                    id: r.sellerUserId, 
-                                                    fullName: r.type === 'PRODUCT' ? `Merchant of ${r.reportedEntityName}` : r.reportedEntityName 
-                                                }, {
-                                                    reason: r.reason,
-                                                    reporter: r.reporterName,
-                                                    targetName: r.reportedEntityName,
-                                                    targetId: r.reportedEntityId,
-                                                    targetImage: r.reportedEntityImage
-                                                })}
-                                            >
-                                                <MessageSquare size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-
-    const renderApplications = () => (
-        <div className="ad-content-wrapper">
-            <div className="ad-table-container">
-                <table className="ad-table">
-                    <thead>
-                        <tr>
-                            <th>Store Detail</th>
-                            <th>Onboarding Metadata</th>
-                            <th>Verification Documents</th>
-                            <th className="ad-text-right">Decision</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {applications.map(app => (
-                            <tr key={app.id} className="ad-table-row">
-                                <td>
-                                    <div className="ad-store-name" style={{ fontSize: '1rem' }}>{app.storeName}</div>
-                                    <div className="ad-owner-name">{app.address}</div>
-                                    <div className="ad-id">App ID: #{app.id}</div>
-                                </td>
-                                <td>
-                                    <div className="ad-owner-name" style={{ fontWeight: 600 }}>SUBMITTED</div>
-                                    <div className="ad-id">{app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : 'N/A'}</div>
-                                </td>
-                                <td>
-                                    <div className="ad-document-pill-group">
-                                        {app.taxCertificatePath && (
-                                            <a href={`${API_BASE}${app.taxCertificatePath}`} target="_blank" rel="noopener noreferrer" className="ad-doc-pill">TAX ID</a>
-                                        )}
-                                        {app.businessLicensePath && (
-                                            <a href={`${API_BASE}${app.businessLicensePath}`} target="_blank" rel="noopener noreferrer" className="ad-doc-pill">LICENSE</a>
-                                        )}
-                                        {app.idDocumentPath && (
-                                            <a href={`${API_BASE}${app.idDocumentPath}`} target="_blank" rel="noopener noreferrer" className="ad-doc-pill">IDENTITY</a>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="ad-text-right">
-                                    <div className="ad-action-pill-group">
-                                        <button className="ad-action-icon-btn success" title="Approve" onClick={() => handleApproveApp(app.id)}>
-                                            <CheckCircle2 size={18} />
-                                        </button>
-                                        <button className="ad-action-icon-btn danger" title="Reject" onClick={() => handleRejectApp(app.id)}>
-                                            <XCircle size={18} />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        {applications.length === 0 && (
-                            <tr>
-                                <td colSpan="4" style={{textAlign: "center", padding: "4rem", color: '#94a3b8'}}>No screening applications found at this time.</td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-
-    return (
-        <div className="ad-layout">
-            <aside className="ad-sidebar">
-                <div className="ad-sidebar-header">
-                    <h3>Admin Panel</h3>
-                </div>
-                {renderTabs()}
-                <div className="ad-logout">
-                    <button className="ad-logout-btn" onClick={handleLogout}>
-                        <LogOut size={18} /> <span>Sign Out</span>
-                    </button>
-                </div>
-            </aside>
-            <main className="ad-main">
-                <div className="ad-header">
-                     <div>
-                        <h1 className="ad-title">
-                            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                        </h1>
-                        <p className="ad-subtitle">Manage your application {activeTab}</p>
-                    </div>
-                    <div className="ad-header-controls">
-                        <div className="ad-search-bar">
-                            <Search size={18} />
-                            <input 
-                                type="text" 
-                                placeholder="Search..." 
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <div className="ad-header-date">{new Date().toLocaleDateString()}</div>
-                    </div>
-                </div>
-                
-                {/* Loading State */}
-                {loading && (
-                    <div style={{textAlign: 'center', padding: '3rem'}}>
-                        <div style={{fontSize: '1.2rem', color: '#666'}}>Loading...</div>
-                    </div>
-                )}
-                
-                {/* Error State */}
-                {error && !loading && (
-                    <div style={{
-                        padding: '1.5rem',
-                        margin: '1rem 0',
-                        backgroundColor: '#fee',
-                        border: '1px solid #fcc',
-                        borderRadius: '8px',
-                        color: '#c33'
-                    }}>
-                        <strong>Error:</strong> {error}
-                    </div>
-                )}
-                
-                {/* Content - Only show when not loading */}
-                {!loading && !error && (
-                    <>
-                        {activeTab === 'users' && renderUsers()}
-                        {activeTab === 'sellers' && renderSellers()}
-                        {activeTab === 'products' && renderProducts()}
-                        {activeTab === 'reports' && renderReports()}
-                        {activeTab === 'applications' && renderApplications()}
-                        {activeTab === 'campaigns' && (
-                            <CreateCampaign 
-                                showToast={showToast} 
-                                confirmConfig={confirmConfig} 
-                                setConfirmConfig={setConfirmConfig} 
-                            />
-                        )}
-                        {activeTab === 'categories' && <CategoryManager showToast={showToast} />}
-                        {activeTab === 'settings' && (
-                            <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
-                                <UpdateAccount />
-                            </div>
-                        )}
-                    </>
-                )}
-            </main>
-            
-            {showSellerModal && selectedSeller && (
-                <div className="ad-sidepanel-overlay" onClick={() => setShowSellerModal(false)}>
-                    <div className="ad-sidepanel" onClick={e => e.stopPropagation()}>
-                        <div className="ad-sidepanel-header">
-                            <div className="header-top">
-                                <h2>Merchant Profile</h2>
-                                <button className="close-panel-btn" onClick={() => setShowSellerModal(false)}><X size={20}/></button>
-                            </div>
-                            <div className="header-main">
-                                <div className="panel-avatar">
-                                    {selectedSeller.logoImagePath ? (
-                                        <img src={`${API_BASE}/${selectedSeller.logoImagePath}`} alt={selectedSeller.storeName} />
-                                    ) : (
-                                        <div className="avatar-letter">{selectedSeller.storeName?.charAt(0).toUpperCase()}</div>
-                                    )}
-                                </div>
-                                <div className="panel-title-info">
-                                    <h3>{selectedSeller.storeName}</h3>
-                                    <span className="panel-id">ID: #{selectedSeller.id}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="ad-sidepanel-body">
-                            <section className="panel-section">
-                                <h4 className="section-title">ADMINISTRATIVE DETAILS</h4>
-                                <div className="panel-info-grid">
-                                    <div className="info-item">
-                                        <span className="info-label">Operator</span>
-                                        <span className="info-val">{selectedSeller.fullName}</span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="info-label">Account Type</span>
-                                        <span className="info-val">Verified Merchant</span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="info-label">Contact Email</span>
-                                        <span className="info-val">{selectedSeller.email}</span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="info-label">Phone</span>
-                                        <span className="info-val">{selectedSeller.contactNumber || 'Not Provided'}</span>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section className="panel-section">
-                                <h4 className="section-title">PERFORMANCE METRICS</h4>
-                                <div className="panel-metrics-grid">
-                                    <div className="metric-box-modern">
-                                        <span className="m-val">Rs. {selectedSeller.totalIncome?.toLocaleString() || 0}</span>
-                                        <span className="m-label">Gross Revenue</span>
-                                    </div>
-                                    <div className="metric-box-modern">
-                                        <span className="m-val">{selectedSeller.totalOrders}</span>
-                                        <span className="m-label">Orders Processed</span>
-                                    </div>
-                                    <div className="metric-box-modern">
-                                        <span className="m-val">{selectedSeller.totalProducts}</span>
-                                        <span className="m-label">Active Catalog</span>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <div className="panel-actions-container">
-                                <button className="panel-action-btn primary" onClick={() => handleSendMessage(selectedSeller)}>
-                                    <MessageSquare size={16} /> Send Direct Message
-                                </button>
-                                <div className="panel-action-row-split">
-                                    <button className="panel-action-btn warn" onClick={() => handleIssueWarning(selectedSeller.id)}>
-                                        <AlertTriangle size={16} /> Issue Warning
-                                    </button>
-                                    {selectedSeller.status === 'ACTIVE' ? (
-                                        <button className="panel-action-btn danger" onClick={() => handleBlockUser(selectedSeller.id)}>
-                                            <Shield size={16} /> Suspend
-                                        </button>
-                                    ) : (
-                                        <button className="panel-action-btn success" onClick={() => handleUnblockUser(selectedSeller.id)}>
-                                            <CheckCircle2 size={16} /> Reactivate
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <MessageModal
-                isOpen={messageConfig.isOpen}
-                onClose={() => setMessageConfig(prev => ({ ...prev, isOpen: false }))}
-                type="admin"
-                recipientId={messageConfig.receiverId}
-                recipientName={messageConfig.receiverName}
-                reportContext={messageConfig.reportContext}
-            />
-
-            <ResolutionModal 
-                isOpen={resolutionConfig.isOpen}
-                onClose={() => setResolutionConfig(prev => ({ ...prev, isOpen: false }))}
-                reportId={resolutionConfig.reportId}
-                status={resolutionConfig.status}
-                reason={resolutionConfig.reason}
-                onConfirm={(note) => {
-                    handleResolveReport(resolutionConfig.reportId, resolutionConfig.status, note);
-                    setResolutionConfig(prev => ({ ...prev, isOpen: false }));
-                }}
-            />
-
-            {/* Warning Modal */}
-            {warningConfig.isOpen && (
-                <div className="ad-modal-overlay">
-                    <div className="ad-modal-content" style={{ maxWidth: '450px' }}>
-                        <div className="ad-modal-header">
-                            <h2 className="ad-user-name-bold" style={{ fontSize: '1.25rem' }}>Issue Official Warning</h2>
-                            <button className="ad-modal-close" onClick={() => setWarningConfig({ ...warningConfig, isOpen: false })}>×</button>
-                        </div>
-                        <div className="ad-modal-body">
-                            <p className="ad-id" style={{ marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                                This action will record an official violation against the merchant. 
-                                <span style={{ color: '#ff4444', fontWeight: 900 }}> 3 warnings lead to permanent suspension.</span>
-                            </p>
-                            
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label className="ad-id" style={{ display: 'block', marginBottom: '8px' }}>REASON FOR INFRACTION</label>
-                                <textarea 
-                                    className="ad-status-select"
-                                    style={{ width: '100%', minHeight: '120px', borderRadius: '8px', padding: '1rem' }}
-                                    placeholder="Describe the violation in detail..."
-                                    value={warningConfig.reason}
-                                    onChange={(e) => setWarningConfig({ ...warningConfig, reason: e.target.value })}
-                                />
-                            </div>
-
-                            <button 
-                                className="ad-logout-btn" 
-                                style={{ background: '#000', color: '#fff', border: 'none', borderRadius: '8px' }}
-                                onClick={submitWarning}
-                            >
-                                SUBMIT RECOGNIZED VIOLATION
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-
-            <ConfirmModal 
-                isOpen={confirmConfig.isOpen}
-                onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
-                onConfirm={confirmConfig.onConfirm}
-                title={confirmConfig.title}
-                message={confirmConfig.message}
-                type={confirmConfig.type}
-            />
-
-            {toast.visible && (
-                <Toast 
-                    message={toast.message} 
-                    type={toast.type} 
-                    onClose={() => setToast(prev => ({ ...prev, visible: false }))} 
+      <div className="adm-charts-grid">
+        <div className="adm-chart-card">
+          <div className="adm-chart-header">
+            <h3>Revenue Growth</h3>
+            <span className="adm-chart-tag">Last 12 Months</span>
+          </div>
+          <div className="adm-chart-body">
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={revenueData}>
+                <defs>
+                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0088cc" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#0088cc" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
+                <Tooltip 
+                  contentStyle={{borderRadius: '10px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}}
+                  formatter={(value) => [`Rs. ${value.toLocaleString()}`, "Revenue"]}
                 />
-            )}
+                <Area type="monotone" dataKey="rev" stroke="#0088cc" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-    );
+
+        <div className="adm-chart-card">
+          <div className="adm-chart-header">
+            <h3>Order Volume</h3>
+            <span className="adm-chart-tag">Daily Trend</span>
+          </div>
+          <div className="adm-chart-body">
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={orderTrendData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
+                <Tooltip 
+                   cursor={{fill: '#f8fafc'}}
+                   contentStyle={{borderRadius: '10px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'}}
+                />
+                <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="adm-action-alerts">
+        {analytics?.pendingApplications > 0 && (
+          <div className="adm-action-alert alert-warning" onClick={() => setActiveTab("applications")}>
+            <div className="alert-icon-circle"><FileText size={18} /></div>
+            <div className="alert-content">
+              <h4>Seller Applications</h4>
+              <span>{analytics.pendingApplications} applications pending validation.</span>
+            </div>
+            <ChevronRight size={16} />
+          </div>
+        )}
+        {analytics?.openReports > 0 && (
+          <div className="adm-action-alert alert-danger" onClick={() => setActiveTab("reports")}>
+            <div className="alert-icon-circle"><AlertCircle size={18} /></div>
+            <div className="alert-content">
+              <h4>Dispute Center</h4>
+              <span>{analytics.openReports} open tickets require investigation.</span>
+            </div>
+            <ChevronRight size={16} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderOrders = () => (
+    <div className="adm-table-card">
+      <div className="adm-table-filters">
+        <Filter size={16}/>
+        <span>Showing platform-wide orders</span>
+      </div>
+      {filtered(orders, ["customerName", "status"]).map(o => (
+        <div className="adm-row clickable" key={o.orderId} onClick={() => navigate(`/admin/order/${o.orderId}`)}>
+          <div className="adm-row-info">
+            <span className="adm-row-title">#{o.orderId} · {o.customerName}</span>
+            <span className="adm-row-sub">{new Date(o.createdAt).toLocaleString()} · {o.paymentMethod}</span>
+          </div>
+          <div className="adm-price-block">
+            <span className="adm-price">Rs. {o.grandTotal.toLocaleString()}</span>
+          </div>
+          <Badge status={o.status} />
+          <div className="adm-row-actions" onClick={e => e.stopPropagation()}>
+            <button className="adm-icon-btn" title="View Details" onClick={() => navigate(`/admin/order/${o.orderId}`)}><ExternalLink size={14}/></button>
+          </div>
+        </div>
+      ))}
+      {orders.length === 0 && <div className="adm-empty">No orders found.</div>}
+    </div>
+  );
+
+  const renderReviews = () => (
+    <div className="adm-table-card">
+      {filtered(reviews, ["userName", "productName", "comment"]).map(r => (
+        <div className="adm-row review-row" key={r.id}>
+          <div className="adm-row-info">
+            <div className="adm-review-top">
+              <span className="adm-row-title">{r.userName}</span>
+              <div className="adm-stars">
+                 {[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < r.rating ? "#f59e0b" : "none"} color={i < r.rating ? "#f59e0b" : "#cbd5e1"}/>)}
+              </div>
+            </div>
+            <span className="adm-row-sub">Product: {r.productName} · {new Date(r.createdAt).toLocaleDateString()}</span>
+            <p className="adm-review-comment">"{r.comment}"</p>
+          </div>
+          <div className="adm-row-actions">
+            <button className="adm-icon-btn danger" title="Delete Review" onClick={() => deleteReview(r.id)}><Trash2 size={16}/></button>
+          </div>
+        </div>
+      ))}
+      {reviews.length === 0 && <div className="adm-empty">No reviews to moderate.</div>}
+    </div>
+  );
+
+  const renderUsers = () => (
+    <div className="adm-table-card">
+      {filtered(users, ["fullName","email"]).map(u => (
+        <div className="adm-row clickable" key={u.id} onClick={() => viewCustomer(u.id)}>
+          <div className="adm-row-avatar">{u.fullName?.charAt(0).toUpperCase() || "U"}</div>
+          <div className="adm-row-info">
+            <span className="adm-row-title">{u.fullName}</span>
+            <span className="adm-row-sub">{u.email} · #{u.id}</span>
+          </div>
+          <Badge status={u.status} />
+          <div className="adm-row-actions" onClick={e => e.stopPropagation()}>
+            <button className="adm-icon-btn" title="Send Message" onClick={() => setMessageConfig({ isOpen: true, recipientId: u.id, recipientName: u.fullName })}><MessageSquare size={16}/></button>
+            {u.status === "ACTIVE"
+              ? <button className="adm-icon-btn danger" title="Block" onClick={() => blockUser(u.id)}><Lock size={16}/></button>
+              : <button className="adm-icon-btn success" title="Unblock" onClick={() => unblockUser(u.id)}><Unlock size={16}/></button>
+            }
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderSellers = () => (
+    <div className="adm-table-card">
+      {filtered(sellers, ["storeName","fullName"]).map(s => (
+        <div className="adm-row clickable" key={s.id} onClick={() => viewSeller(s.id)}>
+          <div className="adm-row-avatar">
+            {s.logoImagePath ? <img src={`${API_BASE}/${s.logoImagePath}`} alt=""/> : s.storeName?.charAt(0)}
+          </div>
+          <div className="adm-row-info">
+            <span className="adm-row-title">{s.storeName}</span>
+            <span className="adm-row-sub">{s.fullName} · {s.email}</span>
+          </div>
+          <Badge status={s.status} />
+          <div className="adm-row-actions" onClick={e => e.stopPropagation()}>
+            <button className="adm-icon-btn" onClick={() => setMessageConfig({ isOpen: true, recipientId: s.id, recipientName: s.storeName })} title="Message Store"><MessageSquare size={16}/></button>
+            <button className="adm-icon-btn" onClick={()=>navigate(`/shop/${s.id}`)} title="Go to Store Front"><ExternalLink size={16}/></button>
+            <button className="adm-icon-btn success" onClick={()=>viewSeller(s.id)} title="View Analytics"><Eye size={16}/></button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderProducts = () => (
+    <div className="adm-table-card">
+      {filtered(products, ["name","category"]).map(p => (
+        <div className="adm-row clickable" key={p.id} onClick={() => navigate(`/product/${p.id}`)}>
+          <div className="adm-row-avatar">
+            {p.imagePaths?.[0] ? <img src={`${API_BASE}/${p.imagePaths[0]}`} alt=""/> : <Boxes size={20}/>}
+          </div>
+          <div className="adm-row-info">
+            <span className="adm-row-title">{p.name}</span>
+            <span className="adm-row-sub">{p.category} · {p.sellerFullName}</span>
+          </div>
+          <Badge status={p.status} />
+          <div className="adm-row-actions" onClick={e => e.stopPropagation()}>
+             <button className={`adm-icon-btn ${p.status === "ACTIVE" ? "danger" : "success"}`} onClick={() => toggleProduct(p.id, p.status)} title={p.status === "ACTIVE" ? "Hide from Store" : "Show in Store"}>
+                {p.status === "ACTIVE" ? <EyeOff size={16}/> : <Eye size={16}/>}
+             </button>
+             <button className="adm-icon-btn" onClick={() => navigate(`/product/${p.id}`)} title="View Product Page"><ExternalLink size={14}/></button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderReports = () => (
+    <div className="adm-table-card">
+       {reports.map(r => (
+         <div className="adm-row" key={r.id}>
+           <div className="adm-row-info">
+             <span className="adm-row-title">{r.reportedEntityName}</span>
+             <span className="adm-row-sub">{r.type} · by {r.reporterName}</span>
+             <p className="adm-row-desc">{r.reason}</p>
+           </div>
+           <Badge status={r.status} />
+           <div className="adm-row-actions">
+              <select className="adm-select small" value="" onChange={(e)=> {
+                 if(!e.target.value) return;
+                 setResolutionConfig({ isOpen: true, reportId: r.id, status: e.target.value, reason: r.reason });
+                 e.target.value = "";
+              }}>
+                <option value="">Actions</option>
+                <option value="UNDER_INVESTIGATION">Investigate</option>
+                <option value="RESOLVED">Resolve</option>
+                <option value="RESOLVED_REFUNDED">Refund</option>
+              </select>
+           </div>
+         </div>
+       ))}
+    </div>
+  );
+
+  const renderApplications = () => (
+    <div className="adm-table-card">
+      {applications.map(a => (
+        <div className="adm-row" key={a.id}>
+          <div className="adm-row-info">
+            <span className="adm-row-title">{a.storeName}</span>
+            <span className="adm-row-sub">{a.address} · {new Date(a.submittedAt).toLocaleDateString()}</span>
+          </div>
+          <div className="adm-row-actions">
+            <button className="adm-action-btn approve" onClick={() => approveApp(a.id)}>Approve</button>
+            <button className="adm-action-btn reject"  onClick={() => rejectApp(a.id)}>Reject</button>
+          </div>
+        </div>
+      ))}
+      {applications.length === 0 && <div className="adm-empty-state"><h3>Fine Work!</h3><p>No seller applications pending.</p></div>}
+    </div>
+  );
+
+  return (
+    <div className="adm-layout">
+      <aside className="adm-sidebar">
+        <div className="adm-sidebar-brand">
+          <div className="adm-brand-logo"><Zap size={18}/></div>
+          <div className="adm-brand-text">
+            <div className="adm-brand-name">Jhapcham</div>
+            <div className="adm-brand-role">Admin Console</div>
+          </div>
+        </div>
+        <nav className="adm-nav">
+          {navItems.map(group => (
+            <div key={group.group} className="adm-nav-group">
+              <h4 className="adm-nav-label">{group.group}</h4>
+              {group.items.map(item => (
+                <button
+                  key={item.id}
+                  className={`adm-nav-item ${activeTab === item.id ? "active" : ""}`}
+                  onClick={() => item.id === "messages" ? navigate("/messages") : setActiveTab(item.id)}
+                >
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                  {item.badge > 0 && <span className="adm-nav-badge">{item.badge}</span>}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <button className="adm-logout-btn" onClick={handleLogout}>
+          <LogOut size={16}/> Sign Out
+        </button>
+      </aside>
+
+      <main className="adm-main">
+        <DashboardNavbar 
+          title={tabTitles[activeTab]} 
+          role="ADMIN"
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+          showSearch={["users","sellers","products","orders"].includes(activeTab)}
+        />
+
+        <section className="adm-content">
+          {loading ? <div className="adm-loader">Spinning up...</div> : (
+            <>
+              {activeTab === "overview"      && renderOverview()}
+              {activeTab === "orders"        && renderOrders()}
+              {activeTab === "products"      && renderProducts()}
+              {activeTab === "sellers"       && renderSellers()}
+              {activeTab === "applications"  && renderApplications()}
+              {activeTab === "reports"       && renderReports()}
+              {activeTab === "reviews"       && renderReviews()}
+              {activeTab === "users"         && renderUsers()}
+              {activeTab === "campaigns"     && <CreateCampaign showToast={showToast} confirmConfig={confirmConfig} setConfirmConfig={setConfirmConfig}/>}
+              {activeTab === "categories"    && <CategoryManager showToast={showToast}/>}
+              {activeTab === "settings"      && <UpdateAccount/>}
+            </>
+          )}
+        </section>
+      </main>
+
+      {/* Shared Modals */}
+      <ConfirmModal {...confirmConfig} onClose={()=>setConfirmConfig({...confirmConfig, isOpen:false})} />
+      <MessageModal {...messageConfig} type="admin" onClose={()=>setMessageConfig({...messageConfig, isOpen:false})} />
+      <ResolutionModal
+         isOpen={resolutionConfig.isOpen}
+         onClose={() => setResolutionConfig({ ...resolutionConfig, isOpen: false })}
+         onConfirm={(note)=>resolveReport(resolutionConfig.reportId, resolutionConfig.status, note)}
+         title={`Resolve Dispute: ${resolutionConfig.status}`}
+         reason={resolutionConfig.reason}
+      />
+      {toast.visible && <Toast {...toast} onClose={()=>setToast({...toast, visible:false})}/>}
+
+    </div>
+  );
 };
 
 export default AdminDashboard;

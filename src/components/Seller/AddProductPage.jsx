@@ -100,6 +100,11 @@ export default function AddProductPage() {
       return;
     }
 
+    if (!formData.image) {
+      showToast("Primary product image is required", "error");
+      return;
+    }
+
     try {
       const data = new FormData();
       data.append("sellerId", sellerId);
@@ -111,11 +116,12 @@ export default function AddProductPage() {
       data.append("brand", formData.brand);
       data.append("stockQuantity", formData.stock || "0");
       
+      // Fix: Join arrays into comma-separated strings for backend binding
       if (formData.colors.length > 0) {
-        formData.colors.forEach(color => data.append("colorOptions", color));
+        data.append("colorOptions", formData.colors.join(", "));
       }
       if (formData.storage.length > 0) {
-        formData.storage.forEach(storage => data.append("storageSpec", storage));
+        data.append("storageSpec", formData.storage.join(", "));
       }
       
       if (formData.manufactureDate) data.append("manufactureDate", formData.manufactureDate);
@@ -139,7 +145,10 @@ export default function AddProductPage() {
         body: data
       });
 
-      if (!response.ok) throw new Error("Failed to save product");
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.message || "Conflict or Missing Data. Check all required fields.");
+      }
 
       showToast("Listing published successfully!", "success");
       setTimeout(() => navigate('/seller/products'), 1500);
@@ -154,8 +163,8 @@ export default function AddProductPage() {
     <div className="ap-container fade-in">
       <div className="ap-header">
         <div className="header-left">
-          <h1>Publish New Listing</h1>
-          <p>Globalize your product by filling out the blueprint below.</p>
+          <h1 className="gt-h3">Product Blueprint</h1>
+          <p className="gt-note">Configure your next marketplace listing with high-precision details.</p>
         </div>
         <button className="ap-btn-cancel" onClick={() => navigate(-1)}>Discard</button>
       </div>
@@ -166,12 +175,12 @@ export default function AddProductPage() {
         <div className="ap-section">
           <div className="section-head">
             <Info size={18} strokeWidth={2.5} />
-            <span>Product Identity</span>
+            <span className="gt-caption">Product Identity</span>
           </div>
           
           <div className="ap-grid-2">
             <div className="ap-field">
-              <label>Official Product Name <span className="req">*</span></label>
+              <label className="gt-note">Official Listing Title <span className="req">*</span></label>
               <input 
                 name="name" 
                 placeholder="e.g. iPhone 15 Pro Max" 
@@ -181,7 +190,7 @@ export default function AddProductPage() {
               />
             </div>
             <div className="ap-field">
-              <label>Manufacturer Brand</label>
+              <label className="gt-note">Manufacturer Brand</label>
               <input 
                 name="brand" 
                 placeholder="e.g. Apple" 
@@ -206,11 +215,11 @@ export default function AddProductPage() {
         <div className="ap-section">
           <div className="section-head">
             <DollarSign size={18} strokeWidth={2.5} />
-            <span>Economics & Inventory</span>
+            <span className="gt-caption">Economics & Inventory</span>
           </div>
           <div className="ap-grid-2">
             <div className="ap-field">
-              <label>Unit Price (NPR) <span className="req">*</span></label>
+              <label className="gt-note">Unit Price (NPR) <span className="req">*</span></label>
               <div className="input-group">
                 <span className="input-prefix">Rs.</span>
                 <input 
@@ -223,7 +232,7 @@ export default function AddProductPage() {
               </div>
             </div>
             <div className="ap-field">
-              <label>Available Stock</label>
+              <label className="gt-note">Available Stock</label>
               <input 
                 type="number" 
                 name="stock" 
@@ -239,7 +248,7 @@ export default function AddProductPage() {
         <div className="ap-section">
           <div className="section-head">
             <FileText size={18} strokeWidth={2.5} />
-            <span>Detailed Manifest</span>
+            <span className="gt-caption">Detailed Manifest</span>
           </div>
           <div className="ap-field">
             <label>Short Pitch (Teaser)</label>
@@ -252,7 +261,7 @@ export default function AddProductPage() {
             />
           </div>
           <div className="ap-field">
-            <label>Complete Technical Description <span className="req">*</span></label>
+            <label>Detailed Technical Brief <span className="req">*</span></label>
             <textarea 
               name="description" 
               placeholder="Deep dive into your product's capabilities..."
@@ -268,7 +277,7 @@ export default function AddProductPage() {
         <div className="ap-section">
           <div className="section-head">
             <Layers size={18} strokeWidth={2.5} />
-            <span>Specifications & Variants</span>
+            <span className="gt-caption">Specifications & Variants</span>
           </div>
           
           <div className="ap-field">
@@ -306,7 +315,7 @@ export default function AddProductPage() {
 
           <div className="ap-grid-3">
             <div className="ap-field">
-              <label>Service Warranty (Months)</label>
+              <label className="gt-note">Service Warranty (Months)</label>
               <input 
                 type="number" 
                 name="warranty" 
@@ -316,7 +325,7 @@ export default function AddProductPage() {
               />
             </div>
             <div className="ap-field">
-              <label>Manufacture Era</label>
+              <label className="gt-note">Manufacture Era</label>
               <input 
                 type="date" 
                 name="manufactureDate" 
@@ -325,7 +334,7 @@ export default function AddProductPage() {
               />
             </div>
             <div className="ap-field">
-              <label>Expiration Milestone</label>
+              <label className="gt-note">Expiration Milestone</label>
               <input 
                 type="date" 
                 name="expiryDate" 
@@ -335,12 +344,30 @@ export default function AddProductPage() {
             </div>
           </div>
         </div>
+        
+        {/* SECTION 5: Technical Audit */}
+        <div className="ap-section">
+          <div className="section-head">
+            <PlusCircle size={18} strokeWidth={2.5} />
+            <span className="gt-caption">Technical Audit</span>
+          </div>
+          <div className="ap-field">
+            <label>Technical Specifications</label>
+            <textarea 
+              name="specification" 
+              placeholder="Detailed technical specs (e.g. Processor: A17 Pro, RAM: 8GB...)" 
+              value={formData.specification} 
+              onChange={handleInput} 
+              style={{minHeight: '150px', resize: 'vertical'}}
+            />
+          </div>
+        </div>
 
-        {/* SECTION 5: Media Intelligence */}
+        {/* SECTION 6: Media Intelligence */}
         <div className="ap-section">
           <div className="section-head">
             <ImageIcon size={18} strokeWidth={2.5} />
-            <span>Visual Assets</span>
+            <span className="gt-caption">Visual Assets</span>
           </div>
           <div className="ap-media-grid">
             {/* Primary Image */}
@@ -355,8 +382,8 @@ export default function AddProductPage() {
                 ) : (
                   <div className="upload-placeholder">
                     <Plus size={18} />
-                    <span>Blueprinting Image</span>
-                    <p>Primary asset for your product</p>
+                    <span>Upload Primary Asset</span>
+                    <p>800x800 recommended • JPG/PNG</p>
                   </div>
                 )}
               </label>
@@ -384,8 +411,8 @@ export default function AddProductPage() {
         </div>
 
         <div className="ap-actions">
-           <button className="ap-btn-publish" type="submit">
-             Confirm & Publish Listing
+           <button className="ap-btn-publish gt-small" type="submit">
+             Finalize & Publish Listing
            </button>
         </div>
       </form>
