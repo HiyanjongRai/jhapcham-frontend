@@ -13,11 +13,9 @@ import { apiGetAddresses } from "../Customer/addressUtils";
 import api from "../../api/axios";
 import { API_BASE } from "../config/config";
 import ErrorToast from "../ErrorToast/ErrorToast";
-import ProductCard from "../productCard/ProductCard";
 import "./CheckoutPage.css";
 import { 
   Truck, 
-  CreditCard, 
   CheckCircle,
   Package,
   ChevronLeft,

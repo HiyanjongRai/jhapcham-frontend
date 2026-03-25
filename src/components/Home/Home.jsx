@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
-  ChevronRight, Package, ArrowRight,
-  ShieldCheck, Truck, Headphones, 
-  Smartphone, Home as HomeIcon, Shirt, 
-  Heart, Gamepad2, Menu, Clock, CircleDollarSign
+  ChevronRight, Package,
+  Truck,
+  Smartphone, Home as HomeIcon, Shirt,
+  Heart, Gamepad2, Clock, CircleDollarSign
 } from "lucide-react";
 import "./Home.css";
 import ProductCard from "../productCard/ProductCard";
@@ -22,16 +22,7 @@ const ProductSkeleton = () => (
   </div>
 );
 
-// Helper functions for formatting
-const formatRs = (price) => {
-  if (price === null || price === undefined) return null;
-  return new Intl.NumberFormat('en-IN').format(price);
-};
 
-const formatCampaignLabel = (type) => {
-  if (!type) return "LIMITED EDITION";
-  return type.replace(/_/g, ' ').toUpperCase();
-};
 
 function Home() {
   const navigate = useNavigate();

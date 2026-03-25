@@ -7,23 +7,16 @@ import api from "../../api/axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Toast from "../Toast/Toast.jsx";
 import {
-  LayoutDashboard,
   ShoppingBag,
   Heart,
   Star,
-  Settings,
-  LogOut,
   Package,
-  Clock,
   Trash2,
   ChevronRight,
   MapPin,
   Plus,
-  User,
-  Eye,
   Check,
   CheckCircle,
-  MessageCircle,
   Flag,
   CreditCard,
   Truck,
@@ -341,7 +334,6 @@ const OverviewTab = ({ user, orders, wishlist, addresses, setActiveTab, onAddToC
                   const oidDisplay = isNaN(oid) ? oid : `ORD-${String(oid).padStart(5, '0')}`;
                   const date = order.createdAt || order.orderDate || order.updateTime;
                   const price = order.grandTotal || order.totalAmount || 0;
-                  const status = (order.status || 'PENDING').toUpperCase();
                   
                   const productNames = order.productNames || (order.items?.length > 0 
                     ? order.items.map(i => i.productName || i.name || i.productNameSnapshot).filter(Boolean).join(", ")

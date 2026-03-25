@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { API_BASE } from "../config/config";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUserId, apiAddToCart } from "../AddCart/cartUtils";
 import { apiGetWishlist, apiRemoveFromWishlist } from "./wishlistUtils";
 import Toast from "../Toast/Toast";
-import { X, Search, ShoppingCart } from "lucide-react";
+import { X } from "lucide-react";
 import "./WishlistPage.css";
 
 function WishlistPage() {
@@ -19,7 +19,7 @@ function WishlistPage() {
     setToast({ message, type, visible: true });
   };
 
-  const loadWishlist = async () => {
+  const loadWishlist = useCallback(async () => {
     const userId = getCurrentUserId();
     if (!userId) {
       navigate("/login");
@@ -45,11 +45,11 @@ function WishlistPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     loadWishlist();
-  }, []);
+  }, [loadWishlist]);
 
   const handleRemove = async (productId) => {
     const userId = getCurrentUserId();

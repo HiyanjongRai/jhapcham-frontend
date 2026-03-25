@@ -1,20 +1,16 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { API_BASE } from "../config/config";
 import { 
   Star, 
   Heart, 
   ShoppingCart, 
-  Minus, 
-  Plus, 
   Store, 
   ChevronLeft,
   ChevronRight,
-  Share2,
   MessageCircle,
   Flag,
   Check,
-  ThumbsUp,
   Package,
   Facebook,
   Twitter,
@@ -63,66 +59,13 @@ export default function ProductDetailPage() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
+  const userId = getCurrentUserId();
   const [markedHelpful, setMarkedHelpful] = useState(new Set());
-  const [visibleReviews, setVisibleReviews] = useState(3);
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0, opacity: 0 });
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [activeTab, setActiveTab] = useState('description');
   const [canReport, setCanReport] = useState(false);
-
-
-
-
-  const handleHelpful = async (reviewId) => {
-    if (!userId) {
-        navigate("/login");
-        return;
-    }
-
-    // Optimistic Update
-    const isMarked = markedHelpful.has(reviewId);
-    setMarkedHelpful(prev => {
-        const newSet = new Set(prev);
-        if (isMarked) newSet.delete(reviewId);
-        else newSet.add(reviewId);
-        return newSet;
-    });
-
-    try {
-        await api.post(`/api/reviews/${reviewId}/helpful`, null, {
-            params: { userId }
-        });
-    } catch (error) {
-        console.error("Failed to toggle helpful:", error);
-        // Revert
-        setMarkedHelpful(prev => {
-            const newSet = new Set(prev);
-            if (isMarked) newSet.add(reviewId);
-            else newSet.delete(reviewId);
-            return newSet;
-        });
-    }
-  };
-
-  const userId = getCurrentUserId();
-  const viewLogged = useRef(false);
-
-  // Log View
-  const logView = async (productId) => {
-    try {
-      let anonKey = localStorage.getItem("anonKey");
-      if (!anonKey) {
-        anonKey = crypto.randomUUID();
-        localStorage.setItem("anonKey", anonKey);
-      }
-
-      await api.post("/api/views/log", null, {
-        params: userId 
-          ? { productId, userId }
-          : { productId, anonKey }
-      });
-    } catch { }
-  };
+  const [visibleReviews] = useState(3);
 
   // Load Data
   useEffect(() => {
@@ -282,10 +225,28 @@ export default function ProductDetailPage() {
     };
 
     load();
-    // After product is loaded, fetchRelated if possible
-    // We'll update the load function to call fetchRelated inside if we want it serial
-
   }, [id, userId]);
+
+  // eslint-disable-next-line no-unused-vars
+  const handleHelpful = async (reviewId) => {
+    if (!userId) { navigate("/login"); return; }
+    const isMarked = markedHelpful.has(reviewId);
+    setMarkedHelpful(prev => {
+        const newSet = new Set(prev);
+        if (isMarked) newSet.delete(reviewId); else newSet.add(reviewId);
+        return newSet;
+    });
+    try {
+        await api.post(`/api/reviews/${reviewId}/helpful`, null, { params: { userId } });
+    } catch (error) {
+        console.error("Failed to toggle helpful:", error);
+        setMarkedHelpful(prev => {
+            const newSet = new Set(prev);
+            if (isMarked) newSet.add(reviewId); else newSet.delete(reviewId);
+            return newSet;
+        });
+    }
+  };
 
   const handleMouseMove = (e) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -357,12 +318,6 @@ export default function ProductDetailPage() {
     }
   };
 
-  // Calculate Rating Distribution
-  const ratingDist = [5, 4, 3, 2, 1].map(star => {
-    const count = reviews.filter(r => Math.round(r.rating) === star).length;
-    const percentage = reviews.length ? (count / reviews.length) * 100 : 0;
-    return { star, count, percentage };
-  });
 
   return (
     <>
