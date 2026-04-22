@@ -52,7 +52,8 @@ export function addToGuestCart(product, quantity = 1, color = null, storage = nu
     (item) =>
       item.productId === product.id &&
       item.color === color &&
-      item.storage === storage
+      item.storage === storage &&
+      item.size === (product.size || null)
   );
 
   if (existing) {
@@ -68,6 +69,7 @@ export function addToGuestCart(product, quantity = 1, color = null, storage = nu
       lineTotal: unit * quantity,
       color,
       storage,
+      size: product.size || null,
       stock: product.stockQuantity ?? product.stock
     });
   }
@@ -77,15 +79,12 @@ export function addToGuestCart(product, quantity = 1, color = null, storage = nu
   // Update global count (Sum of ALL quantities)
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   updateGlobalCartCount(totalCount);
-  // window.dispatchEvent(new Event("open-cart-drawer"));
   
   return cart;
 
 }
 
-/**
- * Helper function to parse error responses from axios
- */
+// Helper function to parse error responses from axios
 function handleApiError(error, path) {
   const response = error.response;
   if (response) {
@@ -108,7 +107,7 @@ function handleApiError(error, path) {
 }
 
 // ---- API CALLS -----
-export async function apiAddToCart(userId, productId, quantity, color, storage) {
+export async function apiAddToCart(userId, productId, quantity, color, storage, size = null) {
   // Legacy Path: POST /api/cart/${userId}/add/${productId}
   const path = `/api/cart/${userId}/add/${productId}`;
 
@@ -116,7 +115,8 @@ export async function apiAddToCart(userId, productId, quantity, color, storage) 
     const res = await api.post(path, {
       quantity: quantity,
       selectedColor: color,
-      selectedStorage: storage
+      selectedStorage: storage,
+      selectedSize: size
     });
 
     // Legacy backend returns the updated cart DTO (CartResponseDTO)
@@ -125,9 +125,7 @@ export async function apiAddToCart(userId, productId, quantity, color, storage) 
     if (cartData && Array.isArray(cartData.items)) {
         const totalCount = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
         updateGlobalCartCount(totalCount);
-        // window.dispatchEvent(new Event("open-cart-drawer"));
     }
-
 
     return cartData;
   } catch (err) {
@@ -151,9 +149,7 @@ export async function apiGetCart(userId) {
   }
 }
 
-/**
- * Updates cart item quantity. Needs cartItemId for legacy PUT endpoint.
- */
+// Updates cart item quantity. Needs cartItemId for legacy PUT endpoint.
 export async function apiUpdateQuantity(userId, cartItemId, quantity) {
   // Legacy Path: PUT /api/cart/${userId}/update/${cartItemId}?qty=${quantity}
   const path = `/api/cart/${userId}/update/${cartItemId}`;
@@ -175,10 +171,8 @@ export async function apiUpdateQuantity(userId, cartItemId, quantity) {
   }
 }
 
-/**
- * Removes an item. Legacy approach uses updateQuantity with qty=0.
- * We need the cartItemId here.
- */
+// Removes an item. Legacy approach uses updateQuantity with qty=0.
+// We need the cartItemId here.
 export async function apiRemoveItem(userId, cartItemId) {
   return apiUpdateQuantity(userId, cartItemId, 0);
 }
@@ -194,7 +188,8 @@ export async function mergeGuestCartIntoUser(userId) {
         item.productId,
         item.quantity,
         item.color,
-        item.storage
+        item.storage,
+        item.size
       );
     } catch (e) {
       console.error("Failed to merge item:", item.productId, e);

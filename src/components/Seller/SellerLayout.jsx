@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import SellerSidebar from "./SellerSidebar";
 import { getCurrentUserId } from "../../utils/authUtils";
 import { API_BASE } from "../config/config";
+import api from "../../api/axios";
 import "./seller.css";
 import DashboardNavbar from "../Admin/DashboardNavbar";
 
@@ -19,10 +20,25 @@ export default function SellerLayout() {
 
     const fetchStoreInfo = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/seller/${sellerId}/dashboard`);
-        if (res.ok) {
-          const data = await res.json();
-          setStoreInfo(data);
+        // Verify the user status to block pending sellers from bypassing login
+        try {
+          const userRes = await api.get(`/api/users/${sellerId}`);
+          if (userRes.status === 200) {
+            const userData = userRes.data;
+            const userStatus = userData.status || userData.userStatus;
+            if (userStatus === "PENDING" || userStatus === "pending") {
+               localStorage.clear();
+               navigate("/login");
+               return;
+            }
+          }
+        } catch (err) {
+          console.error("Failed to check user status in layout", err);
+        }
+
+        const res = await api.get(`/api/seller/${sellerId}/stats`);
+        if (res.status === 200) {
+          setStoreInfo(res.data);
         }
       } catch (err) {
         console.error("Layout store fetch error", err);

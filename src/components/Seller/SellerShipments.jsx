@@ -89,7 +89,7 @@ export default function SellerShipments() {
 
     return (
         <div className="dashboard-content-inner fade-in">
-            {/* ── Page Header ── */}
+            
             <div className="dash-header-row">
                 <div>
                     <h2 className="gt-h3" style={{ textTransform: 'uppercase', margin: 0 }}>
@@ -104,7 +104,6 @@ export default function SellerShipments() {
                 </button>
             </div>
 
-            {/* ── Stats Cards ── */}
             <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '20px' }}>
                 <div className="stat-card">
                     <div className="stat-info">
@@ -143,11 +142,10 @@ export default function SellerShipments() {
                 </div>
             </div>
 
-            {/* ── Main Panel ── */}
             <div className="dashboard-panel">
-                {/* Filters + Search Row */}
+                
                 <div className="panel-header" style={{ borderBottom: '1px solid var(--dash-border)', paddingBottom: '14px', marginBottom: '0' }}>
-                    {/* Filter Tabs */}
+                    
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                         {statusFilters.map(f => (
                             <button
@@ -174,7 +172,6 @@ export default function SellerShipments() {
                         ))}
                     </div>
 
-                    {/* Search Box */}
                     <div className="dash-search-box" style={{ width: '220px' }}>
                         <Search size={14} color="#94a3b8" />
                         <input
@@ -187,7 +184,6 @@ export default function SellerShipments() {
                     </div>
                 </div>
 
-                {/* Table */}
                 <div className="recent-orders-table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
                     <table className="simple-table">
                         <thead>

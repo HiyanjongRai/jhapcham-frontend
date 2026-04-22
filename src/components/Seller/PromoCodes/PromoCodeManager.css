@@ -1,9 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
-/* ══════════════════════════════════════════════════════════
-   PROMO CODE MANAGER — Dashboard Consistent Theme
-   ══════════════════════════════════════════════════════════ */
-
 .promo-manager-container {
     width: 100%;
     margin: 0;
@@ -13,7 +9,6 @@
     -webkit-font-smoothing: antialiased;
 }
 
-/* ── Page Header ── */
 .promo-header {
     display: flex;
     justify-content: space-between;
@@ -42,9 +37,8 @@
     margin-top: 3px;
 }
 
-/* ── Create Button ── */
 .create-btn {
-    background: #0088cc;
+    background: #00b4d8;
     color: #fff;
     border: none;
     padding: 8px 16px;
@@ -68,14 +62,12 @@
     box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
 }
 
-/* ── Promo Grid ── */
 .promo-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 14px;
 }
 
-/* ── Promo Card ── */
 .promo-card {
     background: #fff;
     border: 1px solid #e7e7e7;
@@ -92,7 +84,7 @@
 .promo-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07);
-    border-color: #0088cc;
+    border-color: #00b4d8;
 }
 
 .promo-card.expired {
@@ -106,9 +98,8 @@
     align-items: center;
 }
 
-/* ── Discount Type Badge ── */
 .promo-type-badge {
-    background: #0088cc;
+    background: #00b4d8;
     color: #fff;
     padding: 4px 9px;
     font-size: 0.6rem;
@@ -121,7 +112,6 @@
     gap: 4px;
 }
 
-/* ── Status Pills ── */
 .status-pill {
     font-size: 0.58rem;
     font-weight: 800;
@@ -141,10 +131,9 @@
     color: #777;
 }
 
-/* ── Code Display ── */
 .code-display {
     background: #f5f7f9;
-    border: 1.5px dashed #0088cc;
+    border: 1.5px dashed #00b4d8;
     padding: 9px 12px;
     display: flex;
     justify-content: space-between;
@@ -167,11 +156,10 @@
 }
 
 .copy-icon {
-    color: #0088cc;
+    color: #00b4d8;
     flex-shrink: 0;
 }
 
-/* ── Card Details ── */
 .card-details {
     display: flex;
     flex-direction: column;
@@ -190,11 +178,10 @@
 }
 
 .detail-row svg {
-    color: #0088cc;
+    color: #00b4d8;
     flex-shrink: 0;
 }
 
-/* ── Usage Progress Bar ── */
 .usage-bar-wrapper {
     margin-top: 2px;
 }
@@ -220,12 +207,11 @@
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #0088cc, #10B981);
+    background: linear-gradient(90deg, #00b4d8, #10B981);
     border-radius: 10px;
     transition: width 0.6s ease;
 }
 
-/* ── Empty State ── */
 .empty-state {
     grid-column: 1 / -1;
     text-align: center;
@@ -241,7 +227,6 @@
 
 .empty-state svg { color: #ccc; }
 
-/* ── Loading / Error States ── */
 .loading-state,
 .error-state {
     text-align: center;
@@ -255,9 +240,6 @@
 
 .error-state { color: #ef4444; }
 
-/* ══════════════════════════════════════════════════════════
-   CREATE PROMO MODAL
-   ══════════════════════════════════════════════════════════ */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -306,7 +288,6 @@
     padding-bottom: 12px;
 }
 
-/* ── Form Elements ── */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -337,7 +318,7 @@
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: #0088cc;
+    border-color: #00b4d8;
     box-shadow: 0 0 0 3px #e6f3f9;
 }
 
@@ -347,7 +328,6 @@
     gap: 10px;
 }
 
-/* ── Modal Actions ── */
 .modal-actions {
     display: flex;
     justify-content: flex-end;
@@ -380,7 +360,7 @@
 
 .submit-btn {
     padding: 8px 18px;
-    background: #0088cc;
+    background: #00b4d8;
     color: #fff;
     border: none;
     border-radius: 4px;

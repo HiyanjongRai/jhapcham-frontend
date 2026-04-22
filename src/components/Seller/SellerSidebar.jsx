@@ -17,7 +17,9 @@ import {
   ChevronRight,
   ExternalLink,
   Eye,
-  FileText
+  FileText,
+  Shield,
+  Bell
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { API_BASE } from "../config/config";
@@ -46,17 +48,19 @@ export default function SellerSidebar({ storeInfo }) {
       title: "Sales & Logistics",
       items: [
         { icon: <FileText size={16} />, label: "Order Manager", path: "/seller/orders" },
+        { icon: <Shield size={16} />, label: "Platform Fees", path: "/seller/commissions" },
         { icon: <Truck size={16} />, label: "Shipments", path: "/seller/shipment" },
-        { icon: <Calendar size={16} />, label: "Campaigns", path: "/seller/dashboard", tab: "campaigns" },
+        { icon: <Calendar size={16} />, label: "Campaigns", path: "/seller/campaigns" },
+        { icon: <Bell size={16} />, label: "Inventory Alerts", path: "/seller/inventory-alerts" },
       ]
     },
     {
       title: "Store Management",
       items: [
-        { icon: <Store size={16} />, label: "Store Profile", path: "/seller/dashboard", tab: "settings" },
+        { icon: <Store size={16} />, label: "Store Profile", path: "/seller/settings" },
         { icon: <Tag size={16} />, label: "Coupons/Promo", path: "/seller/promos" },
-        { icon: <Flag size={16} />, label: "Reports", path: "/seller/dashboard", tab: "reports" },
-        { icon: <Users size={16} />, label: "Account Info", path: "/seller/dashboard", tab: "account" },
+        { icon: <Flag size={16} />, label: "Reports", path: "/seller/reports" },
+        { icon: <Users size={16} />, label: "Account Info", path: "/seller/account" },
       ]
     },
     {
@@ -69,11 +73,7 @@ export default function SellerSidebar({ storeInfo }) {
   ];
 
   const handleMenuClick = (item) => {
-    if (item.tab) {
-       navigate(item.path, { state: { activeTab: item.tab } });
-    } else {
-      navigate(item.path);
-    }
+    navigate(item.path);
   };
 
   const handleLogout = () => {
@@ -97,9 +97,7 @@ export default function SellerSidebar({ storeInfo }) {
           <div key={group.title} className="cd-nav-group">
             <div className="cd-nav-label">{group.title}</div>
             {group.items.map((item) => {
-              const isActive = item.tab 
-                ? location.state?.activeTab === item.tab
-                : location.pathname === item.path && (!location.state?.activeTab || location.state.activeTab === 'overview');
+              const isActive = location.pathname === item.path;
               
               return (
                 <button

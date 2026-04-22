@@ -129,7 +129,7 @@ const CustomerDetails = () => {
 
       <div className="intel-content-grid">
         <main className="intel-main">
-          {/* Metrics Rail */}
+          
           <div className="intel-metrics-rail">
             <div className="intel-metric">
               <div className="metric-icon blue"><ShoppingBag size={20} /></div>
@@ -161,7 +161,6 @@ const CustomerDetails = () => {
             </div>
           </div>
 
-          {/* Grid: Orders & Wishlist */}
           <section className="intel-card intel-orders">
             <div className="card-head">
               <h3><Package size={18} /> Transaction Ledger</h3>

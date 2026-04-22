@@ -117,7 +117,7 @@ export default function OnSalePage() {
           </>
         ) : (
           <div className="collection-empty">
-            <div className="collection-empty-icon">🏷️</div>
+            <div className="collection-empty-icon">️</div>
             <h2>No Sale Items Yet</h2>
             <p>Check back soon for amazing deals!</p>
             <Link to="/" className="collection-empty-btn">

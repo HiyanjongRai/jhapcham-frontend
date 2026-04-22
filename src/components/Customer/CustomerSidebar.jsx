@@ -9,26 +9,21 @@ import {
   Star,
   Settings,
   Eye,
-  LogOut
+  LogOut,
+  RefreshCw,
+  AlertCircle,
+  Award,
+  Smartphone
 } from "lucide-react";
 
 const CustomerSidebar = ({ activeTab, setActiveTab, onLogout }) => {
   const navigate = useNavigate();
 
   const handleNav = (tabId) => {
-    if (tabId === 'messages') {
-      navigate('/messages');
-    } else if (tabId === 'shop') {
+    if (tabId === 'shop') {
       navigate('/');
     } else {
-      if (setActiveTab) {
-        setActiveTab(tabId);
-        if (window.location.pathname !== '/customer/dashboard') {
-          navigate(`/customer/dashboard?tab=${tabId}`);
-        }
-      } else {
-        navigate(`/customer/dashboard?tab=${tabId}`);
-      }
+      navigate(`/customer/${tabId}`);
     }
   };
 
@@ -44,6 +39,8 @@ const CustomerSidebar = ({ activeTab, setActiveTab, onLogout }) => {
           {[
             { id: "overview",  label: "Overview",       icon: LayoutDashboard },
             { id: "orders",    label: "Order History",  icon: ShoppingBag },
+            { id: "refunds",   label: "Refunds",        icon: RefreshCw },
+            { id: "disputes",  label: "Disputes",       icon: AlertCircle },
             { id: "wishlist",  label: "Saved Items",    icon: Heart },
             { id: "addresses", label: "Address Book",   icon: MapPin },
             { id: "messages",  label: "Messages",       icon: MessageCircle },
@@ -62,7 +59,9 @@ const CustomerSidebar = ({ activeTab, setActiveTab, onLogout }) => {
         <div className="cd-nav-group">
           <div className="cd-nav-label">Preferences</div>
           {[
+            { id: "loyalty",   label: "Loyalty Points", icon: Award },
             { id: "reviews",   label: "My Reviews",     icon: Star },
+            { id: "sms",       label: "SMS Preferences",icon: Smartphone },
             { id: "settings",  label: "Account Settings", icon: Settings },
             { id: "shop",      label: "Go to Store",    icon: Eye },
           ].map(tab => (

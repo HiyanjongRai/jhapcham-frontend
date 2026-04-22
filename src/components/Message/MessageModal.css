@@ -1,4 +1,4 @@
-/* MessageModal.css */
+
 
 .msg-modal-overlay {
   position: fixed;
@@ -221,7 +221,6 @@
   background: #1a1a1a;
 }
 
-/* Responsive */
 @media (max-width: 640px) {
   .msg-modal-content {
     max-width: 100%;

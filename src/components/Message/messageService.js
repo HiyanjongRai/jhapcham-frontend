@@ -1,10 +1,6 @@
 import api from "../../api/axios";
 import { getCurrentUserId } from "../AddCart/cartUtils";
 
-/**
- * Message Service - API utilities for messaging functionality
- */
-
 // Send a message (product inquiry or direct message)
 export const sendMessage = async (receiverId, content, productId = null) => {
   try {

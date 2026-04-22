@@ -1,274 +1,259 @@
-/* CampaignsPage.css - Refined Swoo Tech Aesthetic */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* ═══════════════════════════════════════════════════ */
+/*  JHAPCHAM — Compact Campaigns Page                  */
+/* ═══════════════════════════════════════════════════ */
 
-:root {
-    --camp-bg: #f8fafc;
-    --camp-accent: #0d9488; /* Professional Muted Teal */
-    --camp-accent-hover: #0f766e;
-    --camp-text-main: #1d2b36;
-    --camp-text-muted: #64748b;
-    --camp-border: #f1f5f9;
-    --camp-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 .campaigns-page {
-    max-width: 1800px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 60px 40px;
-    min-height: 90vh;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    color: var(--camp-text-main);
+    padding: 36px 24px 50px;
+    min-height: 70vh;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #1a1a2e;
 }
 
-/* Background refinement */
-.campaign-mesh-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--camp-bg);
-    background-image: 
-        radial-gradient(at 100% 0%, rgba(13, 148, 136, 0.05) 0, transparent 40%),
-        radial-gradient(at 0% 100%, rgba(29, 43, 54, 0.03) 0, transparent 40%);
-    z-index: -1;
-}
-
+/* ─── Header ─── */
 .campaigns-header {
     text-align: center;
-    margin-bottom: 60px;
-    animation: fadeInUp 0.8s ease-out;
-}
-
-.header-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #fef9c3; /* Soft yellow for highlights */
-    color: #854d0e;
-    padding: 6px 16px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 10px rgba(250, 204, 21, 0.15);
+    margin-bottom: 32px;
 }
 
 .campaigns-header h1 {
-    font-size: clamp(3rem, 6vw, 4.5rem);
-    font-weight: 900;
-    color: var(--camp-text-main);
-    margin-bottom: 15px;
-    font-family: 'Outfit', sans-serif;
-    letter-spacing: -2px;
-    line-height: 1;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin: 0 0 6px;
+    letter-spacing: -0.3px;
 }
 
 .campaigns-header p {
-    font-size: 1.2rem;
-    color: var(--camp-text-muted);
-    font-weight: 500;
-    max-width: 650px;
-    margin: 0 auto;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 400;
+    margin: 0;
 }
 
+/* ─── Grid ─── */
 .campaigns-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 30px;
-    animation: fadeInUp 1s ease-out both;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
 }
 
-/* Premium Campaign Card - Swoo Style */
+/* ─── Campaign Card ─── */
 .campaign-card {
     background: #fff;
-    border-radius: 16px;
-    min-height: 360px;
+    border-radius: 12px;
     display: flex;
+    flex-direction: column;
     position: relative;
     overflow: hidden;
-    border: 1px solid var(--camp-border);
-    box-shadow: var(--camp-shadow);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
 }
 
 .campaign-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.12);
-    border-color: var(--camp-accent);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    border-color: #e0e0e0;
 }
 
-.campaign-content {
-    flex: 1.2;
-    padding: 50px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    z-index: 2;
-    background: white;
-}
-
-.campaign-top-meta {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.status-pill {
-    font-size: 0.65rem;
-    font-weight: 800;
-    padding: 4px 12px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.status-active { background: #e0f2f1; color: var(--camp-accent); }
-.status-soon { background: #fff3e0; color: #ef6c00; }
-.status-ended { background: #f1f5f9; color: var(--camp-text-muted); }
-
-.type-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--camp-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-}
-
-.campaign-content h2 {
-    font-size: 2.8rem;
-    font-weight: 900;
-    color: var(--camp-text-main);
-    margin-bottom: 20px;
-    font-family: 'Outfit', sans-serif;
-    line-height: 1;
-    letter-spacing: -1px;
-}
-
-.campaign-info-row {
-    display: flex;
-    gap: 30px;
-    margin-bottom: 40px;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--camp-text-muted);
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.campaign-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 28px;
-    background: var(--camp-text-main);
-    color: white;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    width: fit-content;
-    transition: all 0.3s;
-}
-
-.campaign-card:hover .campaign-cta {
-    background: var(--camp-accent);
-    padding-right: 40px;
-}
-
-/* Image Section */
+/* ─── Card Image ─── */
 .campaign-image-wrapper {
-    flex: 1;
+    width: 100%;
+    height: 150px;
     position: relative;
     overflow: hidden;
-    background: #f8fafc;
+    background: #f8f9fb;
+    order: -1;
 }
 
 .campaign-image-wrapper img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.5s ease;
 }
 
 .campaign-card:hover .campaign-image-wrapper img {
-    transform: scale(1.08) rotate(1deg);
+    transform: scale(1.05);
 }
 
 .image-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, #fff 0%, transparent 15%);
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.05) 100%);
     pointer-events: none;
+    z-index: 1;
 }
 
-/* Custom UI Colors */
-.type-icon-sale { color: #f43f5e; }
-.type-icon-winter { color: #0ea5e9; }
-.type-icon-default { color: var(--camp-accent); }
-
-/* Empty State Styling */
-.no-campaigns {
-    max-width: 500px;
-    margin: 80px auto;
-    text-align: center;
-    padding: 60px;
+/* ─── Card Content ─── */
+.campaign-content {
+    padding: 16px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     background: #fff;
-    border-radius: 20px;
-    border: 1px solid var(--camp-border);
-    box-shadow: var(--camp-shadow);
+    flex: 1;
+}
+
+.campaign-top-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-pill {
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.status-active { background: #fff0ea; color: #FF6B35; }
+.status-soon { background: #fff3e0; color: #ef6c00; }
+.status-ended { background: #f1f5f9; color: #94a3b8; }
+
+.type-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.type-icon-default { color: #FF6B35; }
+.type-icon-sale { color: #ef4444; }
+.type-icon-winter { color: #0ea5e9; }
+
+.campaign-content h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+}
+
+.campaign-info-row {
+    display: flex;
+    gap: 16px;
+    margin: 0;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.campaign-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    background: #1a1a2e;
+    color: white;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: fit-content;
+    transition: all 0.3s ease;
+    margin-top: 4px;
+}
+
+.campaign-card:hover .campaign-cta {
+    background: #FF6B35;
+}
+
+/* ─── Empty State ─── */
+.no-campaigns {
+    max-width: 400px;
+    margin: 60px auto;
+    text-align: center;
+    padding: 40px 30px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.no-camp-icon { color: #e2e8f0; }
+
+.no-campaigns h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 14px 0 6px;
+    color: #1a1a2e;
+}
+
+.no-campaigns p {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    margin: 0;
 }
 
 .back-btn {
-    margin-top: 30px;
-    padding: 14px 30px;
-    background: var(--camp-accent);
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: #FF6B35;
     color: #fff;
     border: none;
     border-radius: 8px;
-    font-weight: 800;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
 }
 
-.back-btn:hover { 
-    background: var(--camp-text-main);
+.back-btn:hover {
+    background: #e55a2b;
     transform: translateY(-2px);
 }
 
-/* Animations */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(40px); }
-    to { opacity: 1; transform: translateY(0); }
+/* ─── Loading ─── */
+.campaigns-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-    .campaign-content { padding: 40px; }
-    .campaign-content h2 { font-size: 2.22rem; }
+.campaigns-loading .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #f0f0f0;
+    border-top-color: #FF6B35;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
 }
 
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Responsive ─── */
 @media (max-width: 768px) {
-    .campaigns-page { padding: 40px 20px; }
-    .campaign-card { flex-direction: column-reverse; height: auto; border-radius: 16px; }
-    .campaign-image-wrapper { height: 280px; }
-    .campaign-content { padding: 30px; width: 100%; }
-    .image-overlay { display: none; }
-    .campaign-content h2 { font-size: 2rem; }
-    .campaign-info-row { flex-direction: column; gap: 15px; margin-bottom: 30px; }
+    .campaigns-page { padding: 24px 16px 40px; }
+    .campaigns-header { margin-bottom: 20px; }
+    .campaigns-header h1 { font-size: 1.25rem; }
+    .campaigns-grid { grid-template-columns: 1fr; gap: 14px; }
+    .campaign-image-wrapper { height: 140px; }
+}
+
+@media (max-width: 480px) {
+    .campaign-content { padding: 14px 16px 16px; }
+    .campaign-image-wrapper { height: 120px; }
 }

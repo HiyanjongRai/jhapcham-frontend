@@ -1,35 +1,38 @@
-/* =============================================
-   CLEAN PRODUCT CARD - BOUTIQUE PREMIUM
-   ============================================= */
+/* ═══════════════════════════════════════════════════ */
+/*  JHAPCHAM — Modern Product Card (Redesign)          */
+/* ═══════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 .modern-pc-card {
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 14px;
   position: relative;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(33,37,41,0.05), 0 1px 8px rgba(33,37,41,0.05);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   height: 100%;
-  border: 1px solid #f1f5f9;
+  border: 1.5px solid #dee2e6;
   overflow: hidden;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .modern-pc-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
-  border-color: #e2e8f0;
+  box-shadow: 0 8px 28px rgba(0, 180, 216, 0.12);
+  border-color: #90e0ef;
+  transform: translateY(-3px);
 }
 
-/* Wishlist Button */
+/* ─── Wishlist Button ─── */
 .modern-pc-wishlist {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.9);
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
   border-radius: 50%;
   display: flex;
@@ -38,65 +41,73 @@
   border: none;
   cursor: pointer;
   z-index: 10;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .modern-pc-wishlist:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: scale(1.12);
+  background: #FFF0F0;
 }
 
-/* Sale Badge */
+.modern-pc-wishlist.active {
+  background: #e0fbfc;
+  box-shadow: 0 2px 10px rgba(0, 180, 216, 0.2);
+}
+
+/* ─── Sale Badge ─── */
 .modern-pc-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  background: #ff4d4d;
+  top: 10px;
+  left: 10px;
+  background: #c1121f;
   color: white;
   padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.65rem;
+  border-radius: 6px;
+  font-size: 0.6rem;
   font-weight: 700;
   z-index: 10;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
 }
 
-/* Image Box */
+/* ─── Image Box ─── */
 .modern-pc-img-box {
   width: 100%;
-  height: 180px;
+  height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: #fafafa;
-  padding: 10px;
+  background: #F8FAFC;
+  padding: 14px;
   position: relative;
+  border-bottom: 1px solid #F1F5F9;
 }
 
 .modern-pc-img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  transition: transform 0.5s ease;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modern-pc-card:hover .modern-pc-img {
-  transform: scale(1.05);
+  transform: scale(1.07);
 }
 
-/* Quick View Action */
+/* ─── Quick View ─── */
 .modern-pc-quick-view-trigger {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0 15px 15px;
+  padding: 0 12px 12px;
   display: flex;
+  justify-content: center;
   opacity: 0;
-  transform: translateY(15px);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 5;
 }
 
@@ -106,120 +117,133 @@
 }
 
 .quick-view-ghost-btn {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  color: #1e293b;
-  border: 1px solid #e2e8f0;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  color: #00b4d8;
+  border: 1px solid #00b4d8;
+  padding: 7px 16px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.72rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 16px rgba(0, 180, 216, 0.15);
+  transition: all 0.2s ease;
+  font-family: 'Inter', -apple-system, sans-serif;
+  min-width: 110px;
 }
 
 .quick-view-ghost-btn:hover {
-  background: #1e293b;
+  background: #00b4d8;
   color: #fff;
+  border-color: #00b4d8;
 }
 
-/* Body Content */
+/* ─── Card Body ─── */
 .modern-pc-body {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  padding: 10px 12px;
+  padding: 14px 14px 14px;
   background: #ffffff;
-  gap: 6px;
+  gap: 5px;
 }
 
 .modern-pc-brand {
-  font-size: 0.65rem;
-  color: #94a3b8;
+  font-size: 0.62rem;
+  color: #00b4d8;
   margin: 0;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  opacity: 0.8;
+  letter-spacing: 1px;
 }
 
 .modern-pc-title {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #0f172a;
+  color: #212529;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 2.3rem;
+  min-height: 2.55rem;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
+/* ─── Meta Row ─── */
 .modern-pc-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  margin-top: 2px;
 }
 
 .modern-pc-rating {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
 }
 
 .rating-value {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #0F172A;
   margin-left: 4px;
 }
 
 .modern-pc-views {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: #94a3b8;
-  font-size: 0.72rem;
-  font-weight: 600;
+  gap: 4px;
+  color: #94A3B8;
+  font-size: 0.68rem;
+  font-weight: 500;
 }
 
-.modern-pc-rating-placeholder { height: 15px; }
+.modern-pc-rating-placeholder { height: 14px; }
 
-/* Footer Section */
+/* ─── Footer ─── */
 .modern-pc-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
-  gap: 10px;
-  padding-top: 15px;
-  border-top: 1px solid #f1f5f9;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #F1F5F9;
 }
 
 .modern-pc-price-box {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .modern-pc-price {
-  color: #0f172a;
-  font-size: 1.05rem;
+  color: #212529;
+  font-size: 1.1rem;
   font-weight: 800;
+  font-family: 'Inter', -apple-system, sans-serif;
+  line-height: 1;
+}
+
+.modern-pc-price .currency {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.65;
 }
 
 .modern-pc-old-price {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-decoration: line-through;
-  color: #94a3b8;
+  color: #94A3B8;
   font-weight: 500;
 }
 
@@ -227,43 +251,61 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.65rem;
-  color: #94a3b8;
-  font-weight: 600;
+  font-size: 0.62rem;
+  color: #94A3B8;
+  font-weight: 500;
   margin-top: 2px;
 }
 
+/* ─── Add to Cart Button ─── */
 .modern-pc-btn {
-  background: #1e293b;
+  background: #00b4d8;
   color: #ffffff;
   border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 0.7rem;
+  padding: 9px 14px;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 0.72rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.15);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 180, 216, 0.22);
   white-space: nowrap;
+  font-family: 'Inter', -apple-system, sans-serif;
+  flex-shrink: 0;
 }
 
 .modern-pc-btn:hover:not(:disabled) {
-  background: #334155;
+  background: #48cae4;
   transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 180, 216, 0.38);
+}
+
+.modern-pc-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .modern-pc-btn:disabled {
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: #F1F5F9;
+  color: #94A3B8;
   cursor: not-allowed;
   box-shadow: none;
 }
 
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .modern-pc-img-box { height: 160px; padding: 12px; }
+  .modern-pc-body { padding: 10px 12px; }
+  .modern-pc-title { font-size: 0.8rem; min-height: 2.3rem; }
+  .modern-pc-price { font-size: 0.95rem; }
+}
+
 @media (max-width: 480px) {
-  .modern-pc-price { font-size: 1.1rem; }
-  .modern-pc-btn { padding: 8px 10px; font-size: 0.7rem; }
+  .modern-pc-img-box { height: 144px; }
+  .modern-pc-btn { padding: 8px 10px; font-size: 0.68rem; }
+  .modern-pc-btn span { display: none; }
+  .modern-pc-title { font-size: 0.78rem; }
 }

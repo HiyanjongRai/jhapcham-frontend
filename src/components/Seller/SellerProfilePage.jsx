@@ -101,7 +101,7 @@ export default function SellerProfilePage() {
 
   return (
     <div className="spp-wrapper">
-      {/* PREMIUM HEADER */}
+      
       <div className="spp-header">
         <div className="spp-header-content">
           <div className="spp-logo-box">
@@ -176,9 +176,8 @@ export default function SellerProfilePage() {
         </div>
       </div>
 
-      {/* MAIN CONTENT AREA */}
       <div className="spp-main-layout">
-        {/* LEFT COLUMN: About & Stats */}
+        
         <div className="spp-left-col">
           <div className="spp-card">
             <div className="spp-card-header">
@@ -258,7 +257,6 @@ export default function SellerProfilePage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Sidebar Bits */}
         <div className="spp-right-col">
           <div className="spp-widget">
             <h3 className="spp-widget-title gt-note">Quick Performance</h3>
@@ -297,7 +295,6 @@ export default function SellerProfilePage() {
         </div>
       </div>
 
-      {/* PRODUCTS SECTION */}
       <div className="spp-section-header">
         <h2 className="spp-section-title gt-h3">Latest & Trending</h2>
         <div style={{ color: '#000', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '0.75rem', textTransform: 'uppercase' }}>
@@ -347,7 +344,6 @@ export default function SellerProfilePage() {
         )}
       </div>
 
-      {/* MODALS */}
       <MessageModal
         isOpen={showMessageModal}
         onClose={() => setShowMessageModal(false)}

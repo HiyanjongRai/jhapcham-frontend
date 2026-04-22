@@ -72,7 +72,7 @@ const PaymentStatusPage = ({ provider, status }) => {
       }
     };
 
-    if (provider === 'esewa' || provider === 'khalti') {
+    if (provider === 'esewa') {
         // We can ignore 'provider' usage actually, just check params.
         // But if routing is strictly /payment/esewa_success etc. we might need care.
         // For now, simple check logic works for both on same component.

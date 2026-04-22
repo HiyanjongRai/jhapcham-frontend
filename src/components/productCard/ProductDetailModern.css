@@ -1,4 +1,4 @@
-/* ProductDetailModern.css - Porto Inspired Premium Design */
+
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Open+Sans:wght@400;600&display=swap');
 
 :root {
@@ -29,7 +29,6 @@ body {
   to { opacity: 1; }
 }
 
-/* Breadcrumb */
 .pd-breadcrumb {
   display: flex;
   align-items: center;
@@ -52,7 +51,6 @@ body {
   color: #b0b0b0;
 }
 
-/* Grid */
 .pd-grid {
   display: grid;
   grid-template-columns: 45% 1fr;
@@ -60,7 +58,6 @@ body {
   margin-bottom: 50px;
 }
 
-/* Gallery */
 .pd-main-image-wrapper {
   border: 1px solid var(--porto-border);
   position: relative;
@@ -115,7 +112,6 @@ body {
   border-color: var(--porto-primary);
 }
 
-/* Info Section */
 .pd-info-header {
   display: flex;
   justify-content: space-between;
@@ -190,7 +186,6 @@ body {
   margin-bottom: 25px;
 }
 
-/* Highlights & Quick Specs */
 .pd-sub-label {
   font-family: 'Poppins', sans-serif;
   font-size: 11px;
@@ -296,7 +291,6 @@ body {
   display: inline-block;
 }
 
-/* Variants Selection */
 .pd-variants-section {
   padding: 15px 0;
   border-bottom: 1px solid var(--porto-border);
@@ -365,7 +359,6 @@ body {
   border-color: rgba(255,255,255,0.3);
 }
 
-/* Reduced size refinements */
 .pd-container {
   padding: 20px 25px;
   margin-top: 15px;
@@ -393,7 +386,6 @@ body {
 .spec-card { padding: 10px; }
 .spec-val { font-size: 12px; }
 
-/* Actions */
 .pd-porto-actions {
   margin-top: 10px;
 }
@@ -447,7 +439,6 @@ body {
   opacity: 0.8;
 }
 
-/* Footer Actions */
 .pd-footer-actions {
   display: flex;
   justify-content: space-between;
@@ -498,7 +489,6 @@ body {
   cursor: pointer;
 }
 
-/* Tabs */
 .pd-tabs-container {
   margin-top: 60px;
 }
@@ -553,7 +543,6 @@ body {
   color: #2ba561;
 }
 
-/* Related */
 .pd-porto-related {
   margin-top: 80px;
 }
@@ -579,7 +568,6 @@ body {
   animation: fadeIn 0.4s ease-in;
 }
 
-/* Reviews */
 .pd-porto-reviews-feed {
   display: flex;
   flex-direction: column;
@@ -671,7 +659,6 @@ body {
   opacity: 0.8;
 }
 
-/* Report Tab */
 .pd-report-tab {
    padding: 40px !important;
 }
@@ -723,7 +710,620 @@ body {
   .pd-related-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 576px) {
-  .pd-tabs-header { gap: 15px; overflow-x: auto; white-space: nowrap; }
-  .pd-cart-section { flex-direction: column; }
+/* ═══════════════════════════════════════════════════════════ */
+/* Tablet (iPad) - 768px and below                             */
+/* ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .pd-container {
+    padding: 20px;
+    margin: 15px auto;
+  }
+
+  .pd-title {
+    font-size: 22px;
+  }
+
+  .pd-price-new {
+    font-size: 20px;
+  }
+
+  .pd-thumbnails {
+    gap: 8px;
+  }
+
+  .pd-thumb {
+    width: 80px;
+    height: 80px;
+  }
+
+  .pd-quick-specs {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .pd-related-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+
+  .pd-breadcrumb {
+    font-size: 10px;
+    gap: 8px;
+  }
+
+  .pd-badges {
+    top: 10px;
+    left: 10px;
+    gap: 3px;
+  }
+
+  .badge-hot, .badge-discount {
+    padding: 3px 8px;
+    font-size: 9px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* Mobile (iPhone 11) - 480px and below                        */
+/* ═══════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .pd-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 12px;
+    background: #fff;
+  }
+
+  /* Typography & Spacing */
+  .pd-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .pd-info-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .pd-nav-arrows {
+    display: none;
+  }
+
+  /* Rating & Price */
+  .pd-rating {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .pd-review-count {
+    font-size: 11px;
+  }
+
+  .pd-price-block {
+    margin-bottom: 12px;
+  }
+
+  .pd-price-new {
+    font-size: 18px;
+  }
+
+  .pd-price-old {
+    font-size: 14px;
+  }
+
+  /* Description */
+  .pd-short-description {
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  /* Breadcrumb */
+  .pd-breadcrumb {
+    font-size: 9px;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* Badges */
+  .pd-badges {
+    top: 8px;
+    left: 8px;
+    gap: 2px;
+  }
+
+  .badge-hot, .badge-discount {
+    padding: 2px 6px;
+    font-size: 8px;
+    min-width: 40px;
+  }
+
+  /* Thumbnails */
+  .pd-thumbnails {
+    gap: 6px;
+    margin-bottom: 8px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+  }
+
+  .pd-thumb {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    min-height: 60px;
+    flex-shrink: 0;
+    border-radius: 4px;
+  }
+
+  /* Main Image Wrapper */
+  .pd-main-image-wrapper {
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+
+  /* Sub Label */
+  .pd-sub-label {
+    font-size: 9px;
+    padding-left: 8px;
+    margin-bottom: 8px;
+    letter-spacing: 0.08em;
+  }
+
+  /* Highlights */
+  .pd-highlights-area {
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 6px;
+  }
+
+  .pd-highlights-list li {
+    font-size: 11px;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+
+  /* Quick Specs */
+  .pd-quick-specs {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .spec-card {
+    padding: 8px;
+    gap: 8px;
+    border-radius: 6px;
+  }
+
+  .spec-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+  }
+
+  .spec-label {
+    font-size: 8px;
+  }
+
+  .spec-val {
+    font-size: 11px;
+  }
+
+  /* Meta Details */
+  .pd-meta-details-porto {
+    padding: 12px 0;
+    font-size: 10px;
+  }
+
+  .pd-meta-details-porto .meta-label {
+    width: 80px;
+    font-size: 10px;
+  }
+
+  /* Variant Section */
+  .pd-variants-section {
+    padding: 10px 0;
+    margin-bottom: 10px;
+  }
+
+  .pd-variant-group {
+    margin-bottom: 10px;
+  }
+
+  .pd-variant-label {
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+
+  .pd-variant-options {
+    gap: 6px;
+  }
+
+  .pd-variant-btn {
+    padding: 6px 10px;
+    font-size: 10px;
+    gap: 4px;
+    border-radius: 3px;
+  }
+
+  .color-swatch {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Cart Section */
+  .pd-cart-section {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .pd-porto-qty {
+    height: 40px;
+    width: 100%;
+  }
+
+  .qty-btn-minus, .qty-btn-plus {
+    width: 28px;
+    font-size: 14px;
+  }
+
+  .qty-input {
+    width: 35px;
+    font-size: 12px;
+  }
+
+  .pd-porto-add-btn {
+    height: 40px;
+    width: 100%;
+    padding: 0 20px;
+    font-size: 11px;
+    gap: 6px;
+    border-radius: 4px;
+  }
+
+  /* Footer Actions */
+  .pd-footer-actions {
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid var(--porto-border);
+    padding-top: 12px;
+    align-items: flex-start;
+  }
+
+  .pd-social-share {
+    gap: 8px;
+    width: 100%;
+  }
+
+  .social-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .pd-wishlist-link {
+    font-size: 11px;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 0;
+  }
+
+  /* Seller Box */
+  .pd-porto-seller {
+    margin-top: 12px;
+    padding: 12px;
+    font-size: 12px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  /* Tabs Section */
+  .pd-tabs-container {
+    margin-top: 40px;
+  }
+
+  .pd-tabs-header {
+    gap: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+  }
+
+  .tab-btn {
+    padding: 10px 0;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Features List */
+  .pd-porto-features {
+    margin: 12px 0;
+  }
+
+  .pd-porto-features li {
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+
+  /* Related Products */
+  .pd-porto-related {
+    margin-top: 40px;
+  }
+
+  .related-title {
+    font-size: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+  }
+
+  .pd-related-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  /* Reviews Section */
+  .pd-porto-reviews-feed {
+    gap: 12px;
+  }
+
+  .pd-porto-review-item {
+    gap: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+
+  .pd-rev-avatar-circle {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+  }
+
+  .pd-rev-header-strip {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pd-rev-author {
+    font-size: 12px;
+  }
+
+  .pd-rev-published-date {
+    font-size: 10px;
+  }
+
+  .pd-rev-body {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .pd-rev-photo-attachment {
+    gap: 6px;
+  }
+
+  .pd-rev-photo-attachment img {
+    width: 60px;
+    height: 60px;
+  }
+
+  /* Report Tab */
+  .pd-report-tab {
+    padding: 20px !important;
+  }
+
+  .pd-report-content {
+    padding: 20px;
+    border-radius: 8px;
+  }
+
+  .pd-report-content h3 {
+    font-size: 1rem;
+  }
+
+  .pd-report-content p {
+    font-size: 12px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* Extra Small (iPhone SE) - 375px and below                   */
+/* ═══════════════════════════════════════════════════════════ */
+@media (max-width: 375px) {
+  .pd-container {
+    padding: 10px;
+  }
+
+  .pd-title {
+    font-size: 16px;
+    line-height: 1.3;
+  }
+
+  .pd-price-new {
+    font-size: 16px;
+  }
+
+  .pd-price-old {
+    font-size: 12px;
+  }
+
+  .pd-thumb {
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+  }
+
+  .pd-quick-specs {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .spec-card {
+    padding: 6px;
+  }
+
+  .spec-label {
+    font-size: 7px;
+  }
+
+  .spec-val {
+    font-size: 10px;
+  }
+
+  .pd-variant-btn {
+    padding: 5px 8px;
+    font-size: 9px;
+  }
+
+  .pd-porto-qty {
+    height: 36px;
+  }
+
+  .qty-btn-minus, .qty-btn-plus {
+    width: 24px;
+    font-size: 12px;
+  }
+
+  .qty-input {
+    width: 30px;
+    font-size: 11px;
+  }
+
+  .pd-porto-add-btn {
+    height: 36px;
+    font-size: 10px;
+    padding: 0 16px;
+  }
+
+  .pd-related-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .pd-badges {
+    top: 6px;
+    left: 6px;
+  }
+
+  .badge-hot, .badge-discount {
+    padding: 2px 5px;
+    font-size: 7px;
+  }
+
+  .pd-sub-label {
+    font-size: 8px;
+    padding-left: 6px;
+  }
+
+  .pd-highlights-list li {
+    font-size: 10px;
+    gap: 5px;
+  }
+
+  .pd-rev-body {
+    font-size: 11px;
+  }
+
+  .pd-rev-photo-attachment img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .tab-btn {
+    font-size: 11px;
+    padding: 8px 0;
+  }
+
+  .related-title {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .pd-porto-actions {
+    margin-top: 8px;
+  }
+
+  .pd-cart-section {
+    gap: 6px;
+  }
+
+  .pd-footer-actions {
+    gap: 8px;
+    padding-top: 8px;
+  }
+
+  .pd-wishlist-link {
+    font-size: 10px;
+  }
+
+  .pd-short-description {
+    font-size: 11px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* Accessibility - Reduced Motion Support                      */
+/* ═══════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .spec-card:hover {
+    transform: none !important;
+  }
+
+  .pd-variant-btn {
+    transition: none !important;
+  }
+
+  .pd-porto-add-btn {
+    transition: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+/* Landscape Orientation Support                               */
+/* ═══════════════════════════════════════════════════════════ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .pd-container {
+    padding: 10px;
+    margin: 10px auto;
+  }
+
+  .pd-title {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .pd-price-new {
+    font-size: 16px;
+  }
+
+  .pd-quick-specs {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .pd-tabs-container {
+    margin-top: 20px;
+  }
+
+  .pd-porto-related {
+    margin-top: 20px;
+  }
 }

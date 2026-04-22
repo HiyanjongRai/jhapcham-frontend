@@ -32,7 +32,8 @@ export default function AddProductPage() {
     expiryDate: "",
     warranty: "",
     features: "",
-    specification: ""
+    specification: "",
+    sizes: []
   });
 
   const colorOptions = [
@@ -41,10 +42,16 @@ export default function AddProductPage() {
   ];
 
   const storageOptions = ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"];
+  const sizeOptions = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "Free Size"];
 
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [activeVariants, setActiveVariants] = useState({
+    colors: false,
+    storage: false,
+    sizes: false
+  });
   
   useEffect(() => {
     // Fetch categories
@@ -88,6 +95,17 @@ export default function AddProductPage() {
     setFormData({ ...formData, storage: selected });
   };
 
+  const toggleSize = (size) => {
+    const selected = formData.sizes.includes(size)
+      ? formData.sizes.filter((s) => s !== size)
+      : [...formData.sizes, size];
+    setFormData({ ...formData, sizes: selected });
+  };
+
+  const toggleVariantSection = (key) => {
+    setActiveVariants(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const showToast = (message, type) => {
     setToast({ visible: true, message, type });
   };
@@ -122,6 +140,9 @@ export default function AddProductPage() {
       }
       if (formData.storage.length > 0) {
         data.append("storageSpec", formData.storage.join(", "));
+      }
+      if (formData.sizes.length > 0) {
+        data.append("sizeOptions", formData.sizes.join(", "));
       }
       
       if (formData.manufactureDate) data.append("manufactureDate", formData.manufactureDate);
@@ -170,8 +191,7 @@ export default function AddProductPage() {
       </div>
 
       <form className="ap-workspace" onSubmit={handleSubmit}>
-        
-        {/* SECTION 1: Blueprints & Identity */}
+
         <div className="ap-section">
           <div className="section-head">
             <Info size={18} strokeWidth={2.5} />
@@ -202,16 +222,23 @@ export default function AddProductPage() {
 
           <div className="ap-field">
             <label>Product Category <span className="req">*</span></label>
-            <select name="category" value={formData.category} onChange={handleInput} required>
-              <option value="">Choose a specialized category</option>
+            <input 
+              list="category-list"
+              name="category" 
+              value={formData.category} 
+              onChange={handleInput} 
+              placeholder="Select or type a new category..."
+              required 
+              style={{ width: '100%', height: '45px', borderRadius: '8px', border: '1.5px solid #e4e4e7', padding: '0 16px' }}
+            />
+            <datalist id="category-list">
               {categories.map(cat => (
-                <option key={cat.id} value={cat.name}>{cat.name}</option>
+                <option key={cat.id} value={cat.name} />
               ))}
-            </select>
+            </datalist>
           </div>
         </div>
 
-        {/* SECTION 2: Economics & Inventory */}
         <div className="ap-section">
           <div className="section-head">
             <DollarSign size={18} strokeWidth={2.5} />
@@ -244,7 +271,6 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        {/* SECTION 3: Content Audit */}
         <div className="ap-section">
           <div className="section-head">
             <FileText size={18} strokeWidth={2.5} />
@@ -273,7 +299,6 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        {/* SECTION 4: System Specs & Variants */}
         <div className="ap-section">
           <div className="section-head">
             <Layers size={18} strokeWidth={2.5} />
@@ -281,36 +306,76 @@ export default function AddProductPage() {
           </div>
           
           <div className="ap-field">
-            <label>Color Gamut</label>
-            <div className="ap-chip-field">
-              {colorOptions.map(color => (
-                <button 
-                  type="button" 
-                  key={color}
-                  className={`ap-chip ${formData.colors.includes(color) ? 'active' : ''}`}
-                  onClick={() => toggleColor(color)}
-                >
-                  <div className="chip-dot" style={{background: color.toLowerCase()}}></div>
-                  {color}
-                </button>
-              ))}
-            </div>
+            <button 
+              type="button" 
+              className={`ap-variant-toggle ${activeVariants.colors ? 'active' : ''}`}
+              onClick={() => toggleVariantSection('colors')}
+            >
+              <Plus size={14} /> Color Variants
+            </button>
+            {activeVariants.colors && (
+              <div className="ap-chip-field lux-fade-in" style={{ marginTop: '12px' }}>
+                {colorOptions.map(color => (
+                  <button 
+                    type="button" 
+                    key={color}
+                    className={`ap-chip ${formData.colors.includes(color) ? 'active' : ''}`}
+                    onClick={() => toggleColor(color)}
+                  >
+                    <div className="chip-dot" style={{background: color.toLowerCase()}}></div>
+                    {color}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="ap-field">
-            <label>Storage Configurations</label>
-            <div className="ap-chip-field">
-              {storageOptions.map(opt => (
-                <button 
-                  type="button" 
-                  key={opt}
-                  className={`ap-chip ${formData.storage.includes(opt) ? 'active' : ''}`}
-                  onClick={() => toggleStorage(opt)}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
+            <button 
+              type="button" 
+              className={`ap-variant-toggle ${activeVariants.storage ? 'active' : ''}`}
+              onClick={() => toggleVariantSection('storage')}
+            >
+              <Plus size={14} /> Storage Configurations
+            </button>
+            {activeVariants.storage && (
+              <div className="ap-chip-field lux-fade-in" style={{ marginTop: '12px' }}>
+                {storageOptions.map(opt => (
+                  <button 
+                    type="button" 
+                    key={opt}
+                    className={`ap-chip ${formData.storage.includes(opt) ? 'active' : ''}`}
+                    onClick={() => toggleStorage(opt)}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="ap-field">
+            <button 
+              type="button" 
+              className={`ap-variant-toggle ${activeVariants.sizes ? 'active' : ''}`}
+              onClick={() => toggleVariantSection('sizes')}
+            >
+              <Plus size={14} /> Size Variants
+            </button>
+            {activeVariants.sizes && (
+              <div className="ap-chip-field lux-fade-in" style={{ marginTop: '12px' }}>
+                {sizeOptions.map(size => (
+                  <button 
+                    type="button" 
+                    key={size}
+                    className={`ap-chip ${formData.sizes.includes(size) ? 'active' : ''}`}
+                    onClick={() => toggleSize(size)}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="ap-grid-3">
@@ -344,8 +409,7 @@ export default function AddProductPage() {
             </div>
           </div>
         </div>
-        
-        {/* SECTION 5: Technical Audit */}
+
         <div className="ap-section">
           <div className="section-head">
             <PlusCircle size={18} strokeWidth={2.5} />
@@ -363,14 +427,13 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        {/* SECTION 6: Media Intelligence */}
         <div className="ap-section">
           <div className="section-head">
             <ImageIcon size={18} strokeWidth={2.5} />
             <span className="gt-caption">Visual Assets</span>
           </div>
           <div className="ap-media-grid">
-            {/* Primary Image */}
+            
             <div className="ap-upload-card primary">
               <label className="upload-label">
                 <input type="file" name="image" accept="image/*" onChange={handleInput} hidden />
@@ -389,7 +452,6 @@ export default function AddProductPage() {
               </label>
             </div>
 
-            {/* Additional Images */}
             <div className="ap-multi-upload">
               <div className="multi-head">Perspective Gallery ({formData.additionalImages.length}/5)</div>
               <div className="gallery-grid">

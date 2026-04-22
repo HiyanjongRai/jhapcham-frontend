@@ -1,10 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
-/* ══════════════════════════════════════════════════════════
-   STORE PROFILE — Premium Porto Theme 
-   ══════════════════════════════════════════════════════════ */
 :root {
-  --spp-primary:       #0088cc;
+  --spp-primary:       #00b4d8;
   --spp-primary-fade:  #e6f3f9;
   --spp-dark:          #222529;
   --spp-bg:            #f4f6f8;
@@ -44,13 +41,10 @@
   letter-spacing: 0.05em;
 }
 
-/* ══════════════════════════════════════════════════════════
-   PREMIUM HEADER BANNER
-   ══════════════════════════════════════════════════════════ */
 .spp-header {
-  background: linear-gradient(135deg, #0088cc 0%, #005f8f 100%);
+  background: linear-gradient(135deg, #00b4d8 0%, #005f8f 100%);
   color: white;
-  padding: 45px 0 100px; /* Leave space to overlap layout */
+  padding: 45px 0 100px; 
   position: relative;
 }
 
@@ -214,9 +208,6 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* ══════════════════════════════════════════════════════════
-   MAIN LAYOUT (Overlapping the header)
-   ══════════════════════════════════════════════════════════ */
 .spp-main-layout {
   width: 100%;
   max-width: 1200px;
@@ -229,7 +220,6 @@
   z-index: 5;
 }
 
-/* ── Overridden Global Missing Classes ── */
 .spp-left-col {
   display: flex;
   flex-direction: column;
@@ -294,7 +284,6 @@
   color: var(--spp-muted);
 }
 
-/* Store Info Grid (Bottom of overview card) */
 .spp-info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -322,7 +311,6 @@
   gap: 6px;
 }
 
-/* ── 4 Stats Grid ── */
 .spp-stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -380,7 +368,6 @@
   line-height: 1.2;
 }
 
-/* ── Right Widgets ── */
 .spp-widget {
   background: var(--spp-surface);
   border: 1px solid var(--spp-border);
@@ -453,9 +440,6 @@
   line-height: 0;
 }
 
-/* ══════════════════════════════════════════════════════════
-   PRODUCTS SECTION
-   ══════════════════════════════════════════════════════════ */
 .spp-section-header {
   width: 100%;
   max-width: 1200px;
@@ -570,7 +554,6 @@
   font-size: 0.95rem;
 }
 
-/* ── Legacy classes kept for settings pages and report-textarea ── */
 .report-form-group { display: flex; flex-direction: column; }
 .report-textarea {
   width: 100%;
@@ -589,7 +572,6 @@
   box-shadow: 0 0 0 3px var(--spp-primary-fade) !important;
 }
 
-/* Form Settings Specific */
 .spp-page-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid var(--spp-border); }
 .spp-page-header-icon { background: var(--spp-primary); color: #fff; padding: 8px; border-radius: var(--spp-radius-sm); display: flex; align-items: center; justify-content: center; }
 .spp-card-title { display: flex; align-items: center; gap: 8px; font-family: var(--spp-font-head); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--spp-dark); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--spp-border); }
@@ -624,8 +606,6 @@
 .spp-save-btn:hover:not(:disabled) { background: #0077b3; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3); }
 .spp-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-
-/* ── Responsive logic ── */
 @media (max-width: 1024px) {
   .spp-main-layout { grid-template-columns: 1fr; }
   .spp-products-grid { grid-template-columns: repeat(3, 1fr); }

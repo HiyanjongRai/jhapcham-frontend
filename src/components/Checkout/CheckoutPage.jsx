@@ -121,21 +121,18 @@ function CheckoutPage() {
 
   useEffect(() => {
     // ── GHOST ORDER DETECTION ────────────────────────────
-    // If the user lands here but has an eSewa payment "in flight",
-    // they probably hit 'Back' after getting to eSewa.
     const pendingId = sessionStorage.getItem("pendingEsewaOrderId");
     if (pendingId && (!items || items.length === 0)) {
        console.info("Detected pending eSewa order, checking status...");
-       // Redirect to callback page without data, which triggers the 'restore' flow
-       // We only do this if the cart is empty (meaning placeOrder already cleared it)
        navigate("/payment/esewa-callback");
-       return;
     }
+  }, [navigate, items]);
 
+  useEffect(() => {
     if (!userId) return;
     loadCart();
     loadUser();
-  }, [userId, loadCart, loadUser, navigate, items]);
+  }, [userId, loadCart, loadUser]);
 
   const fetchPreview = useCallback(async () => {
     try {
@@ -185,7 +182,9 @@ function CheckoutPage() {
           try {
             const res = await api.get(`/api/activity/similar/${pid}`, { params: { limit: 3 } });
             if (res.data) allSimilar.push(...res.data);
-          } catch { /* skip */ }
+          } catch (err) {
+            // skip
+          }
         }
         
         const cartProductIds = new Set(productIds);
@@ -289,18 +288,13 @@ function CheckoutPage() {
                   form.setAttribute("method", "POST");
                   form.setAttribute("action", esewaData.epayUrl);
 
-                  // Add all required eSewa fields
-                  const fields = [
-                    "amount", "tax_amount", "total_amount", "transaction_uuid", "product_code",
-                    "product_service_charge", "product_delivery_charge", "success_url", "failure_url",
-                    "signed_field_names", "signature"
-                  ];
-
-                  fields.forEach(field => {
+                  // Add all fields returned from the backend (dynamic)
+                  Object.entries(esewaData).forEach(([key, value]) => {
+                    if (key === "epayUrl") return;
                     const hiddenField = document.createElement("input");
                     hiddenField.setAttribute("type", "hidden");
-                    hiddenField.setAttribute("name", field);
-                    hiddenField.setAttribute("value", esewaData[field]);
+                    hiddenField.setAttribute("name", key);
+                    hiddenField.setAttribute("value", value);
                     form.appendChild(hiddenField);
                   });
 
@@ -501,22 +495,37 @@ function CheckoutPage() {
               <h3 className="section-title"><span className="section-number">03</span> Payment Method</h3>
               <div className="payment-grid">
                 {[
-                  { id: "COD", name: "Cash on Delivery", desc: "Pay when you receive", icon: <Package size={18} /> },
-                  { id: "ESEWA", name: "eSewa", desc: "Digital Payment Gateway", icon: (
-                    <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" style={{ width: '24px', height: '18px', objectFit: 'contain' }} />
-                  )},
+                  { 
+                    id: "COD", 
+                    name: "Cash on Delivery", 
+                    desc: "Settle your payment with cash upon delivery.", 
+                    icon: <Package size={20} /> 
+                  },
+                  { 
+                    id: "ESEWA", 
+                    name: "eSewa Wallet", 
+                    desc: "Instant, secure mobile payment via eSewa gateway.", 
+                    icon: (
+                      <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" style={{ width: '28px', height: '20px', objectFit: 'contain' }} />
+                    )
+                  },
                 ].map(p => (
-                  <div key={p.id} className={`payment-card ${paymentMethod === p.id ? "active" : ""}`} onClick={() => setPaymentMethod(p.id)}>
-                    <div className="payment-icon-wrapper">{p.icon}</div>
-                    <div className="payment-info"><strong>{p.name}</strong><span>{p.desc}</span></div>
-                    <div className="payment-radio"></div>
+                  <div key={p.id} className={`payment-card-v2 ${paymentMethod === p.id ? "active" : ""}`} onClick={() => setPaymentMethod(p.id)}>
+                    <div className="payment-icon-v2">{p.icon}</div>
+                    <div className="payment-text-v2">
+                       <strong>{p.name}</strong>
+                       <span>{p.desc}</span>
+                    </div>
+                    <div className="payment-check-v2">
+                       <div className="inner-check"></div>
+                    </div>
                   </div>
                 ))}
               </div>
               {paymentMethod === "ESEWA" && (
-                <div style={{ marginTop: '12px', padding: '10px 14px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '0.75rem', color: '#166534', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle size={14} color="#166534" />
-                  You'll be redirected to eSewa to complete the payment securely.
+                <div className="esewa-notice-v2 animate-slide-up">
+                  <ShieldCheck size={16}/>
+                  <span>A secure eSewa portal will open to complete this order.</span>
                 </div>
               )}
               <div className="form-field" style={{ marginTop: '24px' }}>
@@ -574,7 +583,7 @@ function CheckoutPage() {
                 />
                 <button onClick={handleApplyPromo}>Apply</button>
             </div>
-            {/* Bug Fix #1: inline promo error message */}
+            
             {promoError && (
                 <div style={{ marginTop: '6px', fontSize: '0.72rem', color: '#dc2626', padding: '6px 10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px' }}>
                     {promoError}
@@ -582,7 +591,7 @@ function CheckoutPage() {
             )}
             {appliedPromo && !promoError && (
                 <div style={{ marginTop: '6px', fontSize: '0.72rem', color: '#16a34a', padding: '6px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '4px' }}>
-                    ✓ Promo code <strong>{appliedPromo}</strong> applied!
+                     Promo code <strong>{appliedPromo}</strong> applied!
                 </div>
             )}
 
@@ -592,7 +601,6 @@ function CheckoutPage() {
             </div>
           </div>
 
-          {/* Last-minute Add-ons */}
           {lastMinuteProducts.length > 0 && (
             <div style={{ marginTop: '24px' }}>
               <h3 style={{ fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', color: '#374151' }}>You Might Also Need</h3>

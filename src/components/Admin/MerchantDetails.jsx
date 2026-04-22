@@ -8,7 +8,7 @@ import {
 import { 
   ArrowLeft, Mail, Phone, MapPin, Package, ShoppingBag, 
   DollarSign, CheckCheck, MessageSquare, Lock, Unlock,
-  ExternalLink, Globe, LayoutDashboard, AlertCircle
+  ExternalLink, Globe, LayoutDashboard, AlertCircle, FileText
 } from 'lucide-react';
 import { API_BASE } from '../config/config';
 import './MerchantDetails.css';
@@ -72,7 +72,7 @@ const MerchantDetails = () => {
   return (
     <div className="merchant-details-page">
       <DashboardNavbar title="Merchant Intelligence" role="ADMIN" showSearch={false} />
-      {/* Header Section */}
+      
       <div className="mdp-header">
          <div className="mdp-nav-back">
             <button onClick={() => navigate(-1)} className="mdp-back-btn">
@@ -109,7 +109,7 @@ const MerchantDetails = () => {
       </div>
 
       <div className="mdp-content-grid">
-         {/* Left Side: Information & Stats */}
+         
          <div className="mdp-main-col">
             <div className="mdp-card">
                <h3 className="mdp-card-title">Merchant Performance</h3>
@@ -140,6 +140,13 @@ const MerchantDetails = () => {
                      <div className="mdp-stat-info">
                         <label>Successful Delivery</label>
                         <span className="mdp-stat-val">{seller.totalDelivered} Orders</span>
+                     </div>
+                  </div>
+                  <div className="mdp-stat-box" style={{ background: '#fff1f2', border: '1px solid #fecdd3' }}>
+                     <div className="mdp-stat-icon red" style={{ background: '#fb7185', color: 'white' }}><LayoutDashboard size={24}/></div>
+                     <div className="mdp-stat-info">
+                        <label>Commission Paid</label>
+                        <span className="mdp-stat-val" style={{ color: '#be123c' }}>Rs. {seller.totalCommission?.toLocaleString()}</span>
                      </div>
                   </div>
                </div>
@@ -180,11 +187,10 @@ const MerchantDetails = () => {
             </div>
          </div>
 
-         {/* Right Side: Profile & Contact */}
          <div className="mdp-side-col">
             <div className="mdp-card">
                <h3 className="mdp-card-title">Merchant Profile</h3>
-               <div className="mdp-info-list">
+                <div className="mdp-info-list">
                   <div className="mdp-info-item">
                      <div className="mdp-info-icon"><Mail size={16}/></div>
                      <div className="mdp-info-text">
@@ -207,6 +213,40 @@ const MerchantDetails = () => {
                      </div>
                   </div>
                </div>
+
+               {(seller.idDocumentPath || seller.businessLicensePath || seller.taxCertificatePath) && (
+                 <div className="mdp-info-list" style={{ marginTop: '20px', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
+                    <h4 style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#777', marginBottom: '10px' }}>Legal Documents</h4>
+                    {seller.idDocumentPath && (
+                      <div className="mdp-info-item">
+                        <div className="mdp-info-icon"><FileText size={16}/></div>
+                        <div className="mdp-info-text">
+                            <label>Identity Proof</label>
+                            <a href={`${API_BASE}/${seller.idDocumentPath}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0088cc', fontSize: '0.8rem', fontWeight: '600' }}>View ID Document</a>
+                        </div>
+                      </div>
+                    )}
+                    {seller.businessLicensePath && (
+                      <div className="mdp-info-item">
+                        <div className="mdp-info-icon"><FileText size={16}/></div>
+                        <div className="mdp-info-text">
+                            <label>Business License</label>
+                            <a href={`${API_BASE}/${seller.businessLicensePath}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0088cc', fontSize: '0.8rem', fontWeight: '600' }}>View License</a>
+                        </div>
+                      </div>
+                    )}
+                    {seller.taxCertificatePath && (
+                      <div className="mdp-info-item">
+                        <div className="mdp-info-icon"><FileText size={16}/></div>
+                        <div className="mdp-info-text">
+                            <label>Tax Certificate</label>
+                            <a href={`${API_BASE}/${seller.taxCertificatePath}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0088cc', fontSize: '0.8rem', fontWeight: '600' }}>View Certificate</a>
+                        </div>
+                      </div>
+                    )}
+                 </div>
+               )}
+
                <button className="mdp-msg-btn">
                   <MessageSquare size={16} /> Send Direct Message
                </button>

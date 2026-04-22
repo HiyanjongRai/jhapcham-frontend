@@ -72,7 +72,7 @@ function OrderSuccess() {
 
         {discountTotal > 0 && (
             <div className="os-savings-badge">
-                <span>🎉</span>
+                <span></span>
                 You saved Rs. {discountTotal.toLocaleString()} on this order!
             </div>
         )}
@@ -122,7 +122,7 @@ function OrderSuccess() {
                     <p className="os-payment-note">
                       Charged via {
                         paymentMethod === 'ESEWA' ? 'eSewa (Online)' : 
-                        paymentMethod === 'KHALTI' ? 'Khalti (Online)' : 
+                        
                         paymentMethod === 'COD' ? 'Cash on Delivery' : 
                         paymentMethod
                       }

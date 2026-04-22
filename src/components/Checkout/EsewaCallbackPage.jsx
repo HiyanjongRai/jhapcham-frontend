@@ -4,19 +4,6 @@ import api from "../../api/axios";
 import { CheckCircle, XCircle, Clock, ShoppingBag, ShoppingCart } from "lucide-react";
 import { saveGuestCart, updateGlobalCartCount, loadGuestCart } from "../AddCart/cartUtils";
 
-/**
- * EsewaCallbackPage
- * Mounted at /payment/esewa-callback
- *
- * eSewa redirects here after payment with a ?data=... base64 encoded query param.
- * If no ?data is present, the user cancelled or payment failed on eSewa's side.
- *
- * On failure/cancel:
- *  1. Fetch the order items from the DB
- *  2. Re-add every item back to the user's cart (DB or Guest localStorage)
- *  3. Cancel the ghost order so it doesn't pollute the seller's dashboard
- *  4. Navigate to /cart so the user can start over
- */
 export default function EsewaCallbackPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -25,9 +12,6 @@ export default function EsewaCallbackPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [restoredCount, setRestoredCount] = useState(0);
 
-  /**
-   * Re-add the failed order's items back into the user's cart, then cancel the order.
-   */
   const restoreCartAndCancel = async (reason) => {
     const orderId = sessionStorage.getItem("pendingEsewaOrderId");
     // Attempt to restore user credentials if they were lost during the redirect
@@ -52,7 +36,9 @@ export default function EsewaCallbackPage() {
        try {
          const decoded = window.atob(savedUserId);
          userIdNum = Number(decoded);
-       } catch { /* ignore */ }
+        } catch (err) {
+          // skip
+        }
     }
 
     let restored = 0;
@@ -187,7 +173,6 @@ export default function EsewaCallbackPage() {
         textAlign: "center",
       }}>
 
-        {/* ---- VERIFYING ---- */}
         {state === "verifying" && (
           <>
             <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
@@ -200,7 +185,6 @@ export default function EsewaCallbackPage() {
           </>
         )}
 
-        {/* ---- RESTORING CART ---- */}
         {state === "restoring" && (
           <>
             <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
@@ -220,7 +204,6 @@ export default function EsewaCallbackPage() {
           </>
         )}
 
-        {/* ---- SUCCESS ---- */}
         {state === "success" && (
           <>
             <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
@@ -250,7 +233,6 @@ export default function EsewaCallbackPage() {
           </>
         )}
 
-        {/* ---- FAILED (fallback if no orderId in sessionStorage) ---- */}
         {state === "failed" && (
           <>
             <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
@@ -282,7 +264,6 @@ export default function EsewaCallbackPage() {
           </>
         )}
 
-        {/* eSewa branding footer */}
         <div style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" style={{ height: "14px", objectFit: "contain" }} />
           <span style={{ fontSize: "0.7rem", color: "#9ca3af" }}>Secured by <strong style={{ color: "#166534" }}>eSewa</strong></span>

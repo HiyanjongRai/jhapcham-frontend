@@ -23,6 +23,8 @@ import {
 import "./OrderDetails.css";
 import { API_BASE } from "../config/config";
 import DashboardNavbar from "../Admin/DashboardNavbar.jsx";
+import Toast from "../Toast/Toast.jsx";
+import { RefreshCw, ShieldCheck, ShieldAlert, CheckCircle2 } from "lucide-react";
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -30,7 +32,10 @@ const OrderDetails = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState({ message: "", type: "info", visible: false });
   const userRole = localStorage.getItem("userRole");
+
+  const showToast = (msg, type = "info") => setToast({ message: msg, type, visible: true });
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -48,6 +53,23 @@ const OrderDetails = () => {
 
     fetchOrder();
   }, [id]);
+
+  const handleResendOTP = async () => {
+    try {
+      await axios.post(`/api/admin/orders/${id}/resend-otp`);
+      showToast("Delivery OTP resent to customer.", "success");
+    } catch { showToast("Failed to resend OTP.", "error"); }
+  };
+
+  const handleManualDeliver = async () => {
+    if (!window.confirm("Manually mark this order as delivered? This overrides OTP verification.")) return;
+    try {
+      await axios.put(`/api/admin/orders/${id}/deliver-manually`);
+      showToast("Order marked as Delivered manually.", "success");
+      const updated = await axios.get(`/api/orders/${id}`);
+      setOrder(updated.data);
+    } catch { showToast("Failed to update order status.", "error"); }
+  };
 
   const buildImageUrl = (imagePath) => {
     if (!imagePath) return "https://via.placeholder.com/80?text=No+Image";
@@ -119,7 +141,7 @@ const OrderDetails = () => {
       </div>
 
       <div className="od-main-grid">
-        {/* Left Column: Summary & Items */}
+        
         <div className="od-col-left">
           <section className="od-card od-manifest-header">
             <div className="manifest-id">
@@ -159,6 +181,9 @@ const OrderDetails = () => {
                     <div className="item-variants">
                       {item.selectedColor && <span className="variant-tag">Color: {item.selectedColor}</span>}
                       {item.selectedStorage && <span className="variant-tag">Storage: {item.selectedStorage}</span>}
+                      {item.commissionRate && (userRole === 'ADMIN' || userRole === 'SELLER') && (
+                        <span className="variant-tag commission-tag">{item.commissionRate}% Fee</span>
+                      )}
                     </div>
                   </div>
                   <div className="item-pricing">
@@ -193,9 +218,33 @@ const OrderDetails = () => {
               </div>
             </div>
           </section>
+
+          <section className="od-card od-timeline-card">
+            <h3 className="card-title"><Clock size={18} /> Order Journey Log</h3>
+            <div className="timeline-v3">
+              {[
+                { key: 'PLACED', label: 'Order Registered', date: order.createdAt, icon: <Package size={14}/> },
+                { key: 'PROCESSING', label: 'Merchant Confirmed', date: order.processedAt, icon: <Store size={14}/> },
+                { key: 'SHIPPED', label: 'Handed to Logistics', date: order.shippedAt, icon: <Truck size={14}/> },
+                { key: 'DELIVERED', label: 'Successfully Fulfilled', date: order.deliveredAt, icon: <CheckCircle2 size={14}/> }
+              ].map((step, i) => {
+                const isCompleted = !!step.date;
+                return (
+                  <div key={i} className={`timeline-step ${isCompleted ? 'completed' : 'pending'}`}>
+                    <div className="step-marker">{step.icon}</div>
+                    <div className="step-content">
+                      <span className="step-label">{step.label}</span>
+                      <span className="step-timestamp">
+                        {isCompleted ? new Date(step.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : "Pending..."}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         </div>
 
-        {/* Right Column: Customer & Logistics */}
         <div className="od-col-right">
           <section className="od-card od-customer-card">
             <h3 className="card-title"><User size={18} /> Customer Profile</h3>
@@ -232,7 +281,6 @@ const OrderDetails = () => {
             </div>
           </section>
 
-          {/* Merchant Profile (Only for Admin/Seller) */}
           {(userRole === 'ADMIN' || userRole === 'SELLER') && order.sellerStoreName && (
             <section className="od-card od-merchant-card">
               <h3 className="card-title"><Store size={18} /> Merchant Profile</h3>
@@ -291,32 +339,34 @@ const OrderDetails = () => {
             )}
           </section>
 
-          <section className="od-card od-payment-card">
-            <h3 className="card-title"><CreditCard size={18} /> Payment Intelligence</h3>
-            <div className="payment-summary">
-              <div className={`payment-method-box ${(order.paymentMethod || 'COD').toLowerCase()}`}>
-                <span className="method-label">
-                  {order.paymentMethod === 'ESEWA' ? 'eSewa Digital' : 
-                   order.paymentMethod === 'KHALTI' ? 'Khalti Wallet' : 
-                   'Cash on Delivery'}
-                </span>
-                <span className="payment-status">
-                  {order.paymentMethod === 'COD' ? 'Unpaid / Pending Verification' : 'Transaction Settled'}
-                </span>
+          {(userRole === 'ADMIN' || userRole === 'SELLER') && (
+            <section className="od-card od-admin-action-card">
+              <h3 className="card-title"><ShieldCheck size={18} /> Delivery Verification</h3>
+              <div className="otp-status-container">
+                 <div className={`otp-status-badge ${order.otpVerified ? 'verified' : 'unverified'}`}>
+                   {order.otpVerified ? <ShieldCheck size={16}/> : <ShieldAlert size={16}/>}
+                   {order.otpVerified ? 'OTP Verified' : 'Awaiting OTP'}
+                 </div>
+                 {!order.otpVerified && order.status === 'OUT_FOR_DELIVERY' && (
+                   <div className="otp-actions">
+                     <p className="otp-hint">Delivery OTP sent to customer phone.</p>
+                     <button className="od-btn-sub secondary" onClick={handleResendOTP}>
+                       <RefreshCw size={14}/> Resend Code
+                     </button>
+                     {userRole === 'ADMIN' && (
+                       <button className="od-btn-sub danger" onClick={handleManualDeliver}>
+                         Manual Delivery (Override)
+                       </button>
+                     )}
+                   </div>
+                 )}
               </div>
-              {order.paymentReference && (
-                <div className="payment-ref">
-                  <label>Reference Code</label>
-                  <code>{order.paymentReference}</code>
-                </div>
-              )}
-            </div>
-          </section>
+            </section>
+          )}
 
-          {/* Seller Settlement Summary (Only for Seller/Admin) */}
           {(userRole === 'ADMIN' || userRole === 'SELLER') && order.sellerNetAmount && (
             <section className="od-card od-settlement-card">
-              <h3 className="card-title">💵 Disbursement Info</h3>
+              <h3 className="card-title"> Disbursement Info</h3>
               <div className="settlement-breakdown">
                 <div className="set-row">
                   <span>Gross (Items Only)</span>
@@ -325,6 +375,10 @@ const OrderDetails = () => {
                 <div className="set-row">
                   <span>Marketplace Logistics</span>
                   <span>- NPR {order.sellerShippingCharge?.toLocaleString()}</span>
+                </div>
+                <div className="set-row">
+                  <span>Platform Commission</span>
+                  <span>- NPR {order.marketplaceCommission?.toLocaleString()}</span>
                 </div>
                 <div className="set-divider"></div>
                 <div className="set-row net-income">
@@ -336,6 +390,7 @@ const OrderDetails = () => {
           )}
         </div>
       </div>
+      {toast.visible && <Toast {...toast} onClose={() => setToast({...toast, visible: false})} />}
     </div>
   );
 };

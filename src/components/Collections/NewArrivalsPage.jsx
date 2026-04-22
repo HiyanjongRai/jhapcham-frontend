@@ -119,7 +119,7 @@ export default function NewArrivalsPage() {
           </>
         ) : (
           <div className="collection-empty">
-            <div className="collection-empty-icon">✨</div>
+            <div className="collection-empty-icon"></div>
             <h2>No New Arrivals</h2>
             <p>We're always adding new products. Check back soon!</p>
             <Link to="/" className="collection-empty-btn">

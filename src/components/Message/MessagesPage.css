@@ -1,4 +1,4 @@
-/* ── MESSAGES HUB: REFERENCE MATCH (USER DESIGN) ── */
+
 :root {
   --hub-purple: #5b67ca;
   --hub-purple-dark: #4b55b0;
@@ -13,14 +13,13 @@
 .messages-hub {
   display: grid;
   grid-template-columns: 320px 1fr;
-  height: calc(100vh - 84px); /* Full screen minus DashboardNavbar */
+  height: calc(100vh - 84px); 
   max-height: calc(100vh - 84px);
   background: var(--hub-bg-main);
   overflow: hidden;
   border-top: 1px solid var(--hub-border);
 }
 
-/* ── SIDEBAR ── */
 .hub-sidebar-list {
   background: #ffffff;
   border-right: 1px solid var(--hub-border);
@@ -99,13 +98,12 @@
   margin: 0;
 }
 
-/* ── CHAT MAIN ── */
 .hub-chat-main {
   background: #ffffff;
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden; /* Prevent the main container from expanding */
+  overflow: hidden; 
 }
 
 .hub-chat-header {
@@ -114,7 +112,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  flex-shrink: 0; /* Keep header at fixed height */
+  flex-shrink: 0; 
 }
 
 .hub-header-avatar {
@@ -135,8 +133,8 @@
 .status-subtitle { font-size: 0.8rem; color: var(--hub-text-muted); font-weight: 500; }
 
 .hub-chat-feed {
-  flex: 1; /* Grow to fill middle */
-  min-height: 0; /* Important for flex-child scrolling */
+  flex: 1; 
+  min-height: 0; 
   overflow-y: auto;
   padding: 40px;
   display: flex;
@@ -145,7 +143,6 @@
   background: white;
 }
 
-/* ── DATE DIVIDER ── */
 .hub-date-divider {
   display: flex;
   align-items: center;
@@ -196,7 +193,6 @@
 .msg-time { font-size: 0.75rem; font-weight: 600; color: var(--hub-text-muted); margin-top: 4px; }
 .hub-msg-wrap.received .msg-time { color: var(--hub-text-muted); }
 
-/* ── INPUT AREA ── */
 .hub-chat-input-container {
   padding: 12px 24px;
   border-top: 1px solid var(--hub-border);
@@ -246,7 +242,7 @@
 .hub-tool-btn:hover { color: var(--hub-purple); }
 
 .hub-send-action-btn {
-  background: #0266da; /* The specific blue in screenshot */
+  background: #0266da; 
   color: white;
   border: none;
   border-radius: 24px;
@@ -259,7 +255,6 @@
 
 .hub-send-action-btn:hover { background: #0257b8; }
 
-/* Placeholder */
 .hub-chat-placeholder {
   flex: 1;
   display: flex;
@@ -269,17 +264,16 @@
   color: var(--hub-text-muted);
 }
 
-/* ── ADMIN MESSAGE STYLING ── */
 .hub-msg-wrap.received.admin-notice {
   max-width: 80%;
 }
 
 .admin-bubble {
-  background: #1e293b !important; /* Dark Slate for Authority */
+  background: #1e293b !important; 
   color: white !important;
   border: 1px solid #334155;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #3b82f6; /* Accent line */
+  border-left: 4px solid #3b82f6; 
 }
 
 .hub-msg-wrap.sent.admin-notice .admin-bubble {
@@ -304,7 +298,6 @@
     opacity: 0.8;
 }
 
-/* Admin Sidebar in Messages */
 .adm-sidebar-hub {
     width: 260px;
     background: #ffffff;

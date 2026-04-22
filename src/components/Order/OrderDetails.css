@@ -11,7 +11,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Nav Header */
 .od-nav-header {
   display: flex;
   justify-content: space-between;
@@ -82,7 +81,6 @@
   cursor: pointer;
 }
 
-/* Main Grid */
 .od-main-grid {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
@@ -105,7 +103,6 @@
   border: 1px solid #f1f5f9;
 }
 
-/* Manifest Header */
 .od-manifest-header {
   display: flex;
   justify-content: space-between;
@@ -161,7 +158,6 @@
 .manifest-status-badge.emerald { background: #f0fdf4; color: #047857; }
 .manifest-status-badge.rose { background: #fff1f2; color: #be123c; }
 
-/* Cards Common */
 .card-title {
   display: flex;
   align-items: center;
@@ -172,7 +168,6 @@
   color: #334155;
 }
 
-/* Items List */
 .od-items-card .card-header {
   display: flex;
   justify-content: space-between;
@@ -252,6 +247,12 @@
   font-weight: 600;
 }
 
+.variant-tag.commission-tag {
+  background: #fdf2f8;
+  border-color: #fbcfe8;
+  color: #be185d;
+}
+
 .item-pricing {
   text-align: right;
   display: flex;
@@ -272,7 +273,6 @@
   margin-top: 4px;
 }
 
-/* Financials */
 .financial-grid {
   display: flex;
   flex-direction: column;
@@ -303,7 +303,6 @@
   color: #0f172a;
 }
 
-/* Customer Card */
 .customer-overview {
   display: flex;
   align-items: center;
@@ -372,7 +371,6 @@
 
 .contact-row.alternative { color: #64748b; }
 
-/* Logistics */
 .logistics-info {
   display: flex;
   flex-direction: column;
@@ -446,7 +444,6 @@
   font-weight: 500;
 }
 
-/* Payment */
 .payment-method-box {
   padding: 16px;
   border-radius: 12px;
@@ -496,7 +493,6 @@
   font-weight: 600;
 }
 
-/* Settlement */
 .od-settlement-card {
   background: #1e293b;
   color: white;
@@ -533,7 +529,6 @@
   font-weight: 800;
 }
 
-/* Loading/Error States */
 .od-loading-container, .od-error-container {
   display: flex;
   flex-direction: column;
@@ -572,7 +567,6 @@
   cursor: pointer;
 }
 
-/* Print Styles */
 @media print {
   .od-nav-header, .od-btn-more, .od-nav-right, .od-btn-icon-back {
     display: none !important;
@@ -588,7 +582,6 @@
   }
 }
 
-/* Merchant Card */
 .od-merchant-card .card-title {
   color: #0c4a6e;
 }
@@ -608,9 +601,171 @@
   border: 1px solid #e0f2fe;
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
   .od-main-grid {
     grid-template-columns: 1fr;
   }
 }
+
+/* Timeline V3 Styles */
+.od-timeline-card {
+    padding-bottom: 30px;
+}
+
+.timeline-v3 {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    padding-left: 10px;
+}
+
+.timeline-step {
+    display: flex;
+    gap: 20px;
+    padding-bottom: 30px;
+    position: relative;
+}
+
+.timeline-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 34px;
+    bottom: 0px;
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.timeline-step.completed:not(:last-child)::after {
+    background: #10b981;
+}
+
+.step-marker {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    border: 2px solid white;
+    transition: all 0.3s;
+}
+
+.timeline-step.completed .step-marker {
+    background: #10b981;
+    color: white;
+    box-shadow: 0 0 0 4px #d1fae5;
+}
+
+.step-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.step-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+.timeline-step.completed .step-label {
+    color: #059669;
+}
+
+.step-timestamp {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* Admin OTP Actions */
+.od-admin-action-card {
+    border-top: 4px solid #00b4d8;
+}
+
+.otp-status-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.otp-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    width: fit-content;
+}
+
+.otp-status-badge.verified {
+    background: #ecfeff;
+    color: #0891b2;
+    border: 1px solid #cffafe;
+}
+
+.otp-status-badge.unverified {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #ffedd5;
+}
+
+.otp-actions {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.otp-hint {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.od-btn-sub {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.od-btn-sub.secondary {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+}
+
+.od-btn-sub.secondary:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+.od-btn-sub.danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.od-btn-sub.danger:hover {
+    background: #ef4444;
+    color: white;
+}
+

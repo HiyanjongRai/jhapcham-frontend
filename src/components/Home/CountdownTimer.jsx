@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
 
-const CountdownTimer = ({ targetDate }) => {
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-
-  function calculateTimeLeft() {
-    if (!targetDate) return null;
+const CountdownTimer = memo(({ targetDate }) => {
+  // ⚡ PERFORMANCE: Memoize calculation function
+  const calculateTimeLeft = useCallback((date) => {
+    if (!date) return null;
     
-    const difference = new Date(targetDate) - new Date();
+    const difference = new Date(date) - new Date();
     let timeLeft = {};
 
     if (difference > 0) {
@@ -21,15 +20,17 @@ const CountdownTimer = ({ targetDate }) => {
     }
 
     return timeLeft;
-  }
+  }, []);
+
+  const [timeLeft, setTimeLeft] = useState(() => calculateTimeLeft(targetDate));
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
+      setTimeLeft(calculateTimeLeft(targetDate));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [targetDate, calculateTimeLeft]);
 
   if (!timeLeft) return null;
 
@@ -51,6 +52,8 @@ const CountdownTimer = ({ targetDate }) => {
       </span>
     </div>
   );
-};
+});
+
+CountdownTimer.displayName = 'CountdownTimer';
 
 export default CountdownTimer;

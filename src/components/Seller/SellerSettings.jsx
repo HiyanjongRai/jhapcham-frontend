@@ -148,7 +148,7 @@ export default function SellerSettings() {
             )}
             
             <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-                {/* Page Header */}
+                
                 <div className="spp-page-header">
                     <div className="spp-page-header-icon">
                         <Settings size={16} />
@@ -160,18 +160,15 @@ export default function SellerSettings() {
                 </div>
 
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
-                    
-                    {/* ── LEFT COLUMN ── */}
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        
-                        {/* Identity Card */}
+
                         <div className="spp-card">
                             <h3 className="spp-card-title">
                                 <Store size={15} className="spp-icon-accent" />
                                 Identity
                             </h3>
-                            
-                            {/* Logo Upload */}
+
                             <div className="spp-logo-upload-area">
                                 <div className="spp-logo-preview">
                                     {previewUrl ? (
@@ -221,7 +218,6 @@ export default function SellerSettings() {
                             </div>
                         </div>
 
-                        {/* Descriptions Card */}
                         <div className="spp-card">
                             <h3 className="spp-card-title">
                                 <FileText size={15} className="spp-icon-accent" />
@@ -254,10 +250,8 @@ export default function SellerSettings() {
                         </div>
                     </div>
 
-                    {/* ── RIGHT COLUMN ── */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        
-                        {/* Logistics Card */}
+
                         <div className="spp-card">
                             <h3 className="spp-card-title">
                                 <Truck size={15} className="spp-icon-accent" />
@@ -304,7 +298,6 @@ export default function SellerSettings() {
                                 </div>
                             </div>
 
-                            {/* Free Shipping Toggle */}
                             <div className="spp-freeship-box">
                                 <div className="spp-freeship-row">
                                     <div className="spp-freeship-label">
@@ -338,7 +331,6 @@ export default function SellerSettings() {
                             </div>
                         </div>
 
-                        {/* Commit / Save Card */}
                         <div className="spp-commit-card">
                             <div className="spp-commit-header">
                                 <div className="spp-commit-icon">

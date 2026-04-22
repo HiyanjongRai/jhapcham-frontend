@@ -135,7 +135,7 @@ const DashboardNavbar = ({ title, searchTerm, setSearchTerm, showSearch = true, 
 
       <div className="dash-nav-right">
         <div className="dash-nav-actions">
-           {/* Notifications */}
+           
            <div className="dash-action-item" onClick={() => setShowNotifDropdown(!showNotifDropdown)}>
               <Bell size={20} />
               {unreadNotifCount > 0 && <div className="dash-notif-badge">{unreadNotifCount}</div>}
@@ -176,7 +176,6 @@ const DashboardNavbar = ({ title, searchTerm, setSearchTerm, showSearch = true, 
               )}
            </div>
 
-           {/* Messages Dropdown */}
            <div className="dash-action-item" onClick={() => { setShowMsgDropdown(!showMsgDropdown); setShowNotifDropdown(false); }}>
               <MessageSquare size={20} />
               {unreadMsgCount > 0 && <div className="dash-notif-badge message">{unreadMsgCount}</div>}
@@ -218,7 +217,7 @@ const DashboardNavbar = ({ title, searchTerm, setSearchTerm, showSearch = true, 
         
         <div className="dash-nav-divider" />
         
-        <div className="dash-nav-user" onClick={() => navigate(isCustomer ? '/customer/dashboard?tab=settings' : '/seller/dashboard?tab=settings')}>
+        <div className="dash-nav-user" onClick={() => navigate(isCustomer ? '/customer/dashboard?tab=settings' : (isSeller ? '/seller/dashboard?tab=settings' : '/admin/dashboard?tab=settings'))}>
            <div className="dash-user-avatar">
               <User size={20} />
               <div className="dash-user-status-glow" />

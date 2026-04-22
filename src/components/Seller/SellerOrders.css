@@ -1,11 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
-/* ── Order Hub Studio ─────────────────────────────────────── */
 :root {
     --sh-bg:             transparent;
     --sh-surface:        #ffffff;
     --sh-border:         #e7e7e7;
-    --sh-accent:         #0088cc;
+    --sh-accent:         #00b4d8;
     --sh-accent-light:   #e6f3f9;
     --sh-dark:           #222529;
     --sh-text-primary:   #222529;
@@ -17,7 +16,6 @@
     --sh-shadow-lg:      0 5px 15px rgba(0, 0, 0, 0.06);
 }
 
-/* Base resets & Scrollbars */
 .so-container-v2 * { box-sizing: border-box; }
 .drawer-content::-webkit-scrollbar { width: 6px; }
 .drawer-content::-webkit-scrollbar-track { background: transparent; }
@@ -40,7 +38,6 @@
   box-sizing: border-box;
 }
 
-/* Header */
 .so-header-v2 {
   display: flex;
   justify-content: space-between;
@@ -83,7 +80,6 @@
 }
 .so-btn-help:hover { background: #0077b3; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3); }
 
-/* Metrics Grid */
 .so-metrics-grid-v2 {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -141,7 +137,6 @@
 
 .metric-sub { font-size: 0.62rem; color: var(--sh-text-muted); }
 
-/* Workflow Controls */
 .so-workflow-controls-v2 {
   display: flex;
   justify-content: space-between;
@@ -159,7 +154,6 @@
 .so-tab-v2.active { color: var(--sh-accent); }
 .so-tab-v2.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: var(--sh-accent); }
 
-/* Filters */
 .so-filters-v2 {
     display: flex;
     align-items: center;
@@ -193,7 +187,6 @@
 }
 .so-btn-sync:hover { border-color: var(--sh-accent); color: var(--sh-accent); background: var(--sh-accent-light); transform: translateY(-1px); }
 
-/* Table Studio */
 .so-table-container-v2 {
   background: var(--sh-surface); border-radius: var(--sh-radius); border: 1px solid var(--sh-border);
   box-shadow: var(--sh-shadow); overflow: hidden;
@@ -207,7 +200,6 @@
 .so-table-v2 tr:hover { background: #fcfdfe; cursor: pointer; }
 .so-table-v2 tr.selected { background: #f0f7fb; }
 
-/* Empty state */
 .so-empty-v2 {
   text-align: center; padding: 48px 20px; color: var(--sh-text-muted);
   display: flex; flex-direction: column; align-items: center; gap: 12px;
@@ -215,7 +207,6 @@
 }
 .so-empty-v2 svg { color: #cbd5e1; }
 
-/* Cell UI */
 .oid-text { font-family: 'Poppins', sans-serif; font-weight: 700; color: var(--sh-dark); font-size: 0.82rem; }
 .oid-time { font-size: 0.68rem; color: var(--sh-text-muted); font-weight: 600; display: block; margin-top: 2px; }
 
@@ -255,14 +246,13 @@
   white-space: nowrap; letter-spacing: 0.04em;
 }
 .status-dot-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-/* Status colors matching shipments */
+
 .status-dot-pill.new, .status-dot-pill.pending { background: #fef3c7; color: #92400e; }
 .status-dot-pill.processing { background: #dbeafe; color: #1e40af; }
 .status-dot-pill.shipped { background: #e0f2fe; color: #0369a1; }
 .status-dot-pill.delivered { background: #dcfce7; color: #166534; }
 .status-dot-pill.canceled, .status-dot-pill.cancelled { background: #fee2e2; color: #991b1b; }
 
-/* ── EXECUTION MODAL ── */
 .so-detail-modal-overlay {
   position: fixed; inset: 0; background: rgba(15, 23, 42, 0.35); backdrop-filter: blur(6px);
   z-index: 2000; display: none; align-items: center; justify-content: center;
@@ -301,7 +291,6 @@
 
 .drawer-content { padding: 16px 20px; overflow-y: auto; flex: 1; background: #fafbfc; }
 
-/* Stepper Studio */
 .so-stepper-v2 { display: flex; align-items: flex-start; margin-bottom: 32px; position: relative; padding: 0 40px; }
 .step-item-v2 { flex: 1; display: flex; align-items: center; position: relative; z-index: 2; }
 .step-content-v2 { display: flex; flex-direction: column; align-items: center; min-width: 60px; gap: 8px; }
@@ -319,7 +308,6 @@
 .step-item-v2.done .step-line { background: #10B981; }
 .step-item-v2:last-child { flex: 0; }
 
-/* Content Sections */
 .drawer-section { margin-bottom: 20px; background: #fff; padding: 16px; border-radius: var(--sh-radius); border: 1px solid var(--sh-border); box-shadow: var(--sh-shadow); }
 .section-title { font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--sh-dark); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px; letter-spacing: 0.05em; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
 
@@ -332,7 +320,6 @@
 .so-btn-message { background: #fff; border: 1px solid var(--sh-border); padding: 8px; border-radius: var(--sh-radius-sm); color: var(--sh-text-secondary); cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
 .so-btn-message:hover { border-color: var(--sh-accent); color: var(--sh-accent); background: var(--sh-accent-light); }
 
-/* Logistics Info */
 .logistics-info-v2 { display: flex; flex-direction: column; gap: 12px; }
 .log-row-v2 { display: flex; gap: 12px; align-items: flex-start; }
 .log-icon-v2 { color: var(--sh-accent); flex-shrink: 0; margin-top: 2px; }
@@ -346,7 +333,6 @@
 }
 .internal-notes-v2 textarea:focus { border-color: var(--sh-accent); box-shadow: 0 0 0 3px var(--sh-accent-light); }
 
-/* Manifest */
 .manifest-list-v2 { display: flex; flex-direction: column; gap: 12px; }
 .manifest-item-v2 { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
 .item-img-v2 { width: 40px; height: 40px; border-radius: 6px; border: 1px solid var(--sh-border); object-fit: contain; background: #fff; flex-shrink: 0; padding: 2px; }
@@ -368,8 +354,6 @@
 
 .payment-method-info { background: #f8fafc; border: 1px solid var(--sh-border); padding: 12px; border-radius: var(--sh-radius-sm); margin-top: 12px; }
 
-/* Status Execution Panel */
-/* ── Status Terminal V3 ── */
 .drawer-footer-v3 {
     padding: 16px 20px;
     background: #fff;
@@ -513,4 +497,71 @@
     0% { opacity: 1; }
     50% { opacity: 0.6; }
     100% { opacity: 1; }
+}
+
+/* Advanced Filters Panel */
+.so-advanced-filters-panel {
+    background: #fff;
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-radius);
+    padding: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+    box-shadow: var(--sh-shadow);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.adv-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.adv-filter-group label {
+    margin-left: 2px;
+}
+
+.adv-select, .adv-input {
+    padding: 8px 12px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    font-family: inherit;
+    font-size: 0.8rem;
+    background: #fff;
+    outline: none;
+    transition: 0.2s;
+}
+
+.adv-select:focus, .adv-input:focus {
+    border-color: var(--sh-accent);
+}
+
+.adv-reset-btn {
+    background: #f8fafc;
+    border: 1px solid var(--sh-border);
+    padding: 8px 16px;
+    border-radius: var(--sh-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.adv-reset-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.so-btn-sync.active {
+    background: var(--sh-accent-light);
+    border-color: var(--sh-accent);
+    color: var(--sh-accent);
 }

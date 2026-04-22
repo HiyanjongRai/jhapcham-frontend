@@ -2,16 +2,6 @@ import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import './ErrorToast.css';
 
-/**
- * ErrorToast Component
- * Displays backend errors in a beautiful popup notification
- * 
- * Usage:
- * <ErrorToast 
- *   error={{ status: 400, message: "Invalid Operation", details: "Insufficient stock" }}
- *   onClose={() => setError(null)}
- * />
- */
 const ErrorToast = ({ error, onClose, duration = 5000 }) => {
   useEffect(() => {
     if (error && duration > 0) {
@@ -27,12 +17,12 @@ const ErrorToast = ({ error, onClose, duration = 5000 }) => {
 
   // Determine error type and icon
   const getErrorType = (status) => {
-    if (status >= 500) return { type: 'server', icon: '🔥', color: '#ef4444' };
-    if (status === 404) return { type: 'notfound', icon: '🔍', color: '#f59e0b' };
-    if (status === 403) return { type: 'forbidden', icon: '🚫', color: '#ef4444' };
-    if (status === 401) return { type: 'unauthorized', icon: '🔒', color: '#f59e0b' };
-    if (status === 400) return { type: 'validation', icon: '⚠️', color: '#f59e0b' };
-    return { type: 'error', icon: '❌', color: '#ef4444' };
+    if (status >= 500) return { type: 'server', icon: '', color: '#ef4444' };
+    if (status === 404) return { type: 'notfound', icon: '', color: '#f59e0b' };
+    if (status === 403) return { type: 'forbidden', icon: '', color: '#ef4444' };
+    if (status === 401) return { type: 'unauthorized', icon: '', color: '#f59e0b' };
+    if (status === 400) return { type: 'validation', icon: '️', color: '#f59e0b' };
+    return { type: 'error', icon: '', color: '#ef4444' };
   };
 
   const errorType = getErrorType(error.status);

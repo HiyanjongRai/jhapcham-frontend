@@ -1,6 +1,4 @@
-/* ============================================
-   CART DRAWER - Modern Premium Design
-   ============================================ */
+
 
 .cart-drawer-overlay {
   position: fixed;
@@ -40,10 +38,6 @@
 .cart-drawer-content.open {
   right: 0;
 }
-
-/* ============================================
-   HEADER
-   ============================================ */
 
 .cart-drawer-header {
   padding: 28px 24px;
@@ -134,10 +128,6 @@
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
 }
 
-/* ============================================
-   BODY
-   ============================================ */
-
 .cart-drawer-body {
   flex: 1;
   overflow-y: auto;
@@ -163,7 +153,6 @@
   background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
 }
 
-/* Loading State */
 .cart-drawer-loading {
   display: flex;
   flex-direction: column;
@@ -186,10 +175,6 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
-/* ============================================
-   CART ITEMS
-   ============================================ */
 
 .cart-items-list {
   display: flex;
@@ -249,7 +234,6 @@
   transform: scaleY(1);
 }
 
-/* Item Image */
 .item-img-box {
   width: 100px;
   height: 100px;
@@ -298,7 +282,6 @@
   object-fit: contain;
 }
 
-/* Item Details */
 .item-details {
   flex: 1;
   display: flex;
@@ -355,7 +338,6 @@
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
 }
 
-/* Item Variant */
 .item-variant {
   font-size: 12px;
   color: #64748b;
@@ -386,7 +368,6 @@
   border-color: #e2e8f0;
 }
 
-/* Item Footer */
 .item-footer {
   display: flex;
   justify-content: space-between;
@@ -394,7 +375,6 @@
   margin-top: auto;
 }
 
-/* Quantity Controls */
 .qty-controls {
   display: flex;
   align-items: center;
@@ -444,17 +424,12 @@
   cursor: not-allowed;
 }
 
-/* Item Price */
 .item-price {
   font-weight: 800;
   color: #6366f1;
   font-size: 16px;
   letter-spacing: -0.02em;
 }
-
-/* ============================================
-   EMPTY STATE
-   ============================================ */
 
 .cart-empty-state {
   display: flex;
@@ -530,10 +505,6 @@
   transform: translateY(0);
 }
 
-/* ============================================
-   FOOTER
-   ============================================ */
-
 .cart-drawer-footer {
   padding: 24px;
   background: white;
@@ -589,7 +560,6 @@
   color: #667eea;
 }
 
-/* Action Buttons */
 .drawer-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -664,10 +634,6 @@
 .checkout-btn:active {
   transform: translateY(0);
 }
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
 
 @media (max-width: 480px) {
   .cart-drawer-content {

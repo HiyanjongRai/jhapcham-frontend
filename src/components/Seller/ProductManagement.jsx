@@ -291,7 +291,6 @@ export default function ProductManagement() {
         )}
       </div>
 
-      {/* Edit Product Drawer */}
       {editingProduct && (
         <EditProductDrawer
           product={editingProduct}
@@ -305,7 +304,6 @@ export default function ProductManagement() {
         />
       )}
 
-      {/* Delete Confirmation */}
       {deleteProduct && (
         <div className="sp-modal-overlay">
           <div className="sp-modal">
@@ -323,5 +321,4 @@ export default function ProductManagement() {
     </div>
   );
 }
-
 

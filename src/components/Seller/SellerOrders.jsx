@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
 import { getCurrentUserId } from "../../utils/authUtils";
@@ -18,7 +18,8 @@ import {
   Archive,
   FileText,
   AlertCircle,
-  User
+  User,
+  Filter
 } from "lucide-react";
 import { apiGetSellerOrders, apiGetOrder } from "../AddCart/cartUtils";
 
@@ -39,6 +40,12 @@ export default function SellerOrders() {
   const [msgModal, setMsgModal] = useState({ isOpen: false, recipientId: null, recipientName: '', type: 'store' });
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active"); 
+  const [otpModal, setOtpModal] = useState({ isOpen: false, orderId: null, branch: null, inputOtp: '' });
+  
+  // Advanced Filter State
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [paymentFilter, setPaymentFilter] = useState("ALL");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Toast State
   const [toast, setToast] = useState({ message: '', type: 'info', isVisible: false });
@@ -119,7 +126,7 @@ export default function SellerOrders() {
          await axios.put(url, { branch: branch }); 
          showToast("Order dispatched to branch", "success");
       }
-      else if (statusUpper === 'OUT_FOR_DELIVERY' || statusUpper === 'DELIVERED') {
+      else if (statusUpper === 'OUT_FOR_DELIVERY') {
           if (!branch) {
              showToast("Please confirm the branch for this update.", "warning");
              return;
@@ -129,12 +136,47 @@ export default function SellerOrders() {
           await axios.put(url);
           showToast(`Order status updated to ${statusUpper}`, "success");
       } 
+      else if (statusUpper === 'EXPRESS_DISPATCH') {
+          if (!branch) {
+              showToast("Please select a hub for express dispatch.", "warning");
+              return;
+          }
+          const url = `${API_BASE}/api/orders/seller/${sellerId}/express-dispatch/${orderId}`;
+          await axios.put(url, { branch: branch }); 
+          showToast("Express Dispatch: Order is now Out for Delivery!", "success");
+      }
 
       loadOrders(true); // Pass true to refresh details too
     } catch (err) {
       console.error(err.response || err);
       const msg = err.response?.data?.message || err.message || "Failed to update order";
       showToast(msg, "error");
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpModal.inputOtp || otpModal.inputOtp.trim().length !== 6) {
+        showToast("Please enter a valid 6-digit OTP", "warning");
+        return;
+    }
+    try {
+      const params = new URLSearchParams({ branch: otpModal.branch, otp: otpModal.inputOtp.trim() });
+      await axios.post(`${API_BASE}/api/orders/branch/${otpModal.orderId}/verify-otp?${params.toString()}`);
+      showToast("Order fulfilled successfully!", "success");
+      setOtpModal({ isOpen: false, orderId: null, branch: null, inputOtp: '' });
+      loadOrders(true);
+    } catch (err) {
+      showToast(err.response?.data?.message || "OTP verification failed", "error");
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      const params = new URLSearchParams({ branch: otpModal.branch });
+      await axios.post(`${API_BASE}/api/orders/branch/${otpModal.orderId}/resend-otp?${params.toString()}`);
+      showToast("OTP resent successfully!", "success");
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to resend OTP", "error");
     }
   };
 
@@ -179,6 +221,23 @@ export default function SellerOrders() {
       }
     }
 
+    // Payment Filter
+    if (paymentFilter !== "ALL") {
+      result = result.filter(o => (o.paymentMethod || "COD") === paymentFilter);
+    }
+
+    // Date Range Filter
+    if (dateRange.start) {
+      const start = new Date(dateRange.start);
+      start.setHours(0,0,0,0);
+      result = result.filter(o => new Date(o.createdAt || o.orderDate) >= start);
+    }
+    if (dateRange.end) {
+      const end = new Date(dateRange.end);
+      end.setHours(23,59,59,999);
+      result = result.filter(o => new Date(o.createdAt || o.orderDate) <= end);
+    }
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(o => {
@@ -195,7 +254,7 @@ export default function SellerOrders() {
     }
     
     return result;
-  }, [orders, statusFilter, searchQuery, activeTab]);
+  }, [orders, statusFilter, searchQuery, activeTab, paymentFilter, dateRange]);
 
   useEffect(() => {
     loadOrders();
@@ -234,8 +293,7 @@ export default function SellerOrders() {
 
   return (
     <div className={`so-container-v2 ${selectedOrderId ? 'drawer-opened' : ''}`}>
-      {/* Sidebar for context - (Assuming it exists in SellerLayout, just adjusting main area) */}
-      
+
       <main className="so-main-content">
         <header className="so-header-v2">
           <div className="so-header-left">
@@ -250,7 +308,6 @@ export default function SellerOrders() {
           </div>
         </header>
 
-        {/* Executive Metrics */}
         <div className="so-metrics-grid-v2">
           {[
             { key: 'total', label: 'Gross Volume', value: stats.total, sub: 'Total Orders', icon: <Package size={18} strokeWidth={2.5} /> },
@@ -277,7 +334,6 @@ export default function SellerOrders() {
           ))}
         </div>
 
-        {/* Workflow Controls */}
         <div className="so-workflow-controls-v2">
           <div className="so-tabs-v2">
             <button className={`so-tab-v2 gt-note ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>Active Workbench</button>
@@ -302,11 +358,40 @@ export default function SellerOrders() {
               <button className={`filter-pill-v2 ${statusFilter === 'DELIVERED' ? 'active' : ''}`} onClick={() => setStatusFilter('DELIVERED')}>Success</button>
               <button className={`filter-pill-v2 ${statusFilter === 'CANCELED' ? 'active' : ''}`} onClick={() => setStatusFilter('CANCELED')}>Voided</button>
             </div>
+            <button 
+              className={`so-btn-sync ${showAdvancedFilters ? 'active' : ''}`} 
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              title="Advanced Filters"
+            >
+              <Filter size={18} strokeWidth={2.5} />
+            </button>
             <button className="so-btn-sync" onClick={loadOrders}><RefreshCcw size={18} strokeWidth={2.5} /> Sync Pipeline</button>
           </div>
         </div>
 
-        {/* Data Table */}
+        {showAdvancedFilters && (
+          <div className="so-advanced-filters-panel fade-in">
+            <div className="adv-filter-group">
+              <label className="gt-note">Payment Method</label>
+              <select className="adv-select" value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}>
+                 <option value="ALL">All Payments</option>
+                 <option value="COD">Cash on Delivery</option>
+                 <option value="ESEWA">eSewa Online</option>
+                 
+              </select>
+            </div>
+            <div className="adv-filter-group">
+              <label className="gt-note">Date From</label>
+              <input type="date" className="adv-input" value={dateRange.start} onChange={(e) => setDateRange({...dateRange, start: e.target.value})} />
+            </div>
+            <div className="adv-filter-group">
+              <label className="gt-note">Date To</label>
+              <input type="date" className="adv-input" value={dateRange.end} onChange={(e) => setDateRange({...dateRange, end: e.target.value})} />
+            </div>
+            <button className="adv-reset-btn" onClick={() => { setPaymentFilter("ALL"); setDateRange({start:'', end:''}); }}>Reset</button>
+          </div>
+        )}
+
         <div className="so-table-container-v2">
           <table className="so-table-v2">
             <thead>
@@ -315,8 +400,9 @@ export default function SellerOrders() {
                 <th className="gt-note">RECIPIENT</th>
                 <th className="gt-note">PRODUCT</th>
                 <th className="gt-note">PAYMENT</th>
-                <th className="gt-note">TOTAL & DISCOUNT</th>
-                <th className="gt-note">SETTLEMENT</th>
+                <th className="gt-note">GROSS SALES</th>
+                <th className="gt-note">PLATFORM FEE</th>
+                <th className="gt-note">NET INCOME</th>
                 <th className="gt-note">STATUS</th>
               </tr>
             </thead>
@@ -354,10 +440,10 @@ export default function SellerOrders() {
                     <td>
                       <div className="product-cell-v2">
                         <img 
-                          src={buildImageUrl(order.productImage || order.items?.[0]?.product?.imagePath || order.items?.[0]?.imagePath)} 
-                          alt="" 
-                          className="prod-thumb-v2"
-                          onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/40?text=P'; }}
+                           src={buildImageUrl(order.productImage || order.items?.[0]?.product?.imagePath || order.items?.[0]?.imagePath)} 
+                           alt="" 
+                           className="prod-thumb-v2"
+                           onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/40?text=P'; }}
                         />
                         <div className="prod-info-v2">
                            <span className="prod-name-v2 gt-caption">{order.productNames?.split(',')[0]}</span>
@@ -369,7 +455,7 @@ export default function SellerOrders() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span className={`payment-badge-v2 ${(order.paymentMethod || 'COD').toLowerCase()}`}>
                           {order.paymentMethod === 'ESEWA' ? 'eSewa (Online)' : 
-                           order.paymentMethod === 'KHALTI' ? 'Khalti (Online)' : 
+                           
                            'Cash on Delivery'}
                         </span>
                         {order.paymentReference && (
@@ -386,9 +472,15 @@ export default function SellerOrders() {
                       </div>
                     </td>
                     <td>
+                       <div className="settlement-cell-v2">
+                          <span className="gt-caption" style={{ color: '#e11d48' }}>- NPR {(order.marketplaceCommission || 0).toLocaleString()}</span>
+                          <span className="gt-note">Platform Fee</span>
+                       </div>
+                    </td>
+                    <td>
                       <div className="settlement-cell-v2">
-                         <span className="net-amount-v2 gt-caption">NPR {(order.sellerNetAmount || 0).toLocaleString()}</span>
-                         <span className="settlement-sub-v2 gt-note">Net Income</span>
+                         <span className="net-amount-v2 gt-caption" style={{ color: '#10b981' }}>NPR {(order.sellerNetAmount || 0).toLocaleString()}</span>
+                         <span className="settlement-sub-v2 gt-note">To be Paid</span>
                       </div>
                     </td>
                     <td>
@@ -411,7 +503,6 @@ export default function SellerOrders() {
         </div>
       </main>
 
-      {/* Detail Modal */}
       <div className={`so-detail-modal-overlay ${selectedOrderId ? 'open' : ''}`} onClick={() => setSelectedOrderId(null)}>
         {currentOrder ? (
           <div className="so-detail-modal" onClick={e => e.stopPropagation()}>
@@ -429,7 +520,7 @@ export default function SellerOrders() {
             </header>
 
             <div className="drawer-content">
-              {/* Stepper */}
+              
               <div className="so-stepper-v2">
                 {[
                   { label: "Received", status: ["NEW", "PENDING"] },
@@ -458,7 +549,6 @@ export default function SellerOrders() {
                 })}
               </div>
 
-              {/* Customer Info */}
               <section className="drawer-section">
                 <h3 className="section-title gt-caption"><User size={14} /> CUSTOMER</h3>
                 <div className="customer-info-box">
@@ -480,7 +570,6 @@ export default function SellerOrders() {
                 </div>
               </section>
 
-              {/* Logistics */}
               <section className="drawer-section">
                 <h3 className="section-title"><MapPin size={14} /> LOGISTICS TERMINAL</h3>
                 <div className="logistics-info-v2">
@@ -503,7 +592,6 @@ export default function SellerOrders() {
                 </div>
               </section>
 
-              {/* Manifest */}
               <section className="drawer-section">
                 <h3 className="section-title"><Package size={14} /> UNIT MANIFEST</h3>
                 <div className="manifest-list-v2">
@@ -551,11 +639,11 @@ export default function SellerOrders() {
                         <span>NPR {currentDetail?.grandTotal?.toLocaleString()}</span>
                       </div>
                       
-                      <div className="payment-method-info" style={{ marginTop: '8px', padding: '10px', background: currentOrder?.paymentMethod === 'ESEWA' || currentOrder?.paymentMethod === 'KHALTI' ? '#f0fdf4' : '#f8fafc', borderRadius: '6px', border: `1px solid ${currentOrder?.paymentMethod === 'ESEWA' || currentOrder?.paymentMethod === 'KHALTI' ? '#bbf7d0' : '#e2e8f0'}`, fontSize: '0.8rem', fontWeight: '600', color: currentOrder?.paymentMethod === 'ESEWA' || currentOrder?.paymentMethod === 'KHALTI' ? '#166534' : '#475569', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div className="payment-method-info" style={{ marginTop: '8px', padding: '10px', background: currentOrder?.paymentMethod === 'ESEWA' ? '#f0fdf4' : '#f8fafc', borderRadius: '6px', border: `1px solid ${currentOrder?.paymentMethod === 'ESEWA' ? '#bbf7d0' : '#e2e8f0'}`, fontSize: '0.8rem', fontWeight: '600', color: currentOrder?.paymentMethod === 'ESEWA' ? '#166534' : '#475569', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {currentOrder?.paymentMethod === 'ESEWA' ? '✔️ Paid by eSewa' : 
-                           currentOrder?.paymentMethod === 'KHALTI' ? '✔️ Paid by Khalti' : 
-                           '📦 Cash on Delivery'}
+                          {currentOrder?.paymentMethod === 'ESEWA' ? '️ Paid by eSewa' : 
+                           
+                           ' Cash on Delivery'}
                         </div>
                         {currentOrder?.paymentReference && (
                           <div style={{ fontSize: '0.7rem', color: '#64748b', marginLeft: '24px' }}>
@@ -616,9 +704,20 @@ export default function SellerOrders() {
                           </button>
                         )}
                         {currentOrder.status === "PROCESSING" && (
-                          <button className="terminal-btn-v3 energy-glow" disabled={!orderBranches[selectedOrderId]} onClick={() => updateStatus(selectedOrderId, 'SHIPPED')}>
-                             <Truck size={14} /> Dispatch to Hub
-                          </button>
+                          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                            <button className="terminal-btn-v3 energy-glow" style={{ flex: 1 }} disabled={!orderBranches[selectedOrderId]} onClick={() => updateStatus(selectedOrderId, 'SHIPPED')}>
+                               <Truck size={14} /> Standard Dispatch
+                            </button>
+                            <button 
+                                className="terminal-btn-v3 energy-glow" 
+                                style={{ flex: 1, background: 'linear-gradient(135deg, #8b5cf6, #d946ef)', color: '#fff' }} 
+                                disabled={!orderBranches[selectedOrderId]} 
+                                onClick={() => updateStatus(selectedOrderId, 'EXPRESS_DISPATCH')}
+                                title="Express: Skip branch transit & go straight to Delivery"
+                            >
+                               <Truck size={14} /> Express Dispatch
+                            </button>
+                          </div>
                         )}
                         {["SHIPPED", "SHIPPED_TO_BRANCH"].includes(currentOrder.status) && (
                           <button className="terminal-btn-v3 energy-glow" onClick={() => updateStatus(selectedOrderId, 'OUT_FOR_DELIVERY')}>
@@ -626,8 +725,14 @@ export default function SellerOrders() {
                           </button>
                         )}
                         {currentOrder.status === "OUT_FOR_DELIVERY" && (
-                          <button className="terminal-btn-v3 success-glow" onClick={() => updateStatus(selectedOrderId, 'DELIVERED')}>
-                             <CheckCircle size={14} /> Mark Fulfilled
+                          <button className="terminal-btn-v3 success-glow" onClick={() => {
+                              if (!orderBranches[selectedOrderId]) {
+                                showToast("Please confirm the branch for this update.", "warning");
+                                return;
+                              }
+                              setOtpModal({ isOpen: true, orderId: selectedOrderId, branch: orderBranches[selectedOrderId], inputOtp: '' });
+                          }}>
+                             <CheckCircle size={14} /> Verify Delivery OTP
                           </button>
                         )}
                         
@@ -663,6 +768,49 @@ export default function SellerOrders() {
           type={toast.type}
           onClose={() => setToast({ ...toast, isVisible: false })}
         />
+      )}
+
+      {/* OTP Modal */}
+      {otpModal.isOpen && (
+        <div className="so-detail-modal-overlay open" style={{ zIndex: 9999 }}>
+          <div className="so-detail-modal" style={{ width: '400px', height: 'auto', padding: '24px', position: 'relative', top: '50%', transform: 'translateY(-50%)', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+             <h3 className="section-title" style={{margin: 0, fontSize: '1.2rem'}}>Confirm Delivery Verification</h3>
+             <p className="gt-note" style={{margin: 0}}>Please enter the 6-digit OTP sent to the customer's email to mark this order as fulfilled.</p>
+             
+             <input 
+               type="text" 
+               placeholder="Enter 6-digit OTP" 
+               maxLength="6"
+               style={{ padding: '12px', fontSize: '1.2rem', textAlign: 'center', letterSpacing: '4px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+               value={otpModal.inputOtp}
+               onChange={(e) => setOtpModal({...otpModal, inputOtp: e.target.value})}
+               autoFocus
+             />
+
+             <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                <button 
+                   className="terminal-btn-v3 success-glow" 
+                   style={{ flex: 1, padding: '12px', justifyContent: 'center' }}
+                   onClick={handleVerifyOtp}
+                >
+                   Verify & Complete
+                </button>
+                <button 
+                   className="terminal-btn-v3 ghost-red-v3" 
+                   style={{ padding: '12px' }}
+                   onClick={() => setOtpModal({ isOpen: false, orderId: null, branch: null, inputOtp: '' })}
+                >
+                   Cancel
+                </button>
+             </div>
+
+             <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                <button style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.9rem' }} onClick={handleResendOtp}>
+                   Resend OTP via Email
+                </button>
+             </div>
+          </div>
+        </div>
       )}
 
       <MessageModal

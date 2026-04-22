@@ -63,7 +63,7 @@ export default function SellerRegister() {
     <div className="auth-page-wrapper">
       <div className="auth-centered-content">
         <div className="auth-main-card">
-          {/* Left Section - Visual (Merchant specific) */}
+          
           <div className="auth-visual-section">
             <div className="auth-visual-content">
               <h1 className="auth-visual-title">
@@ -84,7 +84,6 @@ export default function SellerRegister() {
             </div>
           </div>
 
-          {/* Right Section - Form */}
           <div className="auth-form-section">
             <div className="auth-form-container">
               <div className="auth-logo-header" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>

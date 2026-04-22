@@ -1,0 +1,54 @@
+.disputes-container {
+  padding: 20px 0;
+}
+
+.disputes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.disputes-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.dispute-card {
+  border: 1px solid #ddd;
+  border-left: 4px solid #ff6b6b;
+  transition: all 0.3s ease;
+}
+
+.dispute-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.dispute-header h5 {
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.dispute-meta {
+  background-color: #f8f9fa;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.dispute-evidence {
+  background-color: #f0f7ff;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.dispute-resolution {
+  background-color: #f0fff4;
+  border-left: 3px solid #28a745;
+}
+
+.dispute-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}

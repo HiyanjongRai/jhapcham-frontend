@@ -48,13 +48,11 @@
   border-bottom: 1px solid #eee;
 }
 
-/* Columns widths */
 .wl-col-product { width: 40%; }
 .wl-col-price { width: 15%; }
 .wl-col-stock { width: 15%; }
 .wl-col-actions { width: 30%; text-align: right; }
 
-/* Product Cell */
 .wl-product-cell {
   display: flex;
   align-items: center;
@@ -113,7 +111,6 @@
   color: #0088cc;
 }
 
-/* Price & Stock */
 .wl-price-text {
   font-size: 1rem;
   font-weight: 600;
@@ -128,7 +125,6 @@
 .wl-stock-badge.in { color: #666; }
 .wl-stock-badge.out { color: #e53935; }
 
-/* Action Buttons */
 .wl-action-buttons {
   display: flex;
   gap: 12px;
@@ -175,7 +171,6 @@
   transform: none;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 1000px) {
   .wl-col-product { width: 50%; }
   .wl-col-price, .wl-col-stock { display: none; }

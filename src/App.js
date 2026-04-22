@@ -5,13 +5,33 @@ import Home from "./components/Home/Home";
 import CartPage from "./components/AddCart/CartPage";
 import LoginPage from "./components/Login/LoginPage";
 import SignupPage from "./components/Register/SignupPage";
+import ForgotPasswordPage from "./components/Login/ForgotPasswordPage";
 import ProductGrid from "./components/ProductGrind/ProductGrind";
-import CustomerDashboard from "./components/Customer/CustomerDashboard";
+import CustomerLayout, { 
+  CustomerOverview, CustomerOrders, CustomerWishlist, 
+  CustomerReviews, CustomerSettings, CustomerAddresses 
+} from "./components/Customer/CustomerDashboard";
+import CustomerDashboardHome from "./components/Customer/CustomerDashboardHome";
+import Refunds from "./components/Refunds/Refunds.jsx";
+import Disputes from "./components/Disputes/Disputes.jsx";
+import Loyalty from "./components/Loyalty/Loyalty.jsx";
+import SmsPreferences from "./components/SmsPreferences/SmsPreferences.jsx";
 import SellerDashboard from "./components/Seller/SellerDashboard";
 import ProductDetailPage from "./components/productCard/ProductDetailPage";
 import SellerRegister from "./components/Seller/SellerRegister";
 import SellerApplication from "./components/Seller/SellerApplication";
 import AdminDashboard from "./components/Admin/AdminDashboard";
+import AdminLayout from "./components/Admin/AdminLayout";
+import AdminOrders from "./components/Admin/AdminOrders";
+import AdminCatalog from "./components/Admin/AdminCatalog";
+import AdminMerchants from "./components/Admin/AdminMerchants";
+import AdminCustomers from "./components/Admin/AdminCustomers";
+import AdminApplications from "./components/Admin/AdminApplications";
+import AdminDisputes from "./components/Admin/AdminDisputes";
+import AdminModeration from "./components/Admin/AdminModeration";
+import AdminCommissions from "./components/Admin/AdminCommissions";
+import AdminCampaigns from "./components/Admin/AdminCampaigns";
+import AdminSettings from "./components/Admin/AdminSettings";
 import MerchantDetails from "./components/Admin/MerchantDetails";
 import CustomerDetails from "./components/Admin/CustomerDetails";
 import OrderDetails from "./components/Order/OrderDetails";
@@ -38,7 +58,12 @@ import SellerProfilePage from "./components/Seller/SellerProfilePage.jsx";
 import SellerLayout from "./components/Seller/SellerLayout";
 import PromoCodeManager from './components/Seller/PromoCodes/PromoCodeManager'; // New
 import CartDrawer from "./components/CartDrawer/CartDrawer";
-
+import ContactUs from "./components/Common/ContactUs.jsx";
+import SellerCommissions from "./components/Seller/SellerCommissions.jsx";
+import SellerReports from "./components/Seller/SellerReports.jsx";
+import SellerSettings from "./components/Seller/SellerSettings.jsx";
+import SellerCampaigns from "./components/Seller/SellerCampaigns.jsx";
+import InventoryAlerts from "./components/InventoryAlerts/InventoryAlerts.jsx";
 
 // Error Pages
 import { 
@@ -58,7 +83,7 @@ const ProfileRedirect = () => {
   if (!role) return <Navigate to="/login" replace />;
   const path = role === "SELLER" ? "/seller/dashboard" : 
                role === "ADMIN" ? "/admin/dashboard" : 
-               "/customer/dashboard";
+               "/customer/overview";
   return <Navigate to={path} replace />;
 };
 
@@ -80,22 +105,40 @@ function App() {
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* Cart */}
         <Route path="/cart" element={<CartPage />} />
 
         {/* Customer */}
-        <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+        <Route path="/customer" element={<CustomerLayout />}>
+          <Route path="dashboard" element={<Navigate to="/customer/overview" replace />} />
+          <Route path="overview" element={<CustomerDashboardHome />} />
+          <Route path="orders" element={<CustomerOrders />} />
+          <Route path="wishlist" element={<CustomerWishlist />} />
+          <Route path="addresses" element={<CustomerAddresses />} />
+          <Route path="reviews" element={<CustomerReviews />} />
+          <Route path="settings" element={<CustomerSettings />} />
+          <Route path="refunds" element={<Refunds />} />
+          <Route path="disputes" element={<Disputes />} />
+          <Route path="loyalty" element={<Loyalty />} />
+          <Route path="sms" element={<SmsPreferences />} />
+        </Route>
 
         {/* Seller Area (Grouped under Layout) */}
         <Route path="/seller" element={<SellerLayout />}>
           <Route path="dashboard" element={<SellerDashboard />} />
+          <Route path="commissions" element={<SellerCommissions />} />
           <Route path="orders" element={<SellerOrders />} />
           <Route path="add-product" element={<AddProduct />} />
           <Route path="products" element={<ProductManagement />} />
           <Route path="promos" element={<PromoCodeManager />} /> {/* New Route */}
           <Route path="shipment" element={<SellerShipments />} />
-          <Route path="settings" element={<UpdateAccount />} />
+          <Route path="settings" element={<SellerSettings />} />
+          <Route path="account" element={<UpdateAccount />} />
+          <Route path="campaigns" element={<SellerCampaigns />} />
+          <Route path="inventory-alerts" element={<InventoryAlerts />} />
+          <Route path="reports" element={<SellerReports />} />
           <Route path="order/:id" element={<OrderDetails />} />
           <Route path="customer/:id" element={<SellerCustomerDetails />} />
         </Route>
@@ -117,11 +160,23 @@ function App() {
         {/* Payment Callbacks */}
         <Route path="/payment/esewa-callback" element={<EsewaCallbackPage />} />
 
-        {/* Admin */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/merchant/:id" element={<MerchantDetails />} />
-        <Route path="/admin/customer/:id" element={<CustomerDetails />} />
-        <Route path="/admin/order/:id" element={<OrderDetails />} />
+        {/* Admin (Grouped under Layout) */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="catalog" element={<AdminCatalog />} />
+          <Route path="merchants" element={<AdminMerchants />} />
+          <Route path="users" element={<AdminCustomers />} />
+          <Route path="applications" element={<AdminApplications />} />
+          <Route path="disputes" element={<AdminDisputes />} />
+          <Route path="moderation" element={<AdminModeration />} />
+          <Route path="commissions" element={<AdminCommissions />} />
+          <Route path="campaigns" element={<AdminCampaigns />} />
+          <Route path="settings" element={<AdminSettings />} />
+          <Route path="merchant/:id" element={<MerchantDetails />} />
+          <Route path="customer/:id" element={<CustomerDetails />} />
+          <Route path="order/:id" element={<OrderDetails />} />
+        </Route>
 
         {/* Account */}
         <Route path="/update-account" element={<UpdateAccount />} />
@@ -141,6 +196,7 @@ function App() {
         <Route path="/new-arrivals" element={<NewArrivalsPage />} />
         <Route path="/brands" element={<BrandsPage />} />
         <Route path="/campaigns" element={<CampaignsPage />} />
+        <Route path="/contact" element={<ContactUs />} />
 
         {/* Error Pages */}
         <Route path="/403" element={<ForbiddenPage />} />

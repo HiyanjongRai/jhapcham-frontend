@@ -215,7 +215,6 @@ export default function ReviewForm() {
           )}
         </div>
 
-        {/* Star Rating */}
         <div className="review-form-group">
           <label className="review-form-label required">Your Rating</label>
           <div className="review-star-rating">
@@ -241,7 +240,6 @@ export default function ReviewForm() {
           </div>
         </div>
 
-        {/* Comment */}
         <div className="review-form-group">
           <label className="review-form-label required">Your Review</label>
           <textarea
@@ -256,11 +254,9 @@ export default function ReviewForm() {
           </div>
         </div>
 
-        {/* Image Upload */}
         <div className="review-form-group">
           <label className="review-form-label">Add Photo (Optional)</label>
-          
-          {/* Existing Image (Edit Mode) */}
+
           {existingImage && !image && (
              <div className="review-selected-files" style={{ marginBottom: '1rem' }}>
                   <div className="review-file-tag" style={{ background: '#f0f0f0' }}>
@@ -306,7 +302,6 @@ export default function ReviewForm() {
           </div>
         </div>
 
-        {/* Submit Button */}
         <button
           className="review-submit-btn"
           onClick={submitReview}
@@ -315,7 +310,6 @@ export default function ReviewForm() {
           {submitting ? "Submitting..." : "Submit Review"}
         </button>
 
-        {/* Message */}
         {message && (
           <div className={`review-message ${messageType}`}>
             {messageType === "success" && <CheckCircle size={18} style={{ display: "inline", marginRight: "0.5rem" }} />}

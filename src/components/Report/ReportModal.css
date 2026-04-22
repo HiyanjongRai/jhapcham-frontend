@@ -1,4 +1,4 @@
-/* ReportModal.css */
+
 
 .report-modal-overlay {
   position: fixed;
@@ -43,7 +43,7 @@
   justify-content: space-between;
   padding: 1.75rem 2rem;
   border-bottom: 1px solid #f1f5f9;
-  background: #fef2f2; /* Light red background for warning context */
+  background: #fef2f2; 
   color: #991b1b;
 }
 

@@ -49,32 +49,28 @@ const BackendDownPage = () => {
   return (
     <div className="error-page">
       <div className="error-container">
-        {/* Animated Background Elements */}
+        
         <div className="error-bg-decoration">
           <div className="error-circle error-circle-1"></div>
           <div className="error-circle error-circle-2"></div>
           <div className="error-circle error-circle-3"></div>
         </div>
 
-        {/* Error Content */}
         <div className="error-content">
-          {/* Error Icon */}
+          
           <div className="error-icon backend-server-icon">
             <Server size={120} strokeWidth={1.5} />
             <div className="server-status-indicator offline"></div>
           </div>
 
-          {/* Error Title */}
           <h2 className="error-title">
             Backend Server Offline
           </h2>
 
-          {/* Error Message */}
           <p className="error-message">
             Unable to connect to the backend server. The API server might be down or not running.
           </p>
 
-          {/* Server Details */}
           <div className="backend-details">
             <div className="backend-detail-item">
               <Terminal size={20} />
@@ -94,7 +90,6 @@ const BackendDownPage = () => {
             )}
           </div>
 
-          {/* Troubleshooting Steps */}
           <div className="troubleshooting-box">
             <h3 className="troubleshooting-title">
               <AlertTriangle size={20} />
@@ -109,7 +104,6 @@ const BackendDownPage = () => {
             </ol>
           </div>
 
-          {/* Action Buttons */}
           <div className="error-actions">
             <button 
               className="error-btn error-btn-primary" 
@@ -131,7 +125,6 @@ const BackendDownPage = () => {
             </button>
           </div>
 
-          {/* Developer Info */}
           <div className="developer-info">
             <p className="developer-info-title">For Developers:</p>
             <div className="developer-commands">
@@ -147,7 +140,6 @@ const BackendDownPage = () => {
           </div>
         </div>
 
-        {/* Decorative Elements */}
         <div className="error-decorative-dots">
           {[...Array(20)].map((_, i) => (
             <div key={i} className="error-dot" style={{

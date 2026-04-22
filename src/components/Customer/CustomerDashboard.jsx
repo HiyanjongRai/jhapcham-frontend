@@ -4,6 +4,7 @@ import { API_BASE } from "../config/config";
 import { getCurrentUserId, apiGetOrdersForUser, apiCustomerCancelOrder, apiAddToCart, addToGuestCart } from "../AddCart/cartUtils";
 import { apiGetWishlist, apiRemoveFromWishlist } from "../WishlistPage/wishlistUtils";
 import api from "../../api/axios";
+import loyaltyApi from "../../api/loyaltyApi";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Toast from "../Toast/Toast.jsx";
 import {
@@ -21,7 +22,15 @@ import {
   CreditCard,
   Truck,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  Search,
+  Calendar,
+  Filter,
+  BarChart3,
+  Download,
+  RotateCw,
+  Bell,
+  FileText
 } from "lucide-react";
 import UpdateAccount from "../Profile/UpdateAccount.jsx";
 import ConfirmModal from "../Common/ConfirmModal.jsx";
@@ -29,14 +38,115 @@ import ReportModal from "../Report/ReportModal.jsx";
 import { apiGetAddresses, apiAddAddress, apiUpdateAddress, apiDeleteAddress } from "./addressUtils";
 import CustomerSidebar from "./CustomerSidebar.jsx";
 import DashboardNavbar from "../Admin/DashboardNavbar.jsx";
+import Loyalty from "../Loyalty/Loyalty.jsx";
+import SmsPreferences from "../SmsPreferences/SmsPreferences.jsx";
+import Refunds from "../Refunds/Refunds.jsx";
+import Disputes from "../Disputes/Disputes.jsx";
+import InvoiceActions from "../Invoice/InvoiceActions.jsx";
+import AnalyticsDashboard from "../Analytics/AnalyticsDashboard.jsx";
+import PaymentMethods from "../PaymentMethods/PaymentMethods.jsx";
+import Subscriptions from "../Subscriptions/Subscriptions.jsx";
+import { bulkAddToCart, bulkRemoveFromWishlist, bulkCancelOrders, bulkDownloadInvoices } from "../../utils/bulkOperationsUtils.js";
+import { exportOrderHistoryCSV, exportOrderHistoryPDF, exportPersonalData } from "../../utils/exportDataUtils.js";
+import { getNotificationPreferences, updateNotificationPreferences } from "../../api/notificationPreferencesApi.js";
 
-export default function CustomerDashboard() {
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
+import { Outlet, useOutletContext, useLocation } from "react-router-dom";
+
+export function CustomerOverview() {
+  const ctx = useOutletContext(); return <OverviewTab {...ctx} setActiveTab={(path) => ctx.navigate(`/customer/${path}`)} />;
+}
+export function CustomerOrders() {
+  const ctx = useOutletContext();
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [paymentFilter, setPaymentFilter] = useState("ALL");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedOrders, setSelectedOrders] = useState([]);
+  const itemsPerPage = 5;
+  return <OrdersTab {...ctx} statusFilter={statusFilter} setStatusFilter={setStatusFilter} searchQuery={searchQuery} setSearchQuery={setSearchQuery} dateRange={dateRange} setDateRange={setDateRange} paymentFilter={paymentFilter} setPaymentFilter={setPaymentFilter} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} setActiveTab={(path) => ctx.navigate(`/customer/${path}`)} currentPage={currentPage} setCurrentPage={setCurrentPage} selectedOrders={selectedOrders} setSelectedOrders={setSelectedOrders} itemsPerPage={itemsPerPage} />;
+}
+export function CustomerWishlist() {
+  const ctx = useOutletContext(); return <WishlistTab {...ctx} />;
+}
+export function CustomerReviews() {
+  const ctx = useOutletContext(); return <ReviewsTab {...ctx} />;
+}
+export function CustomerSettings() {
+  const ctx = useOutletContext(); return <AccountSettingsTab {...ctx} />;
+}
+export function CustomerAddresses() {
+  const ctx = useOutletContext(); 
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false });
+  return <AddressesTab {...ctx} setConfirmConfig={setConfirmConfig} userId={ctx.user?.id} />;
+}
+export function CustomerAnalytics() {
+  const ctx = useOutletContext();
+  const userId = getCurrentUserId();
+  return <AnalyticsTab userId={userId} setToast={ctx.setToast} />;
+}
+export function CustomerPaymentMethods() {
+  const ctx = useOutletContext();
+  const userId = getCurrentUserId();
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+  return (
+    <div className="fade-in">
+      <div className="cd-header" style={{ marginBottom: '20px' }}>
+        <h2 className="cd-welcome gt-h3">Payment Methods</h2>
+        <p className="cd-date gt-note">Manage your saved payment methods</p>
+      </div>
+      <PaymentMethods userId={userId} onSuccess={(msg) => setToast({ show: true, message: msg, type: "success" })} />
+      {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
+    </div>
+  );
+}
+export function CustomerSubscriptions() {
+  const ctx = useOutletContext();
+  const userId = getCurrentUserId();
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+  return (
+    <div className="fade-in">
+      <div className="cd-header" style={{ marginBottom: '20px' }}>
+        <h2 className="cd-welcome gt-h3">Auto-Reorder Subscriptions</h2>
+        <p className="cd-date gt-note">Set up recurring deliveries of your favorite products</p>
+      </div>
+      <Subscriptions userId={userId} onSuccess={(msg) => setToast({ show: true, message: msg, type: "success" })} />
+      {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
+    </div>
+  );
+}
+export function CustomerNotifications() {
+  const ctx = useOutletContext();
+  const userId = getCurrentUserId();
+  return <NotificationPreferencesTab userId={userId} />;
+}
+export function CustomerDataExport() {
+  const ctx = useOutletContext();
+  const userId = getCurrentUserId();
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+  return (
+    <div className="fade-in">
+      <div className="cd-header" style={{ marginBottom: '20px' }}>
+        <h2 className="cd-welcome gt-h3">Data & Privacy</h2>
+        <p className="cd-date gt-note">Export your data or manage your account</p>
+      </div>
+      <DataExportTab userId={userId} onSuccess={(msg) => setToast({ show: true, message: msg, type: "success" })} />
+      {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
+    </div>
+  );
+}
+
+export default function CustomerLayout() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeTab = location.pathname.split('/').pop();
+  const setActiveTab = (tab) => navigate(`/customer/${tab}`);
   const [userProfile, setUserProfile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [addresses, setAddresses] = useState([]);
+  const [loyalty, setLoyalty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: "", type: "info" });
   const [confirmConfig, setConfirmConfig] = useState({
@@ -48,7 +158,6 @@ export default function CustomerDashboard() {
   });
 
   const userId = getCurrentUserId();
-  const navigate = useNavigate();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -87,6 +196,14 @@ export default function CustomerDashboard() {
     } catch (err) {
         console.error("Addresses API failed:", err);
         setAddresses([]);
+    }
+
+    try {
+        const loyData = await loyaltyApi.getMyPoints();
+        setLoyalty(loyData);
+    } catch (err) {
+        console.error("Loyalty API failed:", err);
+        setLoyalty(null);
     }
 
     setLoading(false);
@@ -174,18 +291,7 @@ export default function CustomerDashboard() {
     </div>
   );
 
-  const renderContent = () => {
-    const commonProps = { user: userProfile, orders, wishlist, addresses, onCancelOrder: handleCancelOrder, navigate, onRemove: handleRemoveWishlist, setActiveTab, onLogout: handleLogout, onAddToCart: handleAddToCart };
-    switch (activeTab) {
-      case "overview": return <OverviewTab {...commonProps} />;
-      case "orders": return <OrdersTab {...commonProps} />;
-      case "wishlist": return <WishlistTab {...commonProps} />;
-      case "addresses": return <AddressesTab userId={userId} addresses={addresses} setAddresses={setAddresses} setConfirmConfig={setConfirmConfig} />;
-      case "reviews": return <ReviewsTab {...commonProps} />;
-      case "settings": return <AccountSettingsTab {...commonProps} setUserProfile={setUserProfile} />;
-      default: return <OverviewTab {...commonProps} />;
-    }
-  };
+  const commonProps = { user: userProfile, orders, wishlist, addresses, loyalty, onCancelOrder: handleCancelOrder, navigate, onRemove: handleRemoveWishlist, setActiveTab, onLogout: handleLogout, onAddToCart: handleAddToCart, setUserProfile };
 
   return (
     <div className="cd-layout">
@@ -196,7 +302,7 @@ export default function CustomerDashboard() {
           onClose={() => setToast({ ...toast, show: false })}
         />
       )}
-      {/* Sidebar — Professional Pro Style */}
+      
       <CustomerSidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -204,7 +310,6 @@ export default function CustomerDashboard() {
         userProfile={userProfile}
       />
 
-      {/* Main */}
       <main className="cd-main">
         <DashboardNavbar 
           title="My Account" 
@@ -213,7 +318,7 @@ export default function CustomerDashboard() {
           customUserName={userProfile?.fullName}
         />
         <div className="cd-main-inner">
-          {renderContent()}
+          <Outlet context={commonProps} />
         </div>
       </main>
 
@@ -229,20 +334,19 @@ export default function CustomerDashboard() {
   );
 }
 
-/* Tab Components */
-
-const OverviewTab = ({ user, orders, wishlist, addresses, setActiveTab, onAddToCart, navigate }) => {
+const OverviewTab = ({ user, orders, wishlist, addresses, loyalty, setActiveTab, onAddToCart, navigate }) => {
   const totalSpent = orders.reduce((sum, o) => sum + (Number(o.grandTotal || o.totalAmount || o.total) || 0), 0);
   
-  // Loyalty Logic
-  const loyaltyPoints = Math.floor(totalSpent / 100);
-  const nextTarget = totalSpent < 10000 ? 10000 : (totalSpent < 50000 ? 50000 : 100000);
-  const tier = totalSpent < 10000 ? 'SILVER' : (totalSpent < 50000 ? 'GOLD' : 'PLATINUM');
-  const progress = Math.min((totalSpent / nextTarget) * 100, 100);
+  // Real Loyalty Logic from backend
+  const loyaltyPoints = loyalty?.totalPoints || 0;
+  const tier = loyalty?.tier || 'BRONZE';
+  const pointsToNext = loyalty?.pointsToNextTier || 500;
+  const nextTarget = loyaltyPoints + pointsToNext;
+  const progress = nextTarget === loyaltyPoints ? 100 : Math.min((loyaltyPoints / nextTarget) * 100, 100);
 
   return (
     <div className="fade-in">
-      {/* Premium Executive Header */}
+      
       <div className="cd-overview-header-v2 lux-fade-in">
         <div className="cd-loyalty-card lux-glass-card">
            <div className="cd-lc-glow" />
@@ -263,7 +367,7 @@ const OverviewTab = ({ user, orders, wishlist, addresses, setActiveTab, onAddToC
               </div>
               <div className="cd-lc-footer">
                  <div className="cd-lc-progress-info">
-                    <span>Next Tier Reward: Rs. {nextTarget.toLocaleString()}</span>
+                    <span>Target: {nextTarget.toLocaleString()} PTS</span>
                     <span>{Math.round(progress)}%</span>
                  </div>
                  <div className="cd-lc-progress-bar">
@@ -291,35 +395,33 @@ const OverviewTab = ({ user, orders, wishlist, addresses, setActiveTab, onAddToC
         </div>
       </div>
 
-      {/* Modern Stat Cards */}
       <div className="cd-stats-row">
         <StatCard 
           icon={<ShoppingBag size={24} />} 
           value={orders.length} 
           label="Orders" 
-          color="#000000"
+          color="#00b4d8"
         />
         <StatCard 
           icon={<Heart size={24} />} 
           value={wishlist.length} 
           label="Wishlist" 
-          color="#000000"
+          color="#00b4d8"
         />
         <StatCard 
           icon={<Star size={24} />} 
           value={`Rs. ${totalSpent.toLocaleString()}`} 
           label="Total Spent" 
-          color="#000000"
+          color="#00b4d8"
         />
         <StatCard 
           icon={<MapPin size={24} />} 
           value={addresses.length || '0'} 
           label="Addresses" 
-          color="#000000"
+          color="#00b4d8"
         />
       </div>
 
-      {/* Activity Grid */}
       <div className="cd-dashboard-grid">
         <div className="cd-grid-card cd-recent-orders">
           <div className="cd-grid-header">
@@ -405,20 +507,241 @@ const OverviewTab = ({ user, orders, wishlist, addresses, setActiveTab, onAddToC
   );
 };
 
-const OrdersTab = ({ orders, onCancelOrder, onAddToCart }) => (
-  <div className="fade-in">
-    <div className="cd-header">
-      <h2 className="cd-welcome gt-h3">Order History</h2>
-      <p className="cd-date gt-note">Track and manage your purchases</p>
+const OrdersTab = ({ 
+  orders, onCancelOrder, onAddToCart, 
+  statusFilter, setStatusFilter, 
+  searchQuery, setSearchQuery,
+  dateRange, setDateRange,
+  paymentFilter, setPaymentFilter,
+  showAdvanced, setShowAdvanced,
+  setActiveTab,
+  currentPage, setCurrentPage,
+  selectedOrders, setSelectedOrders,
+  itemsPerPage
+}) => {
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+  
+  const filtered = orders.filter(o => {
+    // Stage/Status check
+    const rawStatus = (o.stage || o.status || 'PENDING').toUpperCase();
+    const status = rawStatus === 'NEW' ? 'PLACED' : rawStatus;
+    
+    if (statusFilter !== "ALL") {
+       if (statusFilter === "ACTIVE" && ["DELIVERED", "CANCELED"].includes(status)) return false;
+       if (statusFilter === "COMPLETED" && status !== "DELIVERED") return false;
+       if (statusFilter === "CANCELED" && status !== "CANCELED") return false;
+    }
+
+    // Payment Filter
+    if (paymentFilter !== "ALL") {
+      if ((o.paymentMethod || "COD") !== paymentFilter) return false;
+    }
+
+    // Date Range Filter
+    if (dateRange.start) {
+      const start = new Date(dateRange.start);
+      start.setHours(0,0,0,0);
+      if (new Date(o.createdAt || o.orderDate) < start) return false;
+    }
+    if (dateRange.end) {
+      const end = new Date(dateRange.end);
+      end.setHours(23,59,59,999);
+      if (new Date(o.createdAt || o.orderDate) > end) return false;
+    }
+
+    // Search check
+    if (searchQuery) {
+       const q = searchQuery.toLowerCase();
+       const oid = String(o.orderId || o.id).toLowerCase();
+       const products = (o.productNames || "").toLowerCase();
+       return oid.includes(q) || products.includes(q);
+    }
+
+    return true;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIdx = (currentPage - 1) * itemsPerPage;
+  const paginatedOrders = filtered.slice(startIdx, startIdx + itemsPerPage);
+
+  // Bulk operations
+  const handleBulkCancel = async () => {
+    if (selectedOrders.length === 0) {
+      setToast({ show: true, message: "Select orders to cancel", type: "warning" });
+      return;
+    }
+    const result = await bulkCancelOrders(getCurrentUserId(), selectedOrders);
+    if (result.success) {
+      setToast({ show: true, message: result.message, type: "success" });
+      setSelectedOrders([]);
+      setTimeout(() => window.location.reload(), 1000);
+    }
+  };
+
+  const handleBulkDownload = async () => {
+    if (selectedOrders.length === 0) {
+      setToast({ show: true, message: "Select orders to download", type: "warning" });
+      return;
+    }
+    const result = await bulkDownloadInvoices(getCurrentUserId(), selectedOrders);
+    if (result.success) {
+      setToast({ show: true, message: result.message, type: "success" });
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedOrders.length === paginatedOrders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(paginatedOrders.map(o => o.orderId || o.id));
+    }
+  };
+
+  const toggleSelectOrder = (orderId) => {
+    setSelectedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  return (
+    <div className="fade-in">
+      <div className="cd-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '20px' }}>
+        <div>
+          <h2 className="cd-welcome gt-h3">Order History</h2>
+          <p className="cd-date gt-note">Track and manage your purchases</p>
+        </div>
+        
+        <div className="cd-order-filters">
+           <div className="cd-filter-search">
+              <Search size={14} />
+              <input 
+                type="text" 
+                placeholder="Search ID or product..." 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)} 
+              />
+           </div>
+           <select className="cd-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="ALL">All Orders</option>
+              <option value="ACTIVE">Active Pipeline</option>
+              <option value="COMPLETED">Delivered</option>
+              <option value="CANCELED">Cancelled</option>
+           </select>
+           <button 
+             className={`cd-adv-toggle ${showAdvanced ? 'active' : ''}`}
+             onClick={() => setShowAdvanced(!showAdvanced)}
+             title="Advanced Filters"
+           >
+              <Filter size={16} />
+           </button>
+        </div>
+      </div>
+
+      {showAdvanced && (
+        <div className="cd-advanced-filters-panel lux-fade-in">
+           <div className="cd-adv-group">
+              <label>Payment Method</label>
+              <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}>
+                 <option value="ALL">Any Payment</option>
+                 <option value="COD">Cash on Delivery</option>
+                 <option value="ESEWA">eSewa Online</option>
+              </select>
+           </div>
+           <div className="cd-adv-group">
+              <label>From Date</label>
+              <input type="date" value={dateRange.start} onChange={(e) => setDateRange({...dateRange, start: e.target.value})} />
+           </div>
+           <div className="cd-adv-group">
+              <label>To Date</label>
+              <input type="date" value={dateRange.end} onChange={(e) => setDateRange({...dateRange, end: e.target.value})} />
+           </div>
+           <button className="cd-adv-reset" onClick={() => { setPaymentFilter("ALL"); setDateRange({start:'', end:''}); setStatusFilter("ALL"); setSearchQuery(""); }}>Reset All</button>
+        </div>
+      )}
+
+      {/* Bulk Operations Bar */}
+      {selectedOrders.length > 0 && (
+        <div className="cd-bulk-actions-bar">
+          <span className="bulk-count">{selectedOrders.length} orders selected</span>
+          <div className="bulk-buttons">
+            <button className="bulk-btn" onClick={handleBulkDownload}>
+              <Download size={16} /> Download Invoices
+            </button>
+            <button className="bulk-btn danger" onClick={handleBulkCancel}>
+              <Trash2 size={16} /> Cancel Selected
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <div className="cd-card">
+        {paginatedOrders.length > 0 && (
+          <div className="cd-bulk-select-header">
+            <input 
+              type="checkbox" 
+              checked={selectedOrders.length === paginatedOrders.length && paginatedOrders.length > 0}
+              onChange={toggleSelectAll}
+              title="Select all orders"
+            />
+            <span className="select-label">Select Orders</span>
+          </div>
+        )}
+        
+        {paginatedOrders.map(order => (
+          <div key={order.orderId || order.id} className="cd-order-item-with-checkbox">
+            <input 
+              type="checkbox" 
+              checked={selectedOrders.includes(order.orderId || order.id)}
+              onChange={() => toggleSelectOrder(order.orderId || order.id)}
+              className="order-checkbox"
+            />
+            <OrderItem key={order.orderId || order.id} order={order} showActions onCancel={onCancelOrder} onAddToCart={onAddToCart} setActiveTab={setActiveTab} />
+          </div>
+        ))}
+        
+        {filtered.length === 0 && (
+          <div className="cd-empty-state-v2">
+             <ShoppingBag size={48} strokeWidth={1} />
+             <p>No orders matched your filters.</p>
+             <button onClick={() => { setStatusFilter("ALL"); setSearchQuery(""); }}>View All Orders</button>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="cd-pagination">
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            className="pagination-btn"
+          >
+            Previous
+          </button>
+          <span className="pagination-info">Page {currentPage} of {totalPages}</span>
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+            className="pagination-btn"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
-    <div className="cd-card">
-      {orders.map(order => (
-        <OrderItem key={order.orderId || order.id} order={order} showActions onCancel={onCancelOrder} onAddToCart={onAddToCart} />
-      ))}
-      {orders.length === 0 && <EmptyState text="You haven't ordered anything yet." />}
-    </div>
-  </div>
-);
+  );
+};
 
 const WishlistTab = ({ wishlist, navigate, onRemove, onAddToCart }) => (
   <div className="fade-in">
@@ -629,8 +952,6 @@ const AccountSettingsTab = ({ user, setUserProfile }) => (
   </div>
 );
 
-/* Sub-components */
-
 const StatCard = ({ icon, value, label, color }) => (
   <div className="cd-stat-card">
     <div className="cd-stat-icon" style={{ backgroundColor: `${color}15`, color: color }}>
@@ -643,9 +964,9 @@ const StatCard = ({ icon, value, label, color }) => (
   </div>
 );
 
-const OrderItem = ({ order, showActions, onCancel, onAddToCart }) => {
+const OrderItem = ({ order, showActions, onCancel, onAddToCart, setActiveTab }) => {
   const [expanded, setExpanded] = useState(false);
-  const [showReport, setShowReport] = useState(false);
+  const [reportConfig, setReportConfig] = useState({ isOpen: false, item: null });
   const navigate = useNavigate();
   const rawStatus = (order.stage || order.status || 'PENDING').toUpperCase();
   
@@ -670,35 +991,48 @@ const OrderItem = ({ order, showActions, onCancel, onAddToCart }) => {
       : steps.indexOf(status);
 
   return (
-    <div className={`cd-order-wrapper ${expanded ? 'expanded' : ''}`} style={{ borderBottom: '1px solid #f1f5f9' }}>
-      <div className="cd-order-item" onClick={() => setExpanded(!expanded)} style={{ cursor: 'pointer' }}>
-        <img 
-          src={order.items?.[0]?.imagePath 
-            ? (order.items[0].imagePath.startsWith('http') ? order.items[0].imagePath : `${API_BASE}/${order.items[0].imagePath}`) 
-            : "https://via.placeholder.com/100"} 
-          alt="Product" 
-          className="cd-order-img" 
-        />
-        <div className="cd-order-info">
-          <div className="cd-order-title">{title}</div>
-          <div className="cd-order-meta">
-            <span>{oidDisplay}</span>
-            <span>•</span>
-            <span>{new Date(order.orderDate || order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-            <span>•</span>
-            <span>{order.items?.length || 0} Items</span>
+    <div className={`cd-order-card-v3 ${expanded ? 'is-expanded' : ''}`}>
+      <div className="cd-oc-header" onClick={() => setExpanded(!expanded)}>
+        <div className="cd-oc-main-info">
+          <div className="cd-oc-visuals">
+             <div className="cd-oc-img-stack">
+                {order.items?.slice(0, 3).map((item, i) => (
+                  <img 
+                    key={i}
+                    src={item.imagePath ? (item.imagePath.startsWith('http') ? item.imagePath : `${API_BASE}/${item.imagePath}`) : "https://via.placeholder.com/80"} 
+                    alt=""
+                    className={`cd-oc-stack-img img-${i}`}
+                  />
+                ))}
+                {order.items?.length > 3 && <div className="cd-oc-stack-more">+{order.items.length - 3}</div>}
+             </div>
+          </div>
+          <div className="cd-oc-details">
+            <div className="cd-oc-id-row">
+               <span className="cd-oc-id gt-caption">{oidDisplay}</span>
+               <span className={`cd-oc-status-pill status-${status.toLowerCase()}`}>
+                  <span className="dot"></span> {status.replace(/_/g, " ")}
+               </span>
+            </div>
+            <h4 className="cd-oc-title gt-h3">{title}</h4>
+            <div className="cd-oc-meta gt-note">
+               <Calendar size={12} />
+               <span>Ordered {new Date(order.orderDate || order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+               <span className="dot">•</span>
+               <span>{order.items?.length || 0} Items</span>
+            </div>
           </div>
         </div>
-        <div className="cd-order-price">
-          Rs. {Number(order.grandTotal || order.totalAmount || 0).toLocaleString()}
+
+        <div className="cd-oc-price-zone">
+           <div className="cd-oc-amount">
+              <span className="label gt-note">Grand Total</span>
+              <span className="value">Rs. {Number(order.grandTotal || order.totalAmount || 0).toLocaleString()}</span>
+           </div>
+           <div className={`cd-oc-chevron ${expanded ? 'up' : ''}`}>
+              <ChevronRight size={18} />
+           </div>
         </div>
-        <div className={`cd-status-badge status-${status.toLowerCase()}`}>{status.replace(/_/g, " ")}</div>
-        <ChevronRight size={16} style={{ 
-          transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', 
-          transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
-          marginLeft: '20px',
-          color: '#cbd5e1'
-        }} />
       </div>
 
       {expanded && (
@@ -723,10 +1057,22 @@ const OrderItem = ({ order, showActions, onCancel, onAddToCart }) => {
                       alt="" 
                       className="cd-order-img-mini"
                     />
-                    <div className="cd-cr-info" style={{ marginLeft: '12px' }}>
+                    <div className="cd-cr-info" style={{ marginLeft: '12px', flex: 1 }}>
                        <div className="cd-cr-id">{item.productName || item.name}</div>
                        <div className="cd-cr-date">Quantity: {item.quantity} · Rs. {item.unitPrice?.toLocaleString()}</div>
                     </div>
+                    {status === 'DELIVERED' && (
+                       <button 
+                         className="lux-mini-btn" 
+                         style={{ fontSize: '0.65rem', padding: '4px 10px', borderRadius: '8px', background: 'var(--porto-primary-fade)', color: 'var(--porto-primary)', border: 'none', fontWeight: '800' }}
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           setReportConfig({ isOpen: true, item: item });
+                         }}
+                       >
+                         REPORT ISSUE
+                       </button>
+                    )}
                     <button className="cd-buy-again-btn" onClick={(e) => { 
                       e.stopPropagation(); 
                       if (onAddToCart) {
@@ -752,20 +1098,66 @@ const OrderItem = ({ order, showActions, onCancel, onAddToCart }) => {
                  
                  <div className={`cd-payment-info ${order.paymentReference ? 'paid' : 'pending'}`}>
                     {order.paymentMethod === 'ESEWA' ? (
-                      order.paymentReference ? <><Check size={16}/> Paid via eSewa</> : (status === 'CANCELED' ? '❌ Cancelled' : '⏳ Pending eSewa Payment')
-                    ) : order.paymentMethod === 'KHALTI' ? (
-                      order.paymentReference ? <><Check size={16}/> Paid via Khalti</> : (status === 'CANCELED' ? '❌ Cancelled' : '⏳ Pending Khalti Payment')
+                      order.paymentReference ? <><Check size={16}/> Paid via eSewa</> : (
+                         status === 'CANCELED' ? ' Cancelled' : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '12px' }}>
+                               <span style={{ color: '#d97706', fontWeight: 700, fontSize: '0.75rem' }}>⏳ Pending eSewa Payment</span>
+                               <button 
+                                 className="ua-primary-btn" 
+                                 onClick={(e) => {
+                                    e.stopPropagation();
+                                    api.post(`/api/payment/esewa/initiate`, { orderId: order.orderId || order.id })
+                                       .then(res => {
+                                          const form = document.createElement("form");
+                                          form.setAttribute("method", "POST");
+                                          form.setAttribute("action", res.data.epayUrl);
+                                          Object.entries(res.data).forEach(([k, v]) => {
+                                             if (k === 'epayUrl') return;
+                                             const input = document.createElement("input");
+                                             input.setAttribute("type", "hidden");
+                                             input.setAttribute("name", k);
+                                             input.setAttribute("value", v);
+                                             form.appendChild(input);
+                                          });
+                                          document.body.appendChild(form);
+                                          form.submit();
+                                       })
+                                       .catch(err => alert("Payment session failed to start. Please try again."));
+                                 }}
+                                 style={{ padding: '10px', fontSize: '0.7rem', background: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '8px', border: 'none', color: '#fff', cursor: 'pointer' }}
+                               >
+                                  <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="" style={{ height: '12px', filter: 'brightness(0) invert(1)' }}/>
+                                  PAY SECURELY NOW
+                               </button>
+                            </div>
+                         )
+                      )
                     ) : (
                       <><Package size={16}/> Cash on Delivery</>
                     )}
                  </div>
+
+                 {/* Invoice Download Actions */}
+                 {status === 'DELIVERED' && (
+                    <InvoiceActions 
+                      order={order} 
+                      onSuccess={(msg) => {
+                        // Show success message
+                      }}
+                    />
+                 )}
                  
                  {showActions && canCancel && (
                     <button className="ua-primary-btn" onClick={(e) => { e.stopPropagation(); onCancel(order.orderId || order.id); }} style={{ background: '#fff', border: '2px solid #ef4444', color: '#ef4444', padding: '12px', fontSize: '0.8rem', marginTop: '20px' }}>CANCEL ORDER</button>
                  )}
-                 {showActions && !canCancel && (
-                    <button className="ua-primary-btn" onClick={(e) => { e.stopPropagation(); setShowReport(true); }} style={{ background: '#fff', border: '1px solid #94A3B8', color: '#64748B', padding: '12px', fontSize: '0.8rem', marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                       <Flag size={14} /> REPORT ISSUE
+                 {showActions && !canCancel && status !== 'DELIVERED' && (
+                    <button className="ua-primary-btn" onClick={(e) => { e.stopPropagation(); navigate(`/customer/order/${oid}`); }} style={{ background: '#fff', border: '1px solid #94A3B8', color: '#64748B', padding: '12px', fontSize: '0.8rem', marginTop: '20px' }}>
+                       TRACK SHIPMENT
+                    </button>
+                 )}
+                 {status === 'DELIVERED' && (
+                    <button className="ua-primary-btn" onClick={(e) => { e.stopPropagation(); setActiveTab('refunds'); }} style={{ background: 'var(--porto-primary)', color: '#fff', padding: '12px', fontSize: '0.8rem', marginTop: '20px', border: 'none' }}>
+                       VIEW RETURN STATUS
                     </button>
                  )}
               </div>
@@ -773,13 +1165,13 @@ const OrderItem = ({ order, showActions, onCancel, onAddToCart }) => {
         </div>
       )}
 
-      {showReport && order.items?.[0] && (
+      {reportConfig.isOpen && reportConfig.item && (
          <ReportModal
-           isOpen={showReport}
-           onClose={() => setShowReport(false)}
-           type="PRODUCT"
-           reportedEntityId={order.items[0].productId}
-           entityName={title}
+           isOpen={reportConfig.isOpen}
+           onClose={() => setReportConfig({ isOpen: false, item: null })}
+           orderId={order.orderId || order.id}
+           orderItemId={reportConfig.item.id}
+           entityName={reportConfig.item.productName || reportConfig.item.name}
          />
       )}
     </div>
@@ -873,7 +1265,7 @@ const AddressesTab = ({ userId, addresses, setAddresses, setConfirmConfig }) => 
                     <div className="cd-modal-card">
                         <div className="cd-modal-header">
                            <h3>{isEditing ? 'Edit Address' : 'New Physical Address'}</h3>
-                           <button onClick={() => setShowModal(false)}>✕</button>
+                           <button onClick={() => setShowModal(false)}></button>
                         </div>
                         <form onSubmit={handleSubmit} className="cd-modal-form" style={{ padding: '24px', display: 'grid', gap: '16px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -916,6 +1308,224 @@ const AddressesTab = ({ userId, addresses, setAddresses, setConfirmConfig }) => 
             )}
         </div>
     );
+};
+
+const AnalyticsTab = ({ userId }) => (
+  <div className="fade-in">
+    <AnalyticsDashboard userId={userId} />
+  </div>
+);
+
+const NotificationPreferencesTab = ({ userId }) => {
+  const [preferences, setPreferences] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+
+  useEffect(() => {
+    loadPreferences();
+  }, [userId]);
+
+  const loadPreferences = async () => {
+    setLoading(true);
+    try {
+      const data = await getNotificationPreferences(userId);
+      setPreferences(data);
+    } catch (error) {
+      console.error('Preferences error:', error);
+    }
+    setLoading(false);
+  };
+
+  const handleToggle = async (key, channel) => {
+    if (!preferences) return;
+    
+    const updated = {
+      ...preferences,
+      [key]: {
+        ...preferences[key],
+        [channel]: !preferences[key][channel]
+      }
+    };
+    
+    setPreferences(updated);
+    
+    const result = await updateNotificationPreferences(userId, updated);
+    if (result.success) {
+      setToast({ show: true, message: "Preferences updated", type: "success" });
+    }
+  };
+
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading preferences...</div>;
+
+  return (
+    <div className="fade-in cd-notifications-container">
+      <div className="cd-header" style={{ marginBottom: '30px' }}>
+        <h2 className="cd-welcome gt-h3">Notification Preferences</h2>
+        <p className="cd-date gt-note">Control how you receive updates from us</p>
+      </div>
+
+      {preferences && (
+        <div className="cd-notification-sections">
+          {/* Order Notifications */}
+          <div className="cd-notification-section">
+            <h3 className="section-title">📦 Order Notifications</h3>
+            {['orderPlaced', 'orderShipped', 'orderDelivered', 'orderCancelled'].map(key => {
+              const pref = preferences[key] || {};
+              return (
+                <div key={key} className="cd-notification-item">
+                  <span className="item-name">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                  <div className="channel-toggles">
+                    {['email', 'sms', 'push'].map(channel => (
+                      <label key={channel} className="toggle-label">
+                        <input 
+                          type="checkbox" 
+                          checked={pref[channel] || false}
+                          onChange={() => handleToggle(key, channel)}
+                        />
+                        <span className="toggle-text">{channel.toUpperCase()}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Promotions */}
+          <div className="cd-notification-section">
+            <h3 className="section-title">🎁 Promotions & Offers</h3>
+            {['promotionalOffers', 'flashSales', 'personalizedRecommendations'].map(key => {
+              const pref = preferences[key] || {};
+              return (
+                <div key={key} className="cd-notification-item">
+                  <span className="item-name">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                  <div className="channel-toggles">
+                    {['email', 'sms', 'push'].map(channel => (
+                      <label key={channel} className="toggle-label">
+                        <input 
+                          type="checkbox" 
+                          checked={pref[channel] || false}
+                          onChange={() => handleToggle(key, channel)}
+                        />
+                        <span className="toggle-text">{channel.toUpperCase()}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Account Security */}
+          <div className="cd-notification-section">
+            <h3 className="section-title">🔒 Account Security</h3>
+            {['accountSecurityAlerts', 'passwordChanged', 'newDevice'].map(key => {
+              const pref = preferences[key] || {};
+              return (
+                <div key={key} className="cd-notification-item">
+                  <span className="item-name">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                  <div className="channel-toggles">
+                    {['email', 'sms', 'push'].map(channel => (
+                      <label key={channel} className="toggle-label">
+                        <input 
+                          type="checkbox" 
+                          checked={pref[channel] || false}
+                          onChange={() => handleToggle(key, channel)}
+                        />
+                        <span className="toggle-text">{channel.toUpperCase()}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {toast.show && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />
+      )}
+    </div>
+  );
+};
+
+const DataExportTab = ({ userId, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+
+  const handleExport = async (format) => {
+    setLoading(true);
+    let result;
+    if (format === 'csv') {
+      result = await exportOrderHistoryCSV(userId);
+    } else if (format === 'pdf') {
+      result = await exportOrderHistoryPDF(userId);
+    } else {
+      result = await exportPersonalData(userId);
+    }
+    setLoading(false);
+    
+    if (result.success) {
+      setToast({ show: true, message: result.message, type: "success" });
+    } else {
+      setToast({ show: true, message: result.message || "Export failed", type: "error" });
+    }
+  };
+
+  return (
+    <div className="fade-in cd-data-export-container">
+      <div className="cd-export-section">
+        <h3 className="gt-h3">📥 Export Your Data</h3>
+        <p className="gt-note">Download your order history and personal information</p>
+        
+        <div className="cd-export-options">
+          <div className="export-card">
+            <FileText size={32} />
+            <h4>Order History (CSV)</h4>
+            <p>Spreadsheet format, easy to analyze</p>
+            <button 
+              className="export-btn"
+              onClick={() => handleExport('csv')}
+              disabled={loading}
+            >
+              <Download size={16} /> Download CSV
+            </button>
+          </div>
+
+          <div className="export-card">
+            <FileText size={32} />
+            <h4>Order History (PDF)</h4>
+            <p>Print-friendly format</p>
+            <button 
+              className="export-btn"
+              onClick={() => handleExport('pdf')}
+              disabled={loading}
+            >
+              <Download size={16} /> Download PDF
+            </button>
+          </div>
+
+          <div className="export-card">
+            <FileText size={32} />
+            <h4>Personal Data</h4>
+            <p>Complete account information</p>
+            <button 
+              className="export-btn"
+              onClick={() => handleExport('json')}
+              disabled={loading}
+            >
+              <Download size={16} /> Download JSON
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {toast.show && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />
+      )}
+    </div>
+  );
 };
 
 const EmptyState = ({ text }) => (

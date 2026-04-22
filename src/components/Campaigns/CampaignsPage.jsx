@@ -46,23 +46,35 @@ const CampaignsPage = () => {
                     campaigns.map(campaign => (
                         <div key={campaign.id} className="campaign-card" onClick={() => navigate(`/products?campaign=${campaign.id}`)}>
                             <div className="campaign-content">
-                                <span className="campaign-type-label">{campaign.type?.replace(/_/g, ' ')}</span>
+                                <div className="campaign-top-meta">
+                                    <span className="status-pill status-active">ACTIVE</span>
+                                    <div className="type-label">
+                                        <Tag size={14} className="type-icon-default" />
+                                        <span>{campaign.type?.replace(/_/g, ' ')}</span>
+                                    </div>
+                                </div>
                                 <h2>{campaign.name}</h2>
-                                <p className="campaign-date">Ends: {new Date(campaign.endTime).toLocaleDateString()}</p>
+                                <div className="campaign-info-row">
+                                    <div className="info-item">
+                                        <Calendar size={16} />
+                                        <span>Ends: {new Date(campaign.endTime).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
                                 
-                                <button className="view-campaign-btn">
-                                    VIEW DEALS <ArrowRight size={14} />
-                                </button>
+                                <div className="campaign-cta">
+                                    VIEW DEALS <ArrowRight size={16} />
+                                </div>
                             </div>
 
                             <div className="campaign-image-wrapper">
+                                <div className="image-overlay" />
                                 {campaign.imagePath ? (
                                     <img 
                                         src={campaign.imagePath.startsWith('http') ? campaign.imagePath : `${API_BASE}/${campaign.imagePath}`} 
                                         alt={campaign.name} 
                                     />
                                 ) : (
-                                    <div className="campaign-placeholder">
+                                    <div className="campaign-placeholder" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                                          <Tag size={48} color="#cbd5e1" />
                                     </div>
                                 )}

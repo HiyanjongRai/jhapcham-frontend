@@ -1,10 +1,6 @@
 import React from 'react';
 import { ServerErrorPage } from '../ErrorPage/ErrorPage';
 
-/**
- * Error Boundary Component
- * Catches all React errors and displays the error page
- */
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);

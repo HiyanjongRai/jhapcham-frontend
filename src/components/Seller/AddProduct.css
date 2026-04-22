@@ -1,11 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
-/* ── Add Product Studio ─────────────────────────────────────── */
 :root {
     --ap-bg:          #f5f7f9;
     --ap-surface:     #ffffff;
     --ap-border:      #e7e7e7;
-    --ap-primary:     #0088cc;
+    --ap-primary:     #00b4d8;
     --ap-primary-light: #e6f3fa;
     --ap-dark:        #222529;
     --ap-text:        #777777;
@@ -82,7 +81,6 @@
     transform: translateY(-1px);
 }
 
-/* Form Sections */
 .ap-section {
     background: var(--ap-surface);
     padding: 20px;
@@ -121,7 +119,6 @@
     color: var(--ap-dark);
 }
 
-/* Grids */
 .ap-grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -139,7 +136,6 @@
     .ap-container { padding: 16px; }
 }
 
-/* Field Styling */
 .ap-field {
     margin-bottom: 14px;
 }
@@ -190,7 +186,6 @@
     font-weight: 400;
 }
 
-/* Input Group */
 .input-group {
     display: flex;
     align-items: center;
@@ -223,7 +218,6 @@
     padding: 8px 12px;
 }
 
-/* Variant Chips */
 .ap-chip-field {
     display: flex;
     gap: 8px;
@@ -267,7 +261,6 @@
     border: 1px solid rgba(0,0,0,0.05);
 }
 
-/* Media/Visual Assets */
 .ap-media-grid {
     display: grid;
     grid-template-columns: 220px 1fr;
@@ -425,7 +418,6 @@
     color: var(--ap-primary);
 }
 
-/* Actions Bar */
 .ap-actions {
     display: flex;
     justify-content: flex-end;
@@ -451,6 +443,46 @@
     background: var(--porto-blue-dark, #0077b3);
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -5px rgba(0, 136, 204, 0.3);
+}
+
+/* Variant Toggle Buttons */
+.ap-variant-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1.5px dashed #e2e8f0;
+    padding: 12px 20px;
+    border-radius: 12px;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: fit-content;
+    margin-bottom: 5px;
+}
+
+.ap-variant-toggle:hover {
+    border-color: #00b4d8;
+    color: #00b4d8;
+    background: #f0f9ff;
+}
+
+.ap-variant-toggle.active {
+    background: #00b4d8;
+    border-color: #00b4d8;
+    color: #fff;
+    border-style: solid;
+    box-shadow: 0 4px 12px rgba(0, 180, 216, 0.2);
+}
+
+.ap-variant-toggle svg {
+    transition: transform 0.3s;
+}
+
+.ap-variant-toggle.active svg {
+    transform: rotate(45deg);
 }
 
 @media (max-width: 900px) {

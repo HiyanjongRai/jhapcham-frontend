@@ -215,7 +215,6 @@ export default function NotificationList() {
                 )}
             </div>
 
-            {/* Filter Tabs */}
             {notifications.length > 0 && (
                 <div className="notif-filter-tabs">
                     <button 

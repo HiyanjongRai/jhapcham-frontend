@@ -1,6 +1,4 @@
-/* ══════════════════════════════════════════════════════════
-   ADMIN CUSTOMER INTELLIGENCE — PREMIUM GLASSMOPHISM
-   ══════════════════════════════════════════════════════════ */
+
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -45,7 +43,6 @@
   pointer-events: none;
 }
 
-/* ── HEADER & BACK ── */
 .intel-header {
   position: relative;
   z-index: 10;
@@ -77,7 +74,6 @@
   transform: translateX(-4px);
 }
 
-/* ── HERO CARD ── */
 .intel-hero-card {
   background: var(--intel-glass);
   backdrop-filter: blur(20px);
@@ -196,7 +192,6 @@
 
 .intel-btn.success { background: var(--intel-emerald); color: #fff; }
 
-/* ── METRICS RAIL ── */
 .intel-metrics-rail {
   display: flex;
   gap: 20px;
@@ -249,7 +244,6 @@
   letter-spacing: 0.5px;
 }
 
-/* ── CONTENT GRID ── */
 .intel-content-grid {
   display: grid;
   grid-template-columns: 1fr 340px;
@@ -289,7 +283,6 @@
   border-radius: 100px;
 }
 
-/* ── TABLE ── */
 .intel-table-container { overflow-x: auto; margin: 0 -30px -30px; }
 .intel-table { width: 100%; border-collapse: collapse; }
 .intel-table th {
@@ -324,7 +317,6 @@
 .status-pill.canceled { background: #fee2e2; color: #991b1b; }
 .status-pill.pending { background: #fef3c7; color: #92400e; }
 
-/* ── WISHLIST ── */
 .wishlist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
 .wish-tile {
   background: #f8fafc;
@@ -355,7 +347,6 @@
 .wish-name { font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wish-price { font-size: 0.75rem; color: var(--intel-primary); font-weight: 800; }
 
-/* ── SIDEBAR ── */
 .intel-sidebar h3 {
   display: flex;
   align-items: center;
@@ -372,7 +363,6 @@
 .s-data label { display: block; font-size: 0.6rem; font-weight: 800; color: #94a3b8; }
 .s-data span { font-size: 0.85rem; font-weight: 600; word-break: break-all; }
 
-/* ── RESOLUTION ── */
 .resolution-card {
   background: #fbfcfe;
   border-left: 4px solid var(--intel-primary);
@@ -401,7 +391,6 @@
 .res-clean-slate { padding: 30px 0; text-align: center; color: #cbd5e1; }
 .res-clean-slate p { font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-top: 10px; text-transform: uppercase; }
 
-/* ── BADGE V2 ── */
 .adm-badge-v2 {
   display: inline-flex;
   align-items: center;

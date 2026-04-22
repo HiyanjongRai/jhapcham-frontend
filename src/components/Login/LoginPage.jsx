@@ -63,6 +63,30 @@ const LoginPage = () => {
       if (Array.isArray(role)) role = role[0];
       const roleForRouting = role.toUpperCase().replace(/^ROLE_/, "");
       
+      // Check for pending seller approval
+      if (roleForRouting === "SELLER") {
+        let userStatus = data.status || data.userStatus || data.user?.status;
+        
+        // If status wasn't included in the login response, fetch it
+        if (!userStatus) {
+           try {
+             const userRes = await fetch(`${API_BASE}/api/users/${userId}`);
+             if (userRes.ok) {
+                const userData = await userRes.json();
+                userStatus = userData.status || userData.userStatus || "PENDING"; 
+             }
+           } catch(err) {
+             console.error("Failed to check user status", err);
+           }
+        }
+        
+        if (userStatus === "PENDING" || userStatus === "pending") {
+           setMessage("Your seller account is still pending admin approval.");
+           setLoading(false);
+           return;
+        }
+      }
+
       localStorage.setItem("userId", encodeUserId(userId));
       localStorage.setItem("userRole", roleForRouting);
       if (token) localStorage.setItem("token", token);
@@ -84,7 +108,7 @@ const LoginPage = () => {
     <div className="auth-page-wrapper">
       <div className="auth-centered-content">
         <div className="auth-main-card">
-          {/* Left Section - Visual */}
+          
           <div className="auth-visual-section">
             <div className="auth-visual-content">
               <h1 className="auth-visual-title">
@@ -105,7 +129,6 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Right Section - Form */}
           <div className="auth-form-section">
             <div className="auth-form-container">
               <div className="auth-logo-header" onClick={() => navigate("/")} style={{ cursor: 'pointer' }}>

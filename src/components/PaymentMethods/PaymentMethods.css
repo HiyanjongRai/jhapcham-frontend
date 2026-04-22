@@ -1,0 +1,263 @@
+/* Payment Methods Styles */
+.payment-methods-container {
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.payment-methods-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.payment-methods-header h2 {
+  margin: 0;
+}
+
+.add-method-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #00b4d8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.add-method-btn:hover {
+  background: #0088cc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
+}
+
+/* Payment Form */
+.payment-form {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: 1px solid #e0e0e0;
+}
+
+.payment-form h3 {
+  margin: 0 0 16px 0;
+  color: #1a1a1a;
+}
+
+.payment-form form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.payment-form input {
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.payment-form input:focus {
+  outline: none;
+  border-color: #00b4d8;
+  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1);
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: #00b4d8;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0088cc;
+}
+
+.btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+.btn-secondary:hover {
+  background: #e0e0e0;
+}
+
+/* Payment Methods List */
+.payment-methods-list {
+  display: grid;
+  gap: 16px;
+}
+
+.payment-method-card {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.payment-method-card:hover {
+  border-color: #00b4d8;
+  box-shadow: 0 2px 12px rgba(0, 180, 216, 0.1);
+}
+
+.method-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 180, 216, 0.1);
+  color: #00b4d8;
+  flex-shrink: 0;
+}
+
+.method-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.method-name {
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.method-number {
+  font-size: 0.875rem;
+  color: #999;
+  margin: 0;
+  font-family: 'Courier New', monospace;
+}
+
+.method-expiry {
+  font-size: 0.75rem;
+  color: #ccc;
+  margin: 0;
+}
+
+.method-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.default-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #22c55e;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.set-default-btn {
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid #00b4d8;
+  color: #00b4d8;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.set-default-btn:hover {
+  background: #00b4d8;
+  color: white;
+}
+
+.delete-btn {
+  padding: 8px;
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.empty-state {
+  text-align: center;
+  color: #999;
+  padding: 40px 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .payment-methods-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .add-method-btn {
+    width: 100%;
+  }
+
+  .payment-method-card {
+    grid-template-columns: auto 1fr;
+  }
+
+  .method-actions {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+  }
+
+  .payment-form form {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    flex: 1;
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { API_BASE } from "../config/config";
 import { 
@@ -34,7 +34,9 @@ import ErrorToast from "../ErrorToast/ErrorToast";
 import Toast from "../Toast/Toast";
 import "./ProductDetailModern.css";
 
- 
+// ⚡ PERFORMANCE: Memoized ProductCard to prevent unnecessary re-renders
+const MemoizedProductCard = memo(ProductCard);
+
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -56,6 +58,7 @@ export default function ProductDetailPage() {
   };
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedStorage, setSelectedStorage] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
@@ -114,6 +117,15 @@ export default function ProductDetailPage() {
               return [];
             })()
           ),
+          sizes: Array.isArray(data.sizes) ? data.sizes : (
+            (() => {
+                if (typeof data.specification === 'string' && data.specification.toLowerCase().includes('size')) {
+                    // Primitive extraction if backend doesn't have explicit sizes field yet
+                    // But usually it should be in mapped data
+                }
+                return [];
+            })()
+          ),
           rating: data.averageRating ?? data.rating ?? 0,
           sellerId: data.sellerUserId ?? data.sellerId,
           sellerStoreName: data.storeName ?? data.sellerStoreName,
@@ -138,9 +150,9 @@ export default function ProductDetailPage() {
         // Fetch similarity-based related products
         fetchRelated(mappedProduct.id, mappedProduct.category);
 
-
         if (mappedProduct.colors?.length) setSelectedColor(mappedProduct.colors[0]);
         if (mappedProduct.storage?.length) setSelectedStorage(mappedProduct.storage[0]);
+        if (mappedProduct.sizes?.length) setSelectedSize(mappedProduct.sizes[0]);
 
         // Check wishlist and purchase status
         if (userId) {
@@ -259,7 +271,6 @@ export default function ProductDetailPage() {
     setZoomPos(prev => ({ ...prev, opacity: 0 }));
   };
 
-
   if (loading) return <div className="pd-container" style={{textAlign: 'center', paddingTop: '4rem'}}>Loading...</div>;
   if (!product) return <div className="pd-container" style={{textAlign: 'center', paddingTop: '4rem'}}>Product Not Found</div>;
 
@@ -294,9 +305,9 @@ export default function ProductDetailPage() {
 
     try {
       if (userId) {
-        await apiAddToCart(userId, product.id, quantity, selectedColor, selectedStorage);
+        await apiAddToCart(userId, product.id, quantity, selectedColor, selectedStorage, selectedSize);
       } else {
-        addToGuestCart(product, quantity, selectedColor, selectedStorage);
+        addToGuestCart(product, quantity, selectedColor, selectedStorage, selectedSize);
       }
 
       showToast("Item added to cart", "success");
@@ -318,14 +329,13 @@ export default function ProductDetailPage() {
     }
   };
 
-
   return (
     <>
-      {/* Error Toast Notification */}
+      
       <ErrorToast error={error} onClose={() => setError(null)} />
 
       <div className="pd-container">
-        {/* Breadcrumb */}
+        
         <div className="pd-breadcrumb">
           <Link to="/"><Store size={14} /></Link>
           <ChevronRight size={12} />
@@ -335,14 +345,14 @@ export default function ProductDetailPage() {
         </div>
 
         <div className="pd-grid">
-          {/* Left: Image Gallery */}
+          
           <div className="pd-gallery">
             <div
               className="pd-main-image-wrapper"
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
             >
-              {/* Badges */}
+              
               <div className="pd-badges">
                 {product.onSale && <span className="badge-hot">HOT</span>}
                 {product.onSale && (
@@ -356,6 +366,9 @@ export default function ProductDetailPage() {
                 src={mainImage}
                 className="pd-main-image"
                 alt={product.name}
+                loading="eager"
+                decoding="async"
+                onError={(e) => { e.target.src = `${API_BASE}/placeholder-image.png`; }}
                 style={{
                   transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
                   transform: zoomPos.opacity ? "scale(2)" : "scale(1)",
@@ -375,6 +388,9 @@ export default function ProductDetailPage() {
                       className={`pd-thumb ${mainImage === src ? "active" : ""}`}
                       onClick={() => setMainImage(src)}
                       alt="thumbnail"
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => { e.target.style.opacity = '0.5'; }}
                     />
                   );
                 }
@@ -382,7 +398,6 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Right: Product Info */}
           <div className="pd-info">
             <div className="pd-info-header">
               <h1 className="pd-title">{product.name}</h1>
@@ -456,7 +471,6 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Variants Selection */}
             <div className="pd-variants-section">
               {product.colors && product.colors.length > 0 && (
                 <div className="pd-variant-group">
@@ -488,6 +502,23 @@ export default function ProductDetailPage() {
                         onClick={() => setSelectedStorage(spec)}
                       >
                         {spec}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {product.sizes && product.sizes.length > 0 && (
+                <div className="pd-variant-group">
+                  <span className="pd-variant-label">SIZE: <strong>{selectedSize}</strong></span>
+                  <div className="pd-variant-options">
+                    {product.sizes.map(size => (
+                      <button 
+                        key={size}
+                        className={`pd-variant-btn spec-btn ${selectedSize === size ? 'active' : ''}`}
+                        onClick={() => setSelectedSize(size)}
+                      >
+                        {size}
                       </button>
                     ))}
                   </div>
@@ -575,7 +606,6 @@ export default function ProductDetailPage() {
               </button>
             </div>
 
-            {/* Seller Card */}
             <div className="pd-porto-seller" onClick={() => navigate(`/seller/${product.sellerId}`)}>
               <span>Sold by: <strong>{product.sellerStoreName}</strong></span>
               <ChevronRight size={14} />
@@ -583,7 +613,6 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Tabs Section */}
         <div className="pd-tabs-container">
           <div className="pd-tabs-header">
             <button 
@@ -656,7 +685,7 @@ export default function ProductDetailPage() {
             )}
             {activeTab === 'reviews' && (
               <div className="tab-pane fade-in">
-                {/* Reviews implementation moved here */}
+                
                 <div className="pd-porto-reviews-feed">
                   {reviews.length === 0 ? (
                     <p>No reviews yet.</p>
@@ -724,20 +753,19 @@ export default function ProductDetailPage() {
             )}
           </div>
         </div>
-        {/* Related Products Section */}
+        
         {relatedProducts.length > 0 && (
           <div className="pd-porto-related">
             <h2 className="related-title">YOU MAY ALSO LIKE</h2>
             <div className="pd-related-grid">
               {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <MemoizedProductCard key={p.id} product={p} />
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Message Modal */}
       <MessageModal
         isOpen={showMessageModal}
         onClose={() => setShowMessageModal(false)}

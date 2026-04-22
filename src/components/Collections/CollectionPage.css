@@ -1,4 +1,4 @@
-/* CollectionPage.css - Shared styles for On Sale, New Arrivals, Brands pages */
+
 
 .collection-page {
   min-height: 100vh;
@@ -141,7 +141,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Brand Grid Specific */
 .brand-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -178,7 +177,6 @@
   margin: 0;
 }
 
-/* Responsive */
 @media (max-width: 1400px) {
   .collection-grid {
     grid-template-columns: repeat(4, 1fr);

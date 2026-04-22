@@ -65,44 +65,38 @@ const ErrorPage = ({
   return (
     <div className="error-page">
       <div className="error-container">
-        {/* Animated Background Elements */}
+        
         <div className="error-bg-decoration">
           <div className="error-circle error-circle-1"></div>
           <div className="error-circle error-circle-2"></div>
           <div className="error-circle error-circle-3"></div>
         </div>
 
-        {/* Error Content */}
         <div className="error-content">
-          {/* Error Code */}
+          
           <div className="error-code-wrapper">
             <h1 className="error-code">{errorCode}</h1>
             <div className="error-code-underline"></div>
           </div>
 
-          {/* Error Icon */}
           <div className="error-icon">
             {currentError.icon}
           </div>
 
-          {/* Error Title */}
           <h2 className="error-title">
             {errorTitle || currentError.title}
           </h2>
 
-          {/* Error Message */}
           <p className="error-message">
             {errorMessage || currentError.message}
           </p>
 
-          {/* Current Path Info */}
           {location.pathname !== '/' && (
             <div className="error-path">
               <code>{location.pathname}</code>
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="error-actions">
             {showBackButton && (
               <button className="error-btn error-btn-secondary" onClick={handleGoBack}>
@@ -126,7 +120,6 @@ const ErrorPage = ({
             )}
           </div>
 
-          {/* Additional Help */}
           <div className="error-help">
             <p className="error-help-title">Looking for something?</p>
             <div className="error-help-links">
@@ -142,7 +135,6 @@ const ErrorPage = ({
           </div>
         </div>
 
-        {/* Decorative Elements */}
         <div className="error-decorative-dots">
           {[...Array(20)].map((_, i) => (
             <div key={i} className="error-dot" style={{

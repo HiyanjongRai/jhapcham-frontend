@@ -1,0 +1,61 @@
+.product-variants-container {
+  padding: 20px 0;
+}
+
+.variants-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.variants-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.variant-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.variant-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.variant-sku {
+  font-size: 16px;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 10px;
+  word-break: break-word;
+}
+
+.variant-attributes {
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.variant-attributes .badge {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.variant-stock,
+.variant-modifier,
+.variant-status {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.variant-stock strong {
+  color: #28a745;
+}
+
+.variant-modifier {
+  color: #f8931d;
+}

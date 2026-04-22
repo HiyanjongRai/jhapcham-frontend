@@ -1,6 +1,4 @@
-/* =============================================
-   NOTIFICATION CENTER - PREMIUM DESIGN
-   ============================================= */
+
 
 .notif-container {
     padding: 3rem 2rem;
@@ -11,7 +9,6 @@
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* ============ HEADER ============ */
 .notif-header {
     margin-bottom: 2rem;
     display: flex;
@@ -179,7 +176,6 @@
     box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.12);
 }
 
-/* ============ FILTER TABS ============ */
 .notif-filter-tabs {
     display: flex;
     gap: 8px;
@@ -244,7 +240,6 @@
     color: #64748b;
 }
 
-/* ============ NOTIFICATION LIST ============ */
 .notif-list {
     display: flex;
     flex-direction: column;
@@ -290,7 +285,6 @@
     background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
 }
 
-/* Unread Indicator Dot */
 .notif-item.unread::after {
     content: '';
     position: absolute;
@@ -315,7 +309,6 @@
     }
 }
 
-/* ============ ICON CONTAINER ============ */
 .notif-sidebar {
     display: flex;
     align-items: flex-start;
@@ -337,7 +330,6 @@
     transform: scale(1.1) rotate(5deg);
 }
 
-/* Icon Background Colors with Gradients */
 .notif-icon-container.icon-order {
     background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
@@ -373,7 +365,6 @@
     box-shadow: 0 4px 12px rgba(100, 116, 139, 0.15);
 }
 
-/* Icon Colors */
 .notif-badge-icon.info { color: #3b82f6; }
 .notif-badge-icon.warning { color: #f59e0b; }
 .notif-badge-icon.success { color: #22c55e; }
@@ -383,7 +374,6 @@
 .notif-badge-icon.blue { color: #6366f1; }
 .notif-badge-icon.default { color: #64748b; }
 
-/* ============ MAIN CONTENT ============ */
 .notif-main {
     flex: 1;
     min-width: 0;
@@ -423,7 +413,6 @@
     letter-spacing: 0.5px;
 }
 
-/* ============ ADMIN NOTE ============ */
 .notif-admin-note {
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border-radius: 12px;
@@ -453,7 +442,6 @@
     font-weight: 500;
 }
 
-/* ============ EMPTY STATE ============ */
 .notif-empty {
     text-align: center;
     padding: 5rem 2rem;
@@ -493,7 +481,6 @@
     font-weight: 500;
 }
 
-/* ============ ERROR STATE ============ */
 .notif-error-card {
     background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
     border: 1px solid #fecaca;
@@ -509,7 +496,6 @@
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
 }
 
-/* ============ LOADER ============ */
 .notif-loader {
     display: flex;
     flex-direction: column;
@@ -537,7 +523,6 @@
     to { transform: rotate(360deg); } 
 }
 
-/* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
     .notif-container { 
         padding: 1.5rem 1rem; 

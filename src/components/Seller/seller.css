@@ -1,47 +1,46 @@
-/* ── Porto Design Tokens (mirrors CustomerDashboard.css) ───────────────────── */
+
 :root {
-  --porto-blue:           #2E7DFF; /* Primary Brand / CTA */
-  --porto-blue-dark:      #1A5FCC; /* Hover / Interactive Effects */
-  --porto-blue-light:     #e6f3f9; 
-  --porto-primary:        #FF6F3C; /* Secondary Accent / Promotions */
-  --porto-primary-fade:   #fff3cd; /* Tag / Badge Background */
-  --porto-primary-text:   #856404; /* Tag / Badge Text */
+  --porto-blue:           #00b4d8; 
+  --porto-blue-dark:      #48cae4; 
+  --porto-blue-light:     #e0fbfc; 
+  --porto-primary:        #00b4d8; 
+  --porto-primary-fade:   #e0fbfc; 
+  --porto-primary-text:   #00b4d8; 
   
-  --porto-dark:           #212529; /* Product Price - Regular */
-  --porto-text:           #333333; /* Text - Primary */
-  --porto-text-muted:     #777777; /* Text - Secondary */
-  --porto-text-disabled:  #AAAAAA; /* Text - Muted */
+  --porto-dark:           #212529; 
+  --porto-text:           #212529; 
+  --porto-text-muted:     #6c757d; 
+  --porto-text-disabled:  #adb5bd; 
   
-  --porto-border:         #E0E0E0; /* Borders / Dividers */
-  --porto-bg:             #FFFFFF; /* Background - Main */
-  --porto-card-bg:        #F5F5F5; /* Background - Section / Cards */
-  --porto-sidebar-bg:     #F1F3F5; /* Navigation / Sidebar Background */
-  --porto-nav-bg:         #F8F9FA; /* Header / Navigation Background */
+  --porto-border:         #dee2e6; 
+  --porto-bg:             #f8f9fa; 
+  --porto-card-bg:        #ffffff; 
+  --porto-sidebar-bg:     #ffffff; 
+  --porto-nav-bg:         #f8f9fa; 
   
-  --porto-btn-secondary:  #6C757D; /* Icons / Buttons - Secondary */
-  --porto-accent-cart:    #FFB800; /* Cart / Floating Button */
+  --porto-btn-secondary:  #6c757d; 
+  --porto-accent-cart:    #00b4d8; 
   
-  --porto-success:        #28A745; /* Success Messages */
-  --porto-error:          #FF4C4C; /* Error / Alerts */
-  --porto-info:           #17A2B8; /* Info / Notifications */
+  --porto-success:        #10B981; 
+  --porto-error:          #c1121f; 
+  --porto-info:           #48cae4; 
   
   --porto-glass:          rgba(255, 255, 255, 0.7);
-  --porto-glass-border:   rgba(224, 224, 224, 0.4);
-  --porto-overlay:        rgba(0, 0, 0, 0.6);   /* Modal Background */
+  --porto-glass-border:   rgba(255, 255, 255, 0.4);
+  --porto-overlay:        rgba(0, 0, 0, 0.6);   
   
-  --porto-radius:         24px;
-  --porto-shadow:         0 8px 30px rgba(0,0,0,0.04);
-  --porto-shadow-lg:      0 20px 60px rgba(0,0,0,0.08);
+  --porto-radius:         16px;
+  --porto-shadow:         0 8px 30px rgba(33,37,41,0.04);
+  --porto-shadow-lg:      0 20px 60px rgba(33,37,41,0.08);
   --porto-sidebar-w:      280px;
   
-  --porto-font-head:      'Geist', ui-sans-serif, system-ui, sans-serif;
-  --porto-font-body:      'Geist', ui-sans-serif, system-ui, sans-serif;
+  --porto-font-head:      'Inter', ui-sans-serif, system-ui, sans-serif;
+  --porto-font-body:      'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  /* Legacy Seller Aliases (for backward compatibility) */
   --s-font: var(--porto-font-body);
   --s-bg: var(--porto-bg);
-  --s-primary: var(--porto-blue);
-  --s-primary-glow: var(--porto-blue-light);
+  --s-primary: var(--porto-primary);
+  --s-primary-glow: var(--porto-primary-fade);
   --s-secondary: var(--porto-dark);
   --s-text-main: var(--porto-text);
   --s-text-muted: var(--porto-text-muted);
@@ -49,7 +48,6 @@
   --s-radius: var(--porto-radius);
 }
 
-/* ── DASHBOARD LAYOUT ──────────────────────────────────────────────────── */
 .dashboard {
   background: var(--porto-bg);
   min-height: 100vh;
@@ -70,7 +68,6 @@
   margin: 0 auto;
 }
 
-/* ── SIDEBAR (Unified cd- style) ─────────────────────────────────────────── */
 .cd-sidebar {
   width: var(--porto-sidebar-w);
   background: var(--porto-sidebar-bg); 
@@ -206,7 +203,6 @@
   color: var(--s-text-muted);
 }
 
-/* ── STATS ── */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -228,7 +224,7 @@
 .stat-card:hover {
   transform: translateY(-8px);
   border-color: var(--s-primary);
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  box-shadow: 0 16px 32px rgba(0, 180, 216, 0.1);
 }
 
 .stat-icon-wrap {
@@ -273,7 +269,6 @@
   pointer-events: none;
 }
 
-/* ── PANELS ── */
 .dashboard-grid-2 {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -281,11 +276,11 @@
 }
 
 .dash-panel {
-  background: #fff;
+  background: var(--porto-card-bg);
   border-radius: var(--s-radius);
-  border: 1px solid var(--s-border);
+  border: 1px solid transparent;
   padding: 30px;
-  box-shadow: var(--s-card-shadow);
+  box-shadow: var(--porto-shadow);
 }
 
 .panel-head {
@@ -316,7 +311,6 @@
 .btn-view-all:hover { opacity: 0.8; }
 .btn-view-all:hover { border-bottom-color: var(--dash-primary); }
 
-/* Curvy Chart Styles */
 .sales-chart-wrap {
   position: relative;
   height: 250px;
@@ -338,9 +332,6 @@
 }
 .overlay-link:hover { color: var(--dash-primary); }
 
-/* ══════════════════════════════════════════════════════════
-   ACTIVITY STREAM
-   ══════════════════════════════════════════════════════════ */
 .activity-stream {
   display: flex;
   flex-direction: column;
@@ -396,9 +387,6 @@
   min-width: 70px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   TOP PRODUCT CARDS
-   ══════════════════════════════════════════════════════════ */
 .top-product-pro {
   display: flex;
   gap: 25px;
@@ -543,15 +531,12 @@
   background: #fcfdfe;
 }
 
-/* ══════════════════════════════════════════════════════════
-   DASHBOARD PANEL (used by shipments, orders, etc.)
-   ══════════════════════════════════════════════════════════ */
 .dashboard-panel {
-  background: var(--dash-card);
-  border-radius: var(--dash-radius-md);
+  background: var(--porto-card-bg);
+  border-radius: var(--s-radius);
   padding: 20px;
-  box-shadow: var(--dash-shadow);
-  border: 1px solid var(--dash-border);
+  box-shadow: var(--porto-shadow);
+  border: 1px solid transparent;
   overflow: hidden;
 }
 
@@ -574,9 +559,6 @@
   margin: 0;
 }
 
-/* ══════════════════════════════════════════════════════════
-   STATUS BADGES — Consistent System
-   ══════════════════════════════════════════════════════════ */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -590,7 +572,6 @@
   white-space: nowrap;
 }
 
-/* Order statuses */
 .status-badge.new,
 .status-badge.inbound    { background: #fef3c7; color: #92400e; }
 .status-badge.processing { background: #dbeafe; color: #1e40af; }
@@ -601,13 +582,9 @@
 .status-badge.refunded   { background: #f3e8ff; color: #6b21a8; }
 .status-badge.pending    { background: #fff7ed; color: #c2410c; }
 
-/* Shipment-specific  */
 .status-badge.in_transit   { background: #e0f2fe; color: #0369a1; }
 .status-badge.label_created { background: #fef3c7; color: #92400e; }
 
-/* ══════════════════════════════════════════════════════════
-   BUTTONS — Secondary Outline
-   ══════════════════════════════════════════════════════════ */
 .btn-secondary-outline {
   display: inline-flex;
   align-items: center;
@@ -633,9 +610,6 @@
   transform: translateY(-1px);
 }
 
-/* ══════════════════════════════════════════════════════════
-   TEXT UTILITIES
-   ══════════════════════════════════════════════════════════ */
 .text-gray {
   color: var(--dash-text-muted);
 }
@@ -652,7 +626,6 @@
   font-weight: 600;
 }
 
-/* ── Icon Box spacing (sidebar icons) ── */
 .icon-box {
   display: flex;
   align-items: center;
@@ -662,9 +635,6 @@
 
 .label-box { flex: 1; text-align: left; }
 
-/* ══════════════════════════════════════════════════════════
-   LOADING SPINNER
-   ══════════════════════════════════════════════════════════ */
 .so-spinner {
   width: 36px;
   height: 36px;
@@ -678,9 +648,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* ══════════════════════════════════════════════════════════
-   ANIMATIONS
-   ══════════════════════════════════════════════════════════ */
 .fade-in {
   animation: dashFadeIn 0.28s ease forwards;
 }
@@ -694,16 +661,12 @@
   animation: dashFadeIn 0.3s ease forwards;
 }
 
-/* ══════════════════════════════════════════════════════════
-   RECENT ORDERS TABLE WRAPPER
-   ══════════════════════════════════════════════════════════ */
 .recent-orders-table-wrapper {
   overflow-x: auto;
   border: 1px solid var(--dash-border);
   border-radius: var(--dash-radius-sm);
 }
 
-/* ── Type badge (for reports) ── */
 .type-badge {
   display: inline-block;
   background: var(--dash-primary-fade);
@@ -715,10 +678,297 @@
   text-transform: uppercase;
 }
 
-/* ── Shipments: ID cell ── */
 .ad-id {
   font-family: var(--font-pop);
   font-weight: 700;
   font-size: 0.82rem;
   color: var(--dash-text);
+}
+
+/* ═══════════════════════════════════════════════════ */
+/*  Dash Responsiveness                                */
+/* ═══════════════════════════════════════════════════ */
+
+.dash-overview-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .dash-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .top-product-pro {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pro-img-box {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    aspect-ratio: 1;
+    margin: 0 auto;
+  }
+  .quick-actions-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 20px;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dash-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.status-badge.new,
+.status-badge.inbound    { background: #fef3c7; color: #92400e; }
+.status-badge.processing { background: #dbeafe; color: #1e40af; }
+.status-badge.shipped    { background: #e0f2fe; color: #0369a1; }
+.status-badge.delivered  { background: #dcfce7; color: #166534; }
+.status-badge.canceled,
+.status-badge.cancelled  { background: #fee2e2; color: #991b1b; }
+.status-badge.refunded   { background: #f3e8ff; color: #6b21a8; }
+.status-badge.pending    { background: #fff7ed; color: #c2410c; }
+
+.status-badge.in_transit   { background: #e0f2fe; color: #0369a1; }
+.status-badge.label_created { background: #fef3c7; color: #92400e; }
+
+.btn-secondary-outline {
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--dash-border);
+  color: var(--dash-text);
+  padding: 7px 14px;
+  border-radius: var(--dash-radius-sm);
+  font-family: var(--font-open);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--dash-shadow);
+}
+
+.btn-secondary-outline:hover {
+  border-color: var(--dash-primary);
+  color: var(--dash-primary);
+  background: var(--dash-primary-fade);
+  transform: translateY(-1px);
+}
+
+.text-gray {
+  color: var(--dash-text-muted);
+}
+
+.text-primary {
+  color: var(--dash-primary);
+}
+
+.empty-text {
+  text-align: center;
+  padding: 40px;
+  color: var(--dash-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.icon-box {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.label-box { flex: 1; text-align: left; }
+
+.so-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--dash-primary-fade);
+  border-top-color: var(--dash-primary);
+  border-radius: 50%;
+  animation: dashSpin 0.7s linear infinite;
+}
+
+@keyframes dashSpin {
+  to { transform: rotate(360deg); }
+}
+
+.fade-in {
+  animation: dashFadeIn 0.28s ease forwards;
+}
+
+@keyframes dashFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-fade-in {
+  animation: dashFadeIn 0.3s ease forwards;
+}
+
+.recent-orders-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--dash-radius-sm);
+}
+
+.type-badge {
+  display: inline-block;
+  background: var(--dash-primary-fade);
+  color: var(--dash-primary);
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ad-id {
+  font-family: var(--font-pop);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--dash-text);
+}
+
+/* ═══════════════════════════════════════════════════ */
+/*  Dash Responsiveness                                */
+/* ═══════════════════════════════════════════════════ */
+
+.dash-overview-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .dash-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .top-product-pro {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pro-img-box {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    aspect-ratio: 1;
+    margin: 0 auto;
+  }
+  .quick-actions-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 20px;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dash-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .greeting-text h2 {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .cd-sidebar {
+    position: fixed;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  /* When a toggle class is added, the sidebar can show */
+  .cd-sidebar.open {
+    transform: translateX(0);
+  }
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+  .pro-stats-row {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-content-inner [style*="background: 'linear-gradient(135deg, #212529"] > div:nth-child(3) {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start !important;
+  }
 }

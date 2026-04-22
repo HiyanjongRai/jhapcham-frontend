@@ -100,7 +100,9 @@ function CartPage() {
           try {
             const res = await api.get(`/api/activity/similar/${pid}`, { params: { limit: 4 } });
             if (res.data) allSimilar.push(...res.data);
-          } catch { /* skip */ }
+          } catch {
+            // skip
+          }
         }
         
         // Deduplicate and remove items already in cart
@@ -165,8 +167,7 @@ function CartPage() {
       alert(`Sorry, only ${item.stock} items are available in stock.`);
       return;
     }
-    
-    
+
     const itemKey = item.cartItemId || `${item.productId}-${item.color}-${item.storage}`;
     setUpdatingItemId(itemKey);
 
@@ -316,7 +317,6 @@ function CartPage() {
       <h1 className="cart-page-title">YOUR CART</h1>
       
       <div className="cart-layout">
-        {/* Cart Items */}
         <div className="cart-items-section">
           <table className="cart-table">
             <thead>
@@ -409,11 +409,9 @@ function CartPage() {
               })}
             </tbody>
           </table>
-          
 
         </div>
         
-        {/* Order Summary */}
         <div className="order-summary">
           <h2 className="order-summary-title">Order Summary</h2>
           
@@ -469,7 +467,6 @@ function CartPage() {
         </div>
       </div>
 
-      {/* Cross-sell Recommendations */}
       {crossSellProducts.length > 0 && (
         <div className="cart-cross-sell">
           <h2 className="cross-sell-title">Frequently Bought Together</h2>

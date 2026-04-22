@@ -1,4 +1,4 @@
-/* ReviewForm.css - Premium Black & White Review Interface */
+
 
 .review-form-page {
   min-height: 100vh;
@@ -75,7 +75,6 @@
   color: #000;
 }
 
-/* Star Rating */
 .review-star-rating {
   display: flex;
   gap: 0.5rem;
@@ -112,7 +111,6 @@
   font-weight: 500;
 }
 
-/* Comment Textarea */
 .review-textarea {
   width: 100%;
   min-height: 140px;
@@ -137,7 +135,6 @@
   color: #999;
 }
 
-/* File Upload */
 .review-file-upload {
   position: relative;
 }
@@ -187,7 +184,6 @@
   margin-top: 0.25rem;
 }
 
-/* Selected Files */
 .review-selected-files {
   margin-top: 1rem;
   display: flex;
@@ -210,7 +206,6 @@
   font-size: 1rem;
 }
 
-/* Submit Button */
 .review-submit-btn {
   width: 100%;
   padding: 1.15rem;
@@ -239,7 +234,6 @@
   transform: none;
 }
 
-/* Messages */
 .review-message {
   margin-top: 1.5rem;
   padding: 1rem;
@@ -261,7 +255,6 @@
   border: 1px solid #fecaca;
 }
 
-/* Character Count */
 .review-char-count {
   text-align: right;
   font-size: 0.8rem;
@@ -269,7 +262,6 @@
   margin-top: 0.5rem;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .review-form-page {
     padding: 1rem;
@@ -306,7 +298,6 @@
   }
 }
 
-/* Product Summary Header */
 .review-product-summary {
   display: flex;
   align-items: center;
@@ -363,7 +354,6 @@
   border: 1px solid #A7F3D0;
 }
 
-/* Adjust generic header if product exists */
 .review-form-header:has(.review-product-summary) {
   padding-bottom: 2rem;
   margin-bottom: 2.5rem;

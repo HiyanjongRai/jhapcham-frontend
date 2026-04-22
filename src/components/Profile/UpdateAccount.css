@@ -1,4 +1,4 @@
-/* UpdateAccount.css — Indigo-Slate Professional Style */
+
 .ua-card {
   width: 100%;
   max-width: 1000px;
@@ -28,7 +28,6 @@
   text-transform: uppercase;
 }
 
-/* Profile Image Section */
 .ua-img-section {
   display: flex;
   align-items: center;
@@ -99,7 +98,6 @@
   text-underline-offset: 4px;
 }
 
-/* Form Layout */
 .ua-form {
   display: flex;
   flex-direction: column;
@@ -154,7 +152,6 @@
   cursor: not-allowed;
 }
 
-/* Security Box */
 .ua-security-box {
   margin-top: 10px;
   border: 1.5px solid #f1f5f9;
@@ -224,7 +221,6 @@
   gap: 15px;
 }
 
-/* Primary Button */
 .ua-primary-btn {
   width: 100%;
   padding: 12px;
@@ -268,4 +264,90 @@
 @media (max-width: 640px) {
   .ua-grid { grid-template-columns: 1fr; }
   .ua-img-section { flex-direction: column; text-align: center; }
+}
+
+/* Mobile Responsive - iPhone 11 & Similar */
+@media (max-width: 480px) {
+  .ua-card {
+    max-width: 100%;
+    padding: 1rem 12px;
+  }
+
+  .ua-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .ua-title {
+    font-size: 0.95rem;
+  }
+
+  .ua-subtitle {
+    font-size: 0.6rem;
+  }
+
+  .ua-img-section {
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 2rem;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .ua-profile-img-container {
+    width: 80px;
+    height: 80px;
+    border-width: 3px;
+  }
+
+  .ua-img-info h4 {
+    font-size: 0.85rem;
+  }
+
+  .ua-img-info p {
+    font-size: 0.7rem;
+  }
+
+  .ua-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .ua-form-group label {
+    font-size: 0.75rem;
+  }
+
+  .ua-form-group input,
+  .ua-form-group textarea,
+  .ua-form-group select {
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+
+  .ua-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ua-actions button {
+    width: 100%;
+    padding: 12px;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .ua-card {
+    padding: 0.75rem 10px;
+  }
+
+  .ua-profile-img-container {
+    width: 70px;
+    height: 70px;
+  }
+
+  .ua-img-section {
+    gap: 12px;
+    padding: 12px;
+  }
 }

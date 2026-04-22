@@ -215,8 +215,7 @@ export default function MessagesPage() {
       userProfile={userProfile}
     >
       <div className="messages-hub">
-        
-        {/* SIDEBAR */}
+
         <div className="hub-sidebar-list">
           <div className="hub-list-header">
             <h2 className="gt-h2">Messages</h2>
@@ -263,7 +262,6 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* CHAT MAIN */}
         <div className="hub-chat-main">
           {selectedConversation ? (
             <>

@@ -19,7 +19,6 @@ const ProductSkeleton = () => (
   </div>
 );
 
-
 // Map backend ProductResponseDTO to frontend product format
 function mapProductDto(dto) {
   return {
@@ -30,7 +29,6 @@ function mapProductDto(dto) {
     stock: dto.stockQuantity ?? dto.stock ?? 0,
   };
 }
-
 
 function ProductGrid() {
   const [searchParams] = useSearchParams();
@@ -77,7 +75,6 @@ function ProductGrid() {
     }
   }, [searchParams]);
 
-
   // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
@@ -85,8 +82,6 @@ function ProductGrid() {
         setLoading(true);
         setError("");
 
-
-        
         let data = [];
         let url = "";
         const params = new URLSearchParams();
@@ -275,10 +270,9 @@ function ProductGrid() {
 
   return (
     <div className="pg-layout">
-      
-      {/* Sidebar Filters */}
+
       <aside className={`pg-sidebar ${showFilters ? 'show' : ''}`}>
-        {/* Mobile Filter Header */}
+        
         <div className="pg-filter-mobile-header">
           <h3 className="pg-filter-mobile-title">Filters</h3>
           <button className="pg-filter-close-btn" onClick={() => setShowFilters(false)}>
@@ -293,7 +287,6 @@ function ProductGrid() {
           </div>
         </div>
 
-        {/* Active Filters Chips */}
         {(categoryFilter !== "ALL" || minPrice || maxPrice || minRating || brand || onSale) && (
           <div className="pg-active-filters">
             {categoryFilter !== "ALL" && (
@@ -435,10 +428,8 @@ function ProductGrid() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="pg-main">
-        
-        {/* Campaign Hero Banner in Products Page */}
+
         {campaignInfo && (
             <div className="pg-campaign-hero" style={{ 
                 marginBottom: '32px', 

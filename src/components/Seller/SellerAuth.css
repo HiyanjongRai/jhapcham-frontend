@@ -1,8 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
-/* ══════════════════════════════════════════════════════════
-   PORTO HARMONIZED SELLER AUTH CSS
-   ══════════════════════════════════════════════════════════ */
 .sa-container {
     min-height: 100vh;
     display: flex;
@@ -32,7 +29,7 @@
     left: 0;
     width: 30%;
     height: 4px;
-    background: var(--porto-blue, #0088cc);
+    background: var(--porto-blue, #00b4d8);
 }
 
 .sa-title {

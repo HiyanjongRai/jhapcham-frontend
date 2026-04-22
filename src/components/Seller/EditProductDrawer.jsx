@@ -17,6 +17,12 @@ export default function EditProductDrawer({
   const [additionalFiles, setAdditionalFiles] = useState([]);
   const [colorInput, setColorInput] = useState("");
   const [storageInput, setStorageInput] = useState("");
+  const [sizeInput, setSizeInput] = useState("");
+  const [activeVariants, setActiveVariants] = useState({
+    colors: false,
+    storage: false,
+    sizes: false
+  });
 
   function handleFieldChange(field, value) {
     setProduct(prev => ({ ...prev, [field]: value }));
@@ -54,6 +60,18 @@ export default function EditProductDrawer({
     });
   }
 
+  function toggleSize(size) {
+    setProduct(prev => {
+      const sizeArr = prev.sizes || [];
+      return {
+        ...prev,
+        sizes: sizeArr.includes(size)
+          ? sizeArr.filter(s => s !== size)
+          : [...sizeArr, size]
+      };
+    });
+  }
+
   async function saveProduct() {
     if (!product) return;
 
@@ -75,6 +93,9 @@ export default function EditProductDrawer({
       }
       if (product.storage && product.storage.length) {
           product.storage.forEach(s => form.append("storage", s));
+      }
+      if (product.sizes && product.sizes.length) {
+          product.sizes.forEach(sz => form.append("sizes", sz));
       }
 
       const baseFields = {
@@ -215,8 +236,7 @@ export default function EditProductDrawer({
       </div>
 
       <div className="pm-drawer-content">
-        
-        {/* TAB: ESSENTIALS */}
+
         {activeTab === 'essentials' && (
           <div className="pm-form-section">
             <div className="pm-form-group">
@@ -240,15 +260,17 @@ export default function EditProductDrawer({
                 </div>
               <div className="pm-form-group">
                   <label>Category</label>
-                  <select
+                  <input
+                      list="edit-category-list"
                       value={product.category || ""}
                       onChange={e => handleFieldChange("category", e.target.value)}
-                  >
-                    <option value="">Select a category</option>
+                      placeholder="Type or select a category..."
+                  />
+                  <datalist id="edit-category-list">
                     {categories.map(cat => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      <option key={cat.id} value={cat.name} />
                     ))}
-                  </select>
+                  </datalist>
               </div>
             </div>
 
@@ -274,8 +296,6 @@ export default function EditProductDrawer({
           </div>
         )}
 
-
-        {/* TAB: PRICING & STOCK */}
         {activeTab === 'pricing' && (
           <div className="pm-form-section">
              <div className="pm-row-2">
@@ -380,7 +400,6 @@ export default function EditProductDrawer({
           </div>
         )}
 
-        {/* TAB: SPECS & SHIPPING */}
         {activeTab === 'specs' && (
           <div className="pm-form-section">
              <div className="pm-section-title">Dates</div>
@@ -436,58 +455,113 @@ export default function EditProductDrawer({
              </div>
 
              <div className="pm-section-title">Variants & Specs</div>
+             
              <div className="pm-form-group">
-                 <label>Available Colors</label>
-                 <div className="pm-tags-input">
-                    {product.colors?.map((c, i) => (
-                        <span key={i} className="pm-tag">
-                            {c} 
-                            <button onClick={() => toggleColor(c)}>&times;</button>
-                        </span>
-                    ))}
-                    <div className="pm-tag-adder">
-                        <input
-                            type="text"
-                            placeholder="Add color..."
-                            value={colorInput}
-                            onChange={e => setColorInput(e.target.value)}
-                            onKeyDown={e => {
-                                if(e.key === 'Enter') {
-                                    e.preventDefault();
-                                    if (colorInput) { toggleColor(colorInput); setColorInput(""); }
-                                }
-                            }}
-                        />
-                        <button type="button" onClick={() => { if (colorInput) { toggleColor(colorInput); setColorInput(""); } }}>+</button>
-                    </div>
-                 </div>
+                 <button 
+                    type="button" 
+                    className={`pm-collapsible-variant-btn ${activeVariants.colors ? 'active' : ''}`}
+                    onClick={() => setActiveVariants(prev => ({...prev, colors: !prev.colors}))}
+                 >
+                   Color Variants {product.colors?.length > 0 && <span className="variant-count">({product.colors.length})</span>}
+                 </button>
+                 
+                 {activeVariants.colors && (
+                   <div className="pm-tags-input lux-fade-in" style={{ marginTop: '10px' }}>
+                      {product.colors?.map((c, i) => (
+                          <span key={i} className="pm-tag">
+                              {c} 
+                              <button onClick={() => toggleColor(c)}>&times;</button>
+                          </span>
+                      ))}
+                      <div className="pm-tag-adder">
+                          <input
+                              type="text"
+                              placeholder="Add color..."
+                              value={colorInput}
+                              onChange={e => setColorInput(e.target.value)}
+                              onKeyDown={e => {
+                                  if(e.key === 'Enter') {
+                                      e.preventDefault();
+                                      if (colorInput) { toggleColor(colorInput); setColorInput(""); }
+                                  }
+                              }}
+                          />
+                          <button type="button" onClick={() => { if (colorInput) { toggleColor(colorInput); setColorInput(""); } }}>+</button>
+                      </div>
+                   </div>
+                 )}
              </div>
 
              <div className="pm-form-group">
-                 <label>Storage / Size Options</label>
+                 <button 
+                    type="button" 
+                    className={`pm-collapsible-variant-btn ${activeVariants.storage ? 'active' : ''}`}
+                    onClick={() => setActiveVariants(prev => ({...prev, storage: !prev.storage}))}
+                 >
+                   Storage / Configurations {product.storage?.length > 0 && <span className="variant-count">({product.storage.length})</span>}
+                 </button>
+
+                 {activeVariants.storage && (
+                   <div className="pm-tags-input lux-fade-in" style={{ marginTop: '10px' }}>
+                      {product.storage?.map((s, i) => (
+                          <span key={i} className="pm-tag">
+                              {s} 
+                              <button onClick={() => toggleStorage(s)}>&times;</button>
+                          </span>
+                      ))}
+                      <div className="pm-tag-adder">
+                          <input
+                              type="text"
+                              placeholder="Add option..."
+                              value={storageInput}
+                              onChange={e => setStorageInput(e.target.value)}
+                              onKeyDown={e => {
+                                  if(e.key === 'Enter') {
+                                      e.preventDefault();
+                                      if (storageInput) { toggleStorage(storageInput); setStorageInput(""); }
+                                  }
+                              }}
+                          />
+                          <button type="button" onClick={() => { if (storageInput) { toggleStorage(storageInput); setStorageInput(""); } }}>+</button>
+                      </div>
+                   </div>
+                 )}
+             </div>
+
+             <div className="pm-form-group">
+                 <button 
+                    type="button" 
+                    className={`pm-collapsible-variant-btn ${activeVariants.sizes ? 'active' : ''}`}
+                    onClick={() => setActiveVariants(prev => ({...prev, sizes: !prev.sizes}))}
+                 >
+                   Size Variants {product.sizes?.length > 0 && <span className="variant-count">({product.sizes.length})</span>}
+                 </button>
+
+                 {activeVariants.sizes && (
                  <div className="pm-tags-input">
-                    {product.storage?.map((s, i) => (
+                    {product.sizes?.map((sz, i) => (
                         <span key={i} className="pm-tag">
-                            {s} 
-                            <button onClick={() => toggleStorage(s)}>&times;</button>
+                            {sz} 
+                            <button onClick={() => toggleSize(sz)}>&times;</button>
                         </span>
                     ))}
                     <div className="pm-tag-adder">
                         <input
                             type="text"
-                            placeholder="Add option..."
-                            value={storageInput}
-                            onChange={e => setStorageInput(e.target.value)}
+                            placeholder="Add size (e.g. XL, 42)..."
+                            value={sizeInput}
+                            onChange={e => setSizeInput(e.target.value)}
                             onKeyDown={e => {
                                 if(e.key === 'Enter') {
                                     e.preventDefault();
-                                    if (storageInput) { toggleStorage(storageInput); setStorageInput(""); }
+                                    if (sizeInput) { toggleSize(sizeInput); setSizeInput(""); }
                                 }
                             }}
                         />
-                        <button type="button" onClick={() => { if (storageInput) { toggleStorage(storageInput); setStorageInput(""); } }}>+</button>
+                        <button type="button" onClick={() => { if (sizeInput) { toggleSize(sizeInput); setSizeInput(""); } }}>+</button>
                     </div>
                  </div>
+                 )}
              </div>
 
              <div className="pm-form-group">
@@ -509,7 +583,6 @@ export default function EditProductDrawer({
           </div>
         )}
 
-        {/* TAB: IMAGES */}
         {activeTab === 'media' && (
           <div className="pm-form-section">
              <div className="pm-image-upload-section">

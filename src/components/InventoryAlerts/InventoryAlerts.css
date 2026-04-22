@@ -1,0 +1,57 @@
+.inventory-alerts-container {
+  padding: 20px 0;
+}
+
+.alerts-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.alerts-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alert-card {
+  border-left: 4px solid #ffc107;
+  transition: all 0.3s ease;
+}
+
+.alert-card.acknowledged {
+  opacity: 0.7;
+  background-color: #f8f9fa;
+}
+
+.alert-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.alert-icon {
+  font-size: 28px;
+  text-align: center;
+}
+
+.alert-type {
+  margin-bottom: 8px;
+}
+
+.alert-message {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.alert-details {
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}

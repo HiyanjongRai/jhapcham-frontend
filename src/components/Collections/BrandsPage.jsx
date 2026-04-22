@@ -88,7 +88,7 @@ export default function BrandsPage() {
 
   return (
     <>
-      {/* Error Toast Notification */}
+      
       <ErrorToast error={error} onClose={() => setError(null)} />
 
       <div className="collection-page">
@@ -167,7 +167,7 @@ export default function BrandsPage() {
           </>
         ) : (
           <div className="collection-empty">
-            <div className="collection-empty-icon">🏪</div>
+            <div className="collection-empty-icon"></div>
             <h2>No Brands Available</h2>
             <p>Brands will appear here once products are added.</p>
             <Link to="/" className="collection-empty-btn">

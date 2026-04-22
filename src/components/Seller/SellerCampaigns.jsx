@@ -158,7 +158,6 @@ const SellerCampaigns = () => {
                 )}
             </div>
 
-            {/* JOIN MODAL / OVERLAY */}
             {selectedCampaign && (
                 <div className="sc-modal-overlay">
                     <div className="sc-modal">
@@ -191,6 +190,9 @@ const SellerCampaigns = () => {
                                             <div className="sc-prod-info">
                                                 <div className="name">{prod.name}</div>
                                                 <div className="price">Original: Rs. {prod.price}</div>
+                                                <div className={`stock-info ${lowStock ? 'warning' : ''}`}>
+                                                    Stock: {prod.stockQuantity} {lowStock && "(Min. 10 units required)"}
+                                                </div>
                                             </div>
                                             
                                             {isSelected && (

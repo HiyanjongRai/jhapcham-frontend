@@ -89,16 +89,15 @@ const AllErrorsPage = () => {
   return (
     <div className="error-page">
       <div className="error-container">
-        {/* Animated Background */}
+        
         <div className="error-bg-decoration">
           <div className="error-circle error-circle-1"></div>
           <div className="error-circle error-circle-2"></div>
           <div className="error-circle error-circle-3"></div>
         </div>
 
-        {/* Error Content */}
         <div className="error-content">
-          {/* Error Code */}
+          
           {errorDetails?.status && (
             <div className="error-code-wrapper">
               <h1 className="error-code">{errorDetails.status}</h1>
@@ -106,25 +105,21 @@ const AllErrorsPage = () => {
             </div>
           )}
 
-          {/* Error Icon */}
           <div className="error-icon">
             {errorDetails?.status ? getErrorIcon(errorDetails.status) : <AlertTriangle size={100} strokeWidth={1.5} />}
           </div>
 
-          {/* Error Title */}
           <h2 className="error-title">
             {errorDetails?.status ? getErrorTitle(errorDetails.status) : 'Something Went Wrong'}
           </h2>
 
-          {/* Error Description */}
           <p className="error-message">
             {errorDetails?.status ? getErrorDescription(errorDetails.status) : 'An unexpected error occurred.'}
           </p>
 
-          {/* Backend Error Details */}
           {errorDetails && (
             <div className="backend-error-details">
-              {/* Error Message from Backend */}
+              
               {errorDetails.message && (
                 <div className="error-detail-box error-box-message">
                   <div className="error-detail-header">
@@ -137,7 +132,6 @@ const AllErrorsPage = () => {
                 </div>
               )}
 
-              {/* Validation Errors */}
               {errorDetails.errors && Object.keys(errorDetails.errors).length > 0 && (
                 <div className="error-detail-box error-box-validation">
                   <div className="error-detail-header">
@@ -156,7 +150,6 @@ const AllErrorsPage = () => {
                 </div>
               )}
 
-              {/* Error Details */}
               {errorDetails.details && (
                 <div className="error-detail-box error-box-details">
                   <div className="error-detail-header">
@@ -169,7 +162,6 @@ const AllErrorsPage = () => {
                 </div>
               )}
 
-              {/* Timestamp */}
               {errorDetails.timestamp && (
                 <div className="error-detail-box error-box-timestamp">
                   <div className="error-detail-header">
@@ -182,7 +174,6 @@ const AllErrorsPage = () => {
                 </div>
               )}
 
-              {/* Request Path */}
               {errorDetails.path && (
                 <div className="error-detail-box error-box-path">
                   <div className="error-detail-header">
@@ -195,7 +186,6 @@ const AllErrorsPage = () => {
                 </div>
               )}
 
-              {/* Stack Trace (only in development) */}
               {errorDetails.trace && process.env.NODE_ENV === 'development' && (
                 <div className="error-detail-box error-box-trace">
                   <div className="error-detail-header">
@@ -210,7 +200,6 @@ const AllErrorsPage = () => {
             </div>
           )}
 
-          {/* Action Buttons */}
           <div className="error-actions">
             <button className="error-btn error-btn-secondary" onClick={handleGoBack}>
               <RefreshCw size={20} />
@@ -228,7 +217,6 @@ const AllErrorsPage = () => {
             </button>
           </div>
 
-          {/* Help Section */}
           <div className="error-help">
             <p className="error-help-title">Need Help?</p>
             <div className="error-help-links">
@@ -244,7 +232,6 @@ const AllErrorsPage = () => {
           </div>
         </div>
 
-        {/* Decorative Dots */}
         <div className="error-decorative-dots">
           {[...Array(20)].map((_, i) => (
             <div key={i} className="error-dot" style={{

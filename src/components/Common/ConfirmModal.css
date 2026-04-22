@@ -119,7 +119,7 @@
 }
 
 .cm-btn-confirm.warning {
-    background: #000; /* Sticking to B&W theme */
+    background: #000; 
 }
 
 .cm-btn-confirm.warning:hover {

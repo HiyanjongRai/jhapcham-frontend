@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { 
-  ShoppingBag, User, Search, Menu, X, 
-  ChevronDown, Phone, Heart, ArrowRight, Bell
+  ShoppingBag, User, Search, Menu,
+  ChevronDown, Phone, Heart, Bell,
+  Facebook, Twitter, Instagram
 } from "lucide-react";
 import "./Navbar.css";
 import { API_BASE } from "../config/config";
@@ -27,6 +28,8 @@ const Navbar = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [campaigns, setCampaigns] = useState([]);
+  const [showCampaignDropdown, setShowCampaignDropdown] = useState(false);
 
   const encodedId = localStorage.getItem("userId");
   const role = localStorage.getItem("userRole");
@@ -43,6 +46,9 @@ const Navbar = () => {
       try {
         const res = await api.get("/api/categories");
         if (res.data) setCategories(res.data);
+        
+        const campRes = await api.get("/api/campaigns");
+        if (campRes.data) setCampaigns(campRes.data.filter(c => c.status === 'ACTIVE'));
       } catch (e) { console.warn(e); }
     };
     fetchData();
@@ -138,18 +144,16 @@ const Navbar = () => {
 
   return (
     <header className={"porto-navbar-wrapper" + (isDashboard ? " dashboard-mode" : "")}>
-      
-      {/* ── TOP UTILITY BAR (Show on Dashboards) ────────────────────────── */}
+
       <div className="porto-top-bar">
         <div className="porto-container">
           <div className="porto-top-left">
-            <span>FREE RETURNS. STANDARD SHIPPING ORDERS NPR 5,000+</span>
+            <span>🚚 Free shipping on orders over Rs 5,000 &nbsp;·&nbsp; 30-Day easy returns</span>
           </div>
           <div className="porto-top-right">
             <nav className="porto-top-links">
-              <Link to={role === "ADMIN" ? "/admin/dashboard" : "/customer/dashboard"}>My Account</Link>
-              <Link to="/about">About Us</Link>
-              <Link to="/blog">Blog</Link>
+              <Link to={role === "ADMIN" ? "/admin/dashboard" : role === "SELLER" ? "/seller/dashboard" : "/customer/dashboard"}>My Account</Link>
+              <Link to="/contact">About Us</Link>
               <Link to="/wishlist">My Wishlist</Link>
               <Link to="/cart">Cart</Link>
               {role === "SELLER" ? (
@@ -165,23 +169,7 @@ const Navbar = () => {
                 <Link to="/login">Log In</Link>
               )}
             </nav>
-            <div className="porto-top-selectors" onMouseLeave={() => { setShowLangDropdown(false); setShowCurrDropdown(false); }}>
-              <div className="porto-selector" onClick={() => setShowLangDropdown(!showLangDropdown)}>
-                <img 
-                  src={language === "ENG" 
-                    ? "https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg" 
-                    : "https://upload.wikimedia.org/wikipedia/commons/9/9b/Flag_of_Nepal.svg"} 
-                  alt={language} 
-                />
-                <span>{language}</span>
-                <ChevronDown size={10} />
-                {showLangDropdown && (
-                  <div className="porto-selector-dropdown">
-                    <div onClick={() => { setLanguage("ENG"); setShowLangDropdown(false); }}>ENG</div>
-                    <div onClick={() => { setLanguage("NEP"); setShowLangDropdown(false); }}>NEP</div>
-                  </div>
-                )}
-              </div>
+            <div className="porto-top-selectors" onMouseLeave={() => setShowCurrDropdown(false)}>
               <div className="porto-selector" onClick={() => setShowCurrDropdown(!showCurrDropdown)}>
                 <span>{currency}</span>
                 <ChevronDown size={10} />
@@ -194,27 +182,26 @@ const Navbar = () => {
               </div>
             </div>
             <div className="porto-social-links">
-              <i className="fab fa-facebook-f"></i>
-              <i className="fab fa-twitter"></i>
-              <i className="fab fa-instagram"></i>
+              <Facebook size={13} style={{cursor:'pointer'}} />
+              <Twitter size={13} style={{cursor:'pointer'}} />
+              <Instagram size={13} style={{cursor:'pointer'}} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── MIDDLE BRANDING BAR (Show on Dashboards) ────────────────────── */}
       <div className="porto-mid-bar">
         <div className="porto-container">
           
-          <div className="porto-logo-area" onClick={() => navigate('/')}>
-             <img src={logo} alt="Porto Logo" className="porto-logo-img" />
+            <div className="porto-logo-area" onClick={() => navigate('/')}>
+            <img src={logo} alt="Jhapcham Logo" className="porto-logo-img" />
           </div>
 
           <div className="porto-search-area">
             <form className="porto-search-form" onSubmit={handleSearch}>
               <input 
                 type="text" 
-                placeholder="Search..." 
+                placeholder="Search for products, brands and more..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -242,7 +229,7 @@ const Navbar = () => {
             </div>
             <div className="porto-contact-text">
               <span>CALL US NOW</span>
-              <strong>+123 5678 890</strong>
+              <strong>+977 9800000000</strong>
             </div>
           </div>
 
@@ -252,6 +239,15 @@ const Navbar = () => {
                 className="porto-action-btn" 
                 onClick={() => navigate('/customer/dashboard')}
                 title="My Account"
+              >
+                <User size={26} strokeWidth={1.5} />
+              </button>
+            )}
+            {role === "SELLER" && (
+              <button 
+                className="porto-action-btn" 
+                onClick={() => navigate('/seller/dashboard')}
+                title="Seller Dashboard"
               >
                 <User size={26} strokeWidth={1.5} />
               </button>
@@ -318,7 +314,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* ── BOTTOM NAVIGATION BAR (Hide on Dashboards) ───────────────────── */}
       {!isDashboard && (
         <div className="porto-nav-bar">
           <div className="porto-container">
@@ -327,27 +322,20 @@ const Navbar = () => {
             </button>
 
             <nav className={`porto-main-nav ${isMobileMenuOpen ? 'open' : ''}`}>
-               <Link to="/" className="active">HOME</Link>
+               <Link to="/" className={location.pathname === '/' ? 'active' : ''}>Home</Link>
                <div className="porto-nav-item has-dropdown">
-                 <Link to="/products">CATEGORIES</Link>
+                 <Link to="/products" className={location.pathname.startsWith('/products') ? 'active' : ''}>Products</Link>
                  <ChevronDown size={10} />
                </div>
-               <div className="porto-nav-item has-dropdown">
-                 <Link to="/products">PRODUCTS</Link>
-                 <ChevronDown size={10} />
-               </div>
-               <div className="porto-nav-item has-dropdown">
-                 <span>PAGES</span>
-                 <ChevronDown size={10} />
-               </div>
-               <Link to="/blog">BLOG</Link>
-               <Link to="/elements">ELEMENTS</Link>
-               <Link to="/contact">CONTACT US</Link>
+               <Link to="/on-sale" className={location.pathname === '/on-sale' ? 'active' : ''}>On Sale</Link>
+               <Link to="/new-arrivals" className={location.pathname === '/new-arrivals' ? 'active' : ''}>New Arrivals</Link>
+               <Link to="/campaigns" className={location.pathname === '/campaigns' ? 'active' : ''}>Campaigns</Link>
+               <Link to="/contact" className={location.pathname === '/contact' ? 'active' : ''}>Contact</Link>
             </nav>
 
             <div className="porto-nav-right">
-               <span className="porto-nav-tag">SPECIAL OFFER!</span>
-               <Link to="/products" className="porto-buy-link">BUY PORTO!</Link>
+               <span className="porto-nav-tag">Special Offer!</span>
+               <Link to="/on-sale" className="porto-buy-link">Shop Deals →</Link>
             </div>
           </div>
         </div>

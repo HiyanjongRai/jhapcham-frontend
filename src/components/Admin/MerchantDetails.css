@@ -1,6 +1,4 @@
-/* ══════════════════════════════════════════════════════════
-   MERCHANT DETAILS — SELLER DASHBOARD AESTHETIC
-   ══════════════════════════════════════════════════════════ */
+
 :root {
   --mdp-bg:           #f5f7f9;
   --mdp-sidebar:      #FFFFFF;
@@ -290,7 +288,6 @@
 .mdp-alert-head { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--mdp-text); margin-bottom: 8px; font-size: 0.75rem; text-transform: uppercase; }
 .mdp-alert-card p { font-size: 0.78rem; color: var(--mdp-text-muted); line-height: 1.5; margin: 0; }
 
-/* Status Badges Matching Seller System */
 .adm-badge {
   display: inline-flex;
   padding: 3px 10px;
